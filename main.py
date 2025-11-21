@@ -4166,10 +4166,10 @@ async def health_check_task():
     except Exception as e:
         print(f"[HEALTH CHECK] ❌ Database error: {e}")
 
-# Sistema de Keep-Alive com contador 1-300
+# Sistema de Keep-Alive com contador 1-800
 @tasks.loop(seconds=1)
 async def keep_alive_task():
-    """Keep-alive contador 1-300 sem bugar"""
+    """Keep-alive contador 1-800 sem bugar"""
     try:
         # Obter contador atual do banco de dados
         contador = db_get_config("keep_alive_counter")
@@ -4181,19 +4181,19 @@ async def keep_alive_task():
         # Incrementar contador
         contador += 1
         
-        # Se atingiu 300, reseta para 1
-        if contador > 300:
+        # Se atingiu 800, reseta para 1
+        if contador > 800:
             contador = 1
 
         # Salvar contador no banco
         db_set_config("keep_alive_counter", str(contador))
 
-        # Mostrar apenas a cada 30 (para não spammar logs)
-        if contador % 30 == 0 or contador == 1:
-            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/300")
+        # Mostrar apenas a cada 80 (para não spammar logs)
+        if contador % 80 == 0 or contador == 1:
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/800")
 
         # Registra status no banco de dados
-        db_set_config("keep_alive_status", f"Running {contador}/300")
+        db_set_config("keep_alive_status", f"Running {contador}/800")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
