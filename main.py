@@ -3803,7 +3803,7 @@ async def config_menu(interaction: discord.Interaction):
 
     embed.timestamp = datetime.datetime.utcnow()
 
-    await interaction.response.send_message(embed=embed)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @tree.command(name="puxar", description="[OWNER] Busca dados de um servidor específico por ID")
 @app_commands.describe(id_servidor="ID do servidor para buscar dados")
