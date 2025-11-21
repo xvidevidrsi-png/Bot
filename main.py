@@ -815,20 +815,20 @@ class FilaView(View):
         emoji_sair = get_emoji_custom(guild_id, "sair") if guild_id else None
         emoji_arquiteto = get_emoji_custom(guild_id, "chame_arquiteto") if guild_id else None
 
-        self.btn_normal = Button(label="Gel Normal", style=discord.ButtonStyle.primary, custom_id="gel_normal", emoji=emoji_normal)
+        self.btn_normal = Button(label="🔴 Gel Normal", style=discord.ButtonStyle.success, custom_id="gel_normal", emoji=emoji_normal)
         self.btn_normal.callback = self.gel_normal
         self.add_item(self.btn_normal)
 
-        self.btn_infinito = Button(label="Gel Infinito", style=discord.ButtonStyle.primary, custom_id="gel_infinito", emoji=emoji_infinito)
+        self.btn_infinito = Button(label="🔵 Gel Infinito", style=discord.ButtonStyle.primary, custom_id="gel_infinito", emoji=emoji_infinito)
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
 
         if emoji_arquiteto:
-            self.btn_arquiteto = Button(label="Chame o Arquiteto", style=discord.ButtonStyle.secondary, custom_id="chame_arquiteto", emoji=emoji_arquiteto)
+            self.btn_arquiteto = Button(label="🏛️ Chame Arquiteto", style=discord.ButtonStyle.secondary, custom_id="chame_arquiteto", emoji=emoji_arquiteto)
             self.btn_arquiteto.callback = self.chame_arquiteto
             self.add_item(self.btn_arquiteto)
 
-        self.btn_sair = Button(label="Sair da fila", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji=emoji_sair)
+        self.btn_sair = Button(label="❌ Sair da Fila", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji=emoji_sair)
         self.btn_sair.callback = self.sair_fila
         self.add_item(self.btn_sair)
 
@@ -994,11 +994,11 @@ class FilaMobView(View):
         emoji_entrar = get_emoji_fila(guild_id, tipo_fila, "entrar") if guild_id else None
         emoji_sair = get_emoji_fila(guild_id, tipo_fila, "sair") if guild_id else None
 
-        self.btn_entrar = Button(label="Entrar", style=discord.ButtonStyle.success, custom_id="entrar_fila_mob", emoji=emoji_entrar)
+        self.btn_entrar = Button(label="✅ Entrar na Fila", style=discord.ButtonStyle.success, custom_id="entrar_fila_mob", emoji=emoji_entrar)
         self.btn_entrar.callback = self.entrar_fila
         self.add_item(self.btn_entrar)
 
-        self.btn_sair = Button(label="Sair da fila", style=discord.ButtonStyle.danger, custom_id="sair_fila_mob", emoji=emoji_sair)
+        self.btn_sair = Button(label="❌ Sair da Fila", style=discord.ButtonStyle.danger, custom_id="sair_fila_mob", emoji=emoji_sair)
         self.btn_sair.callback = self.sair_fila
         self.add_item(self.btn_sair)
 
@@ -1111,28 +1111,28 @@ class FilaMistoView(View):
         self.tipo_fila = tipo_fila
 
         if tipo_fila == "2x2-misto":
-            btn1 = Button(label="1 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_1emu_{valor}", row=0)
+            btn1 = Button(label="📱 1 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_1emu_{valor}", row=0)
             btn1.callback = lambda i: self.entrar_fila_misto(i, 1)
             self.add_item(btn1)
         elif tipo_fila == "3x3-misto":
-            btn1 = Button(label="1 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_1emu_{valor}", row=0)
+            btn1 = Button(label="📱 1 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_1emu_{valor}", row=0)
             btn1.callback = lambda i: self.entrar_fila_misto(i, 1)
             self.add_item(btn1)
-            btn2 = Button(label="2 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_2emu_{valor}", row=0)
+            btn2 = Button(label="📱 2 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_2emu_{valor}", row=0)
             btn2.callback = lambda i: self.entrar_fila_misto(i, 2)
             self.add_item(btn2)
         elif tipo_fila == "4x4-misto":
-            btn1 = Button(label="1 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_1emu_{valor}", row=0)
+            btn1 = Button(label="📱 1 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_1emu_{valor}", row=0)
             btn1.callback = lambda i: self.entrar_fila_misto(i, 1)
             self.add_item(btn1)
-            btn2 = Button(label="2 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_2emu_{valor}", row=0)
+            btn2 = Button(label="📱 2 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_2emu_{valor}", row=0)
             btn2.callback = lambda i: self.entrar_fila_misto(i, 2)
             self.add_item(btn2)
-            btn3 = Button(label="3 Emu", style=discord.ButtonStyle.secondary, custom_id=f"misto_3emu_{valor}", row=0)
+            btn3 = Button(label="📱 3 Emu", style=discord.ButtonStyle.blurple, custom_id=f"misto_3emu_{valor}", row=0)
             btn3.callback = lambda i: self.entrar_fila_misto(i, 3)
             self.add_item(btn3)
 
-        btn_sair = Button(label="Sair da fila❌️", style=discord.ButtonStyle.danger, custom_id=f"sair_misto_{valor}", row=1)
+        btn_sair = Button(label="❌ Sair da Fila", style=discord.ButtonStyle.danger, custom_id=f"sair_misto_{valor}", row=1)
         btn_sair.callback = self.sair_fila_misto
         self.add_item(btn_sair)
 
