@@ -1348,24 +1348,26 @@ class ConfirmarPartidaView(View):
             # Renomeia o canal/thread para mobile-X
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
-            cur.execute("SELECT numero_topico, canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
+            cur.execute("SELECT numero_topico, canal_id, thread_id, valor FROM partidas WHERE id = ?", (self.partida_id,))
             partida_row = cur.fetchone()
             conn.close()
 
             if partida_row:
-                numero_topico, canal_id, thread_id = partida_row
+                numero_topico, canal_id, thread_id, valor = partida_row
+                valor_dobrado = valor * 2
+                novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
 
                 try:
                     if thread_id and thread_id > 0:
                         # É um thread
                         thread = interaction.guild.get_thread(thread_id)
                         if thread:
-                            await thread.edit(name=f"mobile-{numero_topico}")
+                            await thread.edit(name=novo_nome)
                     else:
                         # É um canal
                         canal = interaction.guild.get_channel(canal_id)
                         if canal:
-                            await canal.edit(name=f"mobile-{numero_topico}")
+                            await canal.edit(name=novo_nome)
                 except Exception as e:
                     print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
@@ -3491,18 +3493,8 @@ async def rank_command(interaction: discord.Interaction):
 
     guild_id = interaction.guild.id
 
-    embed = discord.Embed(
-        title="📊 Sistema de Perfil e Ranking",
-        description=(
-            "**Escolha uma opção:**\n\n"
-            "👤 **Meu Perfil** - Ver suas estatísticas completas\n"
-            "🏆 **Ranking** - Ver o top 10 jogadores do servidor"
-        ),
-        color=0x5865F2
-    )
-
     view = RankMenuView(interaction.user.id, guild_id)
-    await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
+    await interaction.response.send_message("📊 **Perfil & Ranking** - Escolha uma opção:", view=view, ephemeral=False)
 
 async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
     """Mostra o perfil detalhado de um usuário"""
