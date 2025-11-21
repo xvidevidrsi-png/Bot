@@ -216,17 +216,6 @@ def init_db():
         data_definicao TEXT
     )""")
     
-    cur.execute("""CREATE TABLE IF NOT EXISTS tickets (
-        id TEXT PRIMARY KEY,
-        guild_id INTEGER,
-        user_id INTEGER,
-        canal_id INTEGER,
-        thread_id INTEGER,
-        status TEXT,
-        criado_em TEXT,
-        fechado_em TEXT
-    )""")
-    
     # Additions for thread handling and topic number
     try:
         cur.execute("""ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0""")
