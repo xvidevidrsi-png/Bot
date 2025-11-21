@@ -4792,6 +4792,7 @@ async def on_message(message):
             await message.add_reaction('✅')
 
             del ADMIN_ROOM_CREATION_STATES[user_key]
+            return
 
 @bot.event
 async def on_ready():
