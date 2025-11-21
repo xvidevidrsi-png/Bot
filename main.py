@@ -1332,6 +1332,28 @@ class ConfirmarPartidaView(View):
             except:
                 pass
 
+            # LIMPAR OS JOGADORES DA FILA
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT guild_id, valor, tipo_fila, tipo_jogo FROM partidas WHERE id = ?", (self.partida_id,))
+            fila_info = cur.fetchone()
+            conn.close()
+            
+            if fila_info:
+                guild_id, valor, tipo_fila, tipo_jogo = fila_info
+                print(f"[CONFIRMAÇÃO COMPLETA] Limpando fila: {tipo_fila} | Jogadores: {self.jogador1_id}, {self.jogador2_id}")
+                fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador1_id, tipo_jogo)
+                fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador2_id, tipo_jogo)
+                
+                # Se for modo normal/infinito (1x1), limpa o outro também
+                if tipo_fila in ["normal", "infinito"]:
+                    outro_tipo = "infinito" if tipo_fila == "normal" else "normal"
+                    fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador1_id, tipo_jogo)
+                    fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador2_id, tipo_jogo)
+                    print(f"✅ Jogadores removidos de AMBOS os modos (Normal e Infinito)")
+                else:
+                    print(f"✅ Jogadores removidos da fila {tipo_fila}")
+
             # Renomeia o tópico/canal para PAGAR-X.XX-Y
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
