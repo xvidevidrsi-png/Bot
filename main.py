@@ -2425,6 +2425,23 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2573,6 +2590,23 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2613,6 +2647,23 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2651,6 +2702,23 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
 @tree.command(name="filamisto-4x4", description="Cria todas as filas 4x4 Misto")
 async def criar_filas_misto_4x4(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
+        return
+
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
         return
 
     await interaction.response.defer()
