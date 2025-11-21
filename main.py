@@ -240,12 +240,12 @@ def db_get_config(k):
     conn.close()
     return row[0] if row else None
 
-def registrar_log_partida(partida_id, guild_id, acao, j1_id, j2_id, mediador_id=None, valor=0.0, tipo_fila="1x1-mob"):
+def registrar_log_partida(partida_id, guild_id, acao, j1_id, j2_id, mediador_id=None, valor=0.0, tipo_fila="1x1-mob", numero_topico=0):
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    cur.execute("""INSERT INTO logs_partidas (partida_id, guild_id, acao, jogador1_id, jogador2_id, mediador_id, valor, tipo_fila, timestamp)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (partida_id, guild_id, acao, j1_id, j2_id, mediador_id, valor, tipo_fila, datetime.datetime.utcnow().isoformat()))
+    cur.execute("""INSERT INTO logs_partidas (partida_id, guild_id, acao, jogador1_id, jogador2_id, mediador_id, valor, tipo_fila, numero_topico, timestamp)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (partida_id, guild_id, acao, j1_id, j2_id, mediador_id, valor, tipo_fila, numero_topico, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
@@ -270,7 +270,7 @@ def obter_logs_partidas(guild_id, jogador_id=None, limite=10):
     conn.close()
     return rows
 
-async def enviar_log_para_canal(guild, acao, partida_id, j1_id, j2_id, mediador_id=None, valor=0.0, tipo_fila="mob"):
+async def enviar_log_para_canal(guild, acao, partida_id, j1_id, j2_id, mediador_id=None, valor=0.0, tipo_fila="mob", numero_topico=0):
     categoria = None
     for cat in guild.categories:
         if "log" in cat.name.lower():
@@ -319,6 +319,7 @@ async def enviar_log_para_canal(guild, acao, partida_id, j1_id, j2_id, mediador_
     embed.add_field(name="🆔 Partida", value=partida_id, inline=True)
     embed.add_field(name="💰 Valor", value=fmt_valor(valor), inline=True)
     embed.add_field(name="🎮 Tipo", value=tipo_fila.upper(), inline=True)
+    embed.add_field(name="📍 Tópico", value=f"#{numero_topico}", inline=True)
     embed.add_field(name="👥 Player 1", value=f"{nome_j1} (<@{j1_id}>)", inline=True)
     embed.add_field(name="👥 Player 2", value=f"{nome_j2} (<@{j2_id}>)", inline=True)
     embed.add_field(name="👨‍⚖️ Mediador", value=f"{nome_mediador}" + (f" (<@{mediador_id}>)" if mediador_id else ""), inline=True)
@@ -822,7 +823,7 @@ class FilaView(View):
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
 
-        self.btn_sair = Button(label="Sair", style=discord.ButtonStyle.secondary, custom_id="sair_fila", row=1)
+        self.btn_sair = Button(label="Sair", style=discord.ButtonStyle.red, custom_id="sair_fila", row=1)
         self.btn_sair.callback = self.sair_fila
         self.add_item(self.btn_sair)
 
