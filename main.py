@@ -225,24 +225,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-async def criar_canal_filas(guild, tipo_fila):
-    """Cria automaticamente um canal para as filas e retorna o canal"""
-    try:
-        # Verificar se canal já existe
-        canal_existente = discord.utils.get(guild.text_channels, name=f"📊-{tipo_fila}")
-        if canal_existente:
-            return canal_existente
-        
-        # Criar novo canal
-        canal = await guild.create_text_channel(
-            name=f"📊-{tipo_fila}",
-            topic=f"Filas automáticas de {tipo_fila}"
-        )
-        return canal
-    except Exception as e:
-        print(f"⚠️ Erro ao criar canal de filas: {e}")
-        return None
-
 def db_set_config(k, v):
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -2139,6 +2121,60 @@ async def configurar_cargos(interaction: discord.Interaction, cargos: str):
     db_set_config("cargos_mencionar", cargos)
     await interaction.response.send_message("✅ Cargos configurados!", ephemeral=True)
 
+@tree.command(name="auto_fila", description="🤖 Cria automaticamente os canais para TODAS as filas (1v1, 2x2, 3x3, 4x4, Misto)")
+async def auto_fila(interaction: discord.Interaction):
+    if not is_admin(interaction.user.id, member=interaction.user):
+        await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
+        return
+
+    await interaction.response.defer(ephemeral=True)
+    
+    guild = interaction.guild
+    tipos_fila = [
+        "1v1-mobile", "1v1-emulador",
+        "2x2-emu", "3x3-emu", "4x4-emu",
+        "2x2-mobile", "3x3-mobile", "4x4-mobile",
+        "2x2-misto", "3x3-misto", "4x4-misto"
+    ]
+    
+    criados = []
+    ja_existem = []
+    
+    for tipo_fila in tipos_fila:
+        canal_existente = discord.utils.get(guild.text_channels, name=f"📊-{tipo_fila}")
+        if canal_existente:
+            ja_existem.append(tipo_fila)
+        else:
+            try:
+                canal = await guild.create_text_channel(
+                    name=f"📊-{tipo_fila}",
+                    topic=f"Filas automáticas de {tipo_fila}"
+                )
+                criados.append(canal.mention)
+            except Exception as e:
+                print(f"⚠️ Erro ao criar canal {tipo_fila}: {e}")
+    
+    embed = discord.Embed(
+        title="✅ Canais de Filas Criados!",
+        color=0x00FF00
+    )
+    
+    if criados:
+        embed.add_field(
+            name="📊 Canais Criados",
+            value="\n".join(criados),
+            inline=False
+        )
+    
+    if ja_existem:
+        embed.add_field(
+            name="⚠️ Canais que já Existem",
+            value=", ".join(ja_existem),
+            inline=False
+        )
+    
+    await interaction.followup.send(embed=embed, ephemeral=True)
+
 @tree.command(name="1x1-mob", description="⚔️ Cria todas as filas de 1v1 Mobile (Gel Normal e Infinito)")
 async def criar_filas_1v1(interaction: discord.Interaction):
     if not interaction.guild:
@@ -2166,15 +2202,10 @@ async def criar_filas_1v1(interaction: discord.Interaction):
         )
         return
 
-    # Auto-criar canal e responder imediatamente
-    canal = await criar_canal_filas(interaction.guild, "1v1-mobile")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2232,14 +2263,10 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "1v1-emulador")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2294,14 +2321,10 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "2x2-emu")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2351,14 +2374,10 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "3x3-emu")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2408,14 +2427,10 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "4x4-emu")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2465,14 +2480,10 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "2x2-mobile")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2522,14 +2533,10 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "3x3-mobile")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2579,14 +2586,10 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "4x4-mobile")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2636,14 +2639,10 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "2x2-misto")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2695,14 +2694,10 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "3x3-misto")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2754,14 +2749,10 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
         )
         return
 
-    canal = await criar_canal_filas(interaction.guild, "4x4-misto")
-    if not canal:
-        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
-        return
-    
-    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
+    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
