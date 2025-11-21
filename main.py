@@ -2856,6 +2856,59 @@ async def on_guild_join(guild):
         except:
             pass
 
+@tree.command(name="separador_de_servidor", description="⚙️ Registra seu servidor no Bot Zeus manualmente")
+@app_commands.describe(
+    id_servidor="ID do servidor (use o ID numérico do servidor Discord)",
+    nome_dono="Nome do dono do servidor"
+)
+async def separador_servidor(interaction: discord.Interaction, id_servidor: str, nome_dono: str):
+    """Registra servidor manualmente - sem restrição de owner"""
+    try:
+        guild_id_int = int(id_servidor)
+    except ValueError:
+        await interaction.response.send_message("❌ ID do servidor inválido! Use o ID numérico do servidor.", ephemeral=True)
+        return
+
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+
+    cur.execute("SELECT guild_id FROM servidores WHERE guild_id = ?", (guild_id_int,))
+    existe = cur.fetchone()
+
+    if existe:
+        cur.execute("UPDATE servidores SET nome_dono = ?, ativo = 1 WHERE guild_id = ?",
+                    (nome_dono, guild_id_int))
+        conn.commit()
+        conn.close()
+        await interaction.response.send_message(
+            f"✅ **Servidor Atualizado com Sucesso!**\n\n"
+            f"**ID do Servidor:** {guild_id_int}\n"
+            f"**Dono:** {nome_dono}\n"
+            f"**Status:** ✅ Ativo\n\n"
+            f"🎉 **O servidor já está autorizado a usar o Bot Zeus!**\n"
+            f"Todos os comandos estão disponíveis para este servidor.",
+            ephemeral=True
+        )
+    else:
+        cur.execute("INSERT INTO servidores (guild_id, nome_dono, ativo, data_registro) VALUES (?, ?, 1, ?)",
+                    (guild_id_int, nome_dono, datetime.datetime.utcnow().isoformat()))
+        conn.commit()
+        conn.close()
+        await interaction.response.send_message(
+            f"✅ **Servidor Registrado com Sucesso!**\n\n"
+            f"**ID do Servidor:** {guild_id_int}\n"
+            f"**Dono:** {nome_dono}\n"
+            f"**Status:** ✅ Ativo\n"
+            f"**Data de Registro:** {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M')}\n\n"
+            f"🎉 **O servidor agora está autorizado a usar o Bot Zeus!**\n\n"
+            f"📋 **Próximas Ações (Obrigatórias):**\n"
+            f"1️⃣ **Use `/dono_comando_slash`** para definir o cargo de administração\n"
+            f"2️⃣ Configure os canais necessários com `/auto_fila`\n"
+            f"3️⃣ Use `/manual` para ver todos os comandos disponíveis\n\n"
+            f"💡 Este registro garante isolamento de dados e previne bugs críticos.",
+            ephemeral=True
+        )
+
 @tree.command(name="dono_comando_slash", description="👑 Define qual cargo é o DONO do servidor e tem acesso a todos os comandos administrativos")
 @app_commands.describe(
     cargo="O cargo que terá acesso total aos comandos (este cargo não pode ser removido depois)"
