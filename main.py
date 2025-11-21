@@ -2874,11 +2874,12 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
             f"**Status:** ✅ Ativo\n"
             f"**Data de Registro:** {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M')}\n\n"
             f"🎉 **O servidor agora está autorizado a usar o Bot Zeus!**\n\n"
-            f"📋 **Próximos Passos:**\n"
-            f"1. Use `/dono_comando_slash` para definir o cargo de administração\n"
-            f"2. Configure os canais e cargos necessários\n"
-            f"3. Use `/manual` para ver todos os comandos disponíveis\n\n"
-            f"💡 Este registro garante isolamento de dados e previne bugs críticos.",
+            f"📋 **Próximas Ações (Obrigatórias):**\n"
+            f"1️⃣ **Use `/dono_comando_slash`** para definir o cargo de administração\n"
+            f"2️⃣ Configure os canais necessários com `/auto_fila`\n"
+            f"3️⃣ Use `/manual` para ver todos os comandos disponíveis\n\n"
+            f"💡 Este registro garante isolamento de dados e previne bugs críticos.\n"
+            f"⏭️ **Clique em `/dono_comando_slash` agora para continuar a configuração!**",
             ephemeral=True
         )
 
@@ -2899,8 +2900,12 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
     if not verificar_separador_servidor(guild_id):
         await interaction.response.send_message(
             "⛔ **Servidor não registrado!**\n\n"
-            "Este servidor precisa estar registrado no Bot Zeus antes de configurar cargos de administração.\n\n"
-            "Entre em contato com o owner do bot (**emanoel7269**) para registrar seu servidor.",
+            "❌ Este servidor ainda não foi registrado no Bot Zeus.\n\n"
+            "📋 **Para registrar seu servidor:**\n"
+            "1. Peça ao owner do bot (**emanoel7269**) para executar:\n"
+            "   `/separador_de_servidor` com o ID do seu servidor\n\n"
+            "🔑 **Seu ID do Servidor:** `{guild_id}`\n\n"
+            "💡 Após o registro, você poderá usar todos os comandos de configuração!",
             ephemeral=True
         )
         return
