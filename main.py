@@ -815,16 +815,16 @@ class FilaView(View):
         emoji_sair = get_emoji_custom(guild_id, "sair") if guild_id else None
         emoji_arquiteto = get_emoji_custom(guild_id, "chame_arquiteto") if guild_id else None
 
-        self.btn_normal = Button(label="🔴 Gel Normal", style=discord.ButtonStyle.success, custom_id="gel_normal", emoji=emoji_normal)
+        self.btn_normal = Button(label="🔴 Gel Normal", style=discord.ButtonStyle.blurple, custom_id="gel_normal", emoji=emoji_normal)
         self.btn_normal.callback = self.gel_normal
         self.add_item(self.btn_normal)
 
-        self.btn_infinito = Button(label="🔵 Gel Infinito", style=discord.ButtonStyle.primary, custom_id="gel_infinito", emoji=emoji_infinito)
+        self.btn_infinito = Button(label="🔵 Gel Infinito", style=discord.ButtonStyle.success, custom_id="gel_infinito", emoji=emoji_infinito)
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
 
         if emoji_arquiteto:
-            self.btn_arquiteto = Button(label="🏛️ Chame Arquiteto", style=discord.ButtonStyle.secondary, custom_id="chame_arquiteto", emoji=emoji_arquiteto)
+            self.btn_arquiteto = Button(label="🏛️ Chame Arquiteto", style=discord.ButtonStyle.primary, custom_id="chame_arquiteto", emoji=emoji_arquiteto)
             self.btn_arquiteto.callback = self.chame_arquiteto
             self.add_item(self.btn_arquiteto)
 
