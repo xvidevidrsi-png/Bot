@@ -2830,9 +2830,16 @@ async def on_guild_join(guild):
 
     conn.close()
 
+    # Verificar limite de 25 servidores
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM servidores WHERE ativo = 1")
+    total_ativos = cur.fetchone()[0]
+
     # Enviar mensagem de boas-vindas
     if guild.owner:
         try:
+            limite_msg = f" ({total_ativos}/25)" if total_ativos >= 24 else f" ({total_ativos}/25)"
+            
             embed = discord.Embed(
                 title="🎉 Bot Zeus - Bem-vindo!",
                 description=f"Olá {guild.owner.mention}! Seu servidor foi registrado automaticamente.",
@@ -2848,6 +2855,11 @@ async def on_guild_join(guild):
             embed.add_field(
                 name="💡 Dica:",
                 value="O registro garante isolamento de dados e previne bugs críticos.",
+                inline=False
+            )
+            embed.add_field(
+                name="🔢 Servidores Ativos",
+                value=f"{total_ativos}/25 servidores usando o Bot Zeus",
                 inline=False
             )
             embed.set_footer(text="Comece agora com /dono_comando_slash!")
@@ -2890,6 +2902,23 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
             ephemeral=True
         )
     else:
+        # Verificar limite de 25 servidores
+        cur.execute("SELECT COUNT(*) FROM servidores WHERE ativo = 1")
+        total_ativos = cur.fetchone()[0]
+
+        if total_ativos >= 25:
+            conn.close()
+            await interaction.response.send_message(
+                f"⛔ **Limite de Servidores Atingido!**\n\n"
+                f"❌ O Bot Zeus tem suporte máximo para **25 servidores**.\n"
+                f"Servidores ativos: **{total_ativos}/25**\n\n"
+                f"📋 **O que fazer:**\n"
+                f"- Remova um servidor inativo para adicionar um novo\n"
+                f"- Contacte o administrador do bot para mais informações",
+                ephemeral=True
+            )
+            return
+
         cur.execute("INSERT INTO servidores (guild_id, nome_dono, ativo, data_registro) VALUES (?, ?, 1, ?)",
                     (guild_id_int, nome_dono, datetime.datetime.utcnow().isoformat()))
         conn.commit()
@@ -2898,7 +2927,7 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
             f"✅ **Servidor Registrado com Sucesso!**\n\n"
             f"**ID do Servidor:** {guild_id_int}\n"
             f"**Dono:** {nome_dono}\n"
-            f"**Status:** ✅ Ativo\n"
+            f"**Status:** ✅ Ativo ({total_ativos + 1}/25)\n"
             f"**Data de Registro:** {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M')}\n\n"
             f"🎉 **O servidor agora está autorizado a usar o Bot Zeus!**\n\n"
             f"📋 **Próximas Ações (Obrigatórias):**\n"
@@ -4452,6 +4481,29 @@ async def keep_alive_24h_task():
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 24H] ❌ Erro: {e}")
         db_set_config("keep_alive_24h_status", f"ERROR: {str(e)}")
 
+# Reinicio de filas a cada 1 mês (30 dias = 2592000 segundos)
+@tasks.loop(seconds=2592000)
+async def restart_queues_monthly_task():
+    """Reinicia as filas a cada 1 mês"""
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cur = conn.cursor()
+
+        # Limpar todas as filas
+        cur.execute("DELETE FROM filas")
+        conn.commit()
+
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 RESTART MENSAL: Todas as filas foram reiniciadas!")
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 📊 Próximo reinicio: em 30 dias")
+
+        # Registrar no config
+        db_set_config("last_queues_restart", datetime.datetime.utcnow().isoformat())
+        db_set_config("next_queues_restart", (datetime.datetime.utcnow() + datetime.timedelta(days=30)).isoformat())
+
+        conn.close()
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [RESTART FILAS] ❌ Erro: {e}")
+
 @tasks.loop(seconds=60)
 async def auto_role_task():
     try:
@@ -5172,6 +5224,7 @@ async def on_ready():
     keep_alive_1s_task.start()
     keep_alive_1h_task.start()
     keep_alive_24h_task.start()
+    restart_queues_monthly_task.start()
     rotacao_mediadores_task.start()
     auto_role_task.start()
     atualizar_fila_mediadores_task.start()
@@ -5183,6 +5236,7 @@ async def on_ready():
     print(f"  ├─ Keep-Alive 1s: Simples a cada 1s ⚡")
     print(f"  ├─ Keep-Alive 1h: 1-3600 com pausa 1min 🕐")
     print(f"  ├─ Keep-Alive 24h: 1-86400 com pausa 1min 📅")
+    print(f"  ├─ Reinicio Filas: a cada 1 mês (30 dias) 🔄")
     print(f"  ├─ Rotação Mediadores: a cada 30s")
     print(f"  ├─ Auto Role: a cada 60s")
     print(f"  └─ Fila Mediadores: a cada 10s")
