@@ -4884,8 +4884,8 @@ async def start_web_server():
     runner = web.AppRunner(app)
     await runner.setup()
 
-    # Tentar porta 3000 primeiro, depois outras portas
-    ports = [3000, 5000, 8080, 8000]
+    # Tentar porta 5000 primeiro (Replit requirement), depois outras portas
+    ports = [5000, 3000, 8080, 8000]
     site = None
 
     for port in ports:
