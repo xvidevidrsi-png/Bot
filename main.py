@@ -4269,6 +4269,71 @@ async def keep_alive_1s_task():
     except Exception as e:
         db_set_config("keep_alive_1s_status", f"ERROR: {str(e)}")
 
+# Keep-Alive de 1 hora (1-3600 segundos com pausa)
+keep_alive_1h_paused = False
+
+@tasks.loop(seconds=1)
+async def keep_alive_1h_task():
+    """Keep-alive contador 1-3600 (1 hora) com 1 min de pausa entre ciclos"""
+    global keep_alive_1h_paused
+    try:
+        # Obter contador atual
+        contador_1h = db_get_config("keep_alive_1h_counter")
+        if not contador_1h:
+            contador_1h = 0
+        else:
+            contador_1h = int(contador_1h)
+
+        # Se está em pausa
+        if keep_alive_1h_paused:
+            pausa_tempo = db_get_config("keep_alive_1h_pause_time")
+            if pausa_tempo:
+                try:
+                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
+                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
+                    
+                    if tempo_decorrido < 60:
+                        # Ainda em pausa
+                        if int(tempo_decorrido) % 15 == 0:
+                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1h em pausa: {int(tempo_decorrido)}/60s")
+                        db_set_config("keep_alive_1h_status", f"Paused {int(tempo_decorrido)}/60s")
+                        return
+                    else:
+                        # Pausa terminou, reseta
+                        keep_alive_1h_paused = False
+                        contador_1h = 1
+                        db_set_config("keep_alive_1h_counter", "1")
+                        db_set_config("keep_alive_1h_pause_time", "")
+                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive 1h retomado! Iniciando novo ciclo...")
+                except:
+                    keep_alive_1h_paused = False
+                    contador_1h = 1
+
+        # Incrementar contador
+        contador_1h += 1
+        
+        # Se atingiu 3600 (1 hora), inicia pausa
+        if contador_1h > 3600:
+            keep_alive_1h_paused = True
+            db_set_config("keep_alive_1h_pause_time", datetime.datetime.utcnow().isoformat())
+            db_set_config("keep_alive_1h_counter", "3600")
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1h atingiu 3600! Iniciando pausa de 1 minuto...")
+            return
+
+        # Salvar contador
+        db_set_config("keep_alive_1h_counter", str(contador_1h))
+
+        # Mostrar apenas a cada 300 (5 min) para não spammar
+        if contador_1h % 300 == 0 or contador_1h == 1:
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1h: {contador_1h}/3600")
+
+        # Registra status
+        db_set_config("keep_alive_1h_status", f"Running {contador_1h}/3600")
+
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1H] ❌ Erro: {e}")
+        db_set_config("keep_alive_1h_status", f"ERROR: {str(e)}")
+
 @tasks.loop(seconds=60)
 async def auto_role_task():
     try:
@@ -4987,6 +5052,7 @@ async def on_ready():
     health_check_task.start()
     keep_alive_task.start()
     keep_alive_1s_task.start()
+    keep_alive_1h_task.start()
     rotacao_mediadores_task.start()
     auto_role_task.start()
     atualizar_fila_mediadores_task.start()
@@ -4996,6 +5062,7 @@ async def on_ready():
     print(f"  ├─ Health Check: a cada 5min")
     print(f"  ├─ Keep-Alive: 1-1000 com pausa 1min")
     print(f"  ├─ Keep-Alive 1s: Simples a cada 1s ⚡")
+    print(f"  ├─ Keep-Alive 1h: 1-3600 com pausa 1min 🕐")
     print(f"  ├─ Rotação Mediadores: a cada 30s")
     print(f"  ├─ Auto Role: a cada 60s")
     print(f"  └─ Fila Mediadores: a cada 10s")
