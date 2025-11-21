@@ -854,8 +854,8 @@ class FilaView(View):
 
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
+            fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "normal")
-            await asyncio.sleep(0.2)
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def gel_infinito(self, interaction: discord.Interaction):
@@ -885,8 +885,8 @@ class FilaView(View):
 
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
+            fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
-            await asyncio.sleep(0.2)
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
@@ -1021,7 +1021,6 @@ class FilaMobView(View):
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
-            await asyncio.sleep(0.2)
             await atualizar_msg_fila_mob(interaction.channel, self.valor, self.tipo_fila, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
@@ -1173,7 +1172,6 @@ class FilaMistoView(View):
             fila_remove_primeiros(guild_id, self.valor, modo_fila, 2, 'misto')
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
             registrar_historico_fila(guild_id, self.valor, modo_fila, "misto", "finalizada")
-            await asyncio.sleep(0.2)
             await atualizar_msg_fila_misto(interaction.channel, self.valor, self.tipo_fila)
 
     async def sair_fila_misto(self, interaction: discord.Interaction):
