@@ -3457,19 +3457,8 @@ async def rank_command(interaction: discord.Interaction):
         return
 
     guild_id = interaction.guild.id
-
-    embed = discord.Embed(
-        title="📊 Sistema de Perfil e Ranking",
-        description=(
-            "**Escolha uma opção:**\n\n"
-            "👤 **Meu Perfil** - Ver suas estatísticas completas\n"
-            "🏆 **Ranking** - Ver o top 10 jogadores do servidor"
-        ),
-        color=0x5865F2
-    )
-
-    view = RankMenuView(interaction.user.id, guild_id)
-    await interaction.response.send_message(embed=embed, view=view)
+    await mostrar_perfil(interaction, interaction.user, guild_id, ephemeral=False)
+    await mostrar_ranking(interaction, guild_id, ephemeral=False)
 
 async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
     """Mostra o perfil detalhado de um usuário"""
