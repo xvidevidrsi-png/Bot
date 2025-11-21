@@ -5486,6 +5486,54 @@ async def on_ready():
         print(f'⚠️ Owner {BOT_OWNER_USERNAME} não encontrado!')
 
     print('Bot pronto!')
+    
+    # 🎨 ÍNDICE VISUAL DO BOT
+    print(f"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   🤖 BOT ZEUS - PAINEL DE CONTROLE 🤖                       ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  📊 STATUS DO BOT                                                            ║
+║  ├─ Status: 🟢 ONLINE                                                       ║
+║  ├─ Bot: {str(bot.user):40} ║
+║  ├─ ID: {str(bot.user.id):50} ║
+║  ├─ Owner: {str(BOT_OWNER_USERNAME):49} ║
+║  └─ Servidores: {len(bot.guilds)}                                            ║
+║                                                                              ║
+║  📋 COMANDOS DISPONÍVEIS ({len(tree.get_commands())} comandos slash)                  ║
+║  ├─ /1v1-mob        🎮 Filas 1v1 Mobile (Gel Normal/Infinito)               ║
+║  ├─ /1v1-emu        🎮 Filas 1v1 Emulador                                   ║
+║  ├─ /2x2-mob        👥 Filas 2x2 Mobile com Duplas                          ║
+║  ├─ /3x3-mob        👥 Filas 3x3 Mobile com Times                           ║
+║  ├─ /4x4-mob        👥 Filas 4x4 Mobile com Times                           ║
+║  ├─ /rank           🏆 Ranking de Jogadores                                 ║
+║  ├─ /mediador       ⚖️ Gerenciar Mediadores                                ║
+║  └─ /configurar     ⚙️ Configurações do Servidor                            ║
+║                                                                              ║
+║  ⚙️ BACKGROUND TASKS (10 tarefas rodando)                                   ║
+║  ├─ ✅ Ping Handler        - A cada 30 segundos                            ║
+║  ├─ ✅ Health Check       - A cada 5 minutos                               ║
+║  ├─ ✅ Keep-Alive System   - 5 tarefas sincronizadas                        ║
+║  ├─ ✅ Monthly Queue Reset - A cada 30 dias                                ║
+║  ├─ ✅ Mediator Rotation   - A cada 30 segundos                            ║
+║  ├─ ✅ Auto Role Manager   - A cada 60 segundos                            ║
+║  └─ ✅ Queue List Manager  - A cada 10 segundos                            ║
+║                                                                              ║
+║  🌐 ENDPOINTS HTTP (Porta 5000)                                             ║
+║  ├─ GET /ping       - Verificação rápida (compatível Cron-Job.org)         ║
+║  ├─ GET /health     - Status detalhado em JSON                             ║
+║  ├─ GET /stats      - Estatísticas do banco de dados                       ║
+║  └─ GET /status     - Status em texto simples                              ║
+║                                                                              ║
+║  💾 DATABASE                                                                 ║
+║  ├─ Status: 🟢 Conectado                                                    ║
+║  ├─ Arquivo: ./bot/bot_zeus.db                                             ║
+║  └─ Tipo: SQLite3                                                           ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  ✨ Bot Zeus iniciado com sucesso! Aguardando conexões...                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+""")
 
 async def ping_handler(request):
     """Endpoint otimizado para Cron-Job.org e serviços de uptime"""
