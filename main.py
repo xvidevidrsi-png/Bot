@@ -813,7 +813,6 @@ class FilaView(View):
         emoji_normal = get_emoji_custom(guild_id, "gel_normal") if guild_id else None
         emoji_infinito = get_emoji_custom(guild_id, "gel_infinito") if guild_id else None
         emoji_sair = get_emoji_custom(guild_id, "sair") if guild_id else None
-        emoji_arquiteto = get_emoji_custom(guild_id, "chame_arquiteto") if guild_id else None
 
         self.btn_normal = Button(label="🔴 Gel Normal", style=discord.ButtonStyle.blurple, custom_id="gel_normal", emoji=emoji_normal)
         self.btn_normal.callback = self.gel_normal
@@ -822,11 +821,6 @@ class FilaView(View):
         self.btn_infinito = Button(label="🔵 Gel Infinito", style=discord.ButtonStyle.success, custom_id="gel_infinito", emoji=emoji_infinito)
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
-
-        if emoji_arquiteto:
-            self.btn_arquiteto = Button(label="🏛️ Chame Arquiteto", style=discord.ButtonStyle.primary, custom_id="chame_arquiteto", emoji=emoji_arquiteto)
-            self.btn_arquiteto.callback = self.chame_arquiteto
-            self.add_item(self.btn_arquiteto)
 
         self.btn_sair = Button(label="❌ Sair da Fila", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji=emoji_sair)
         self.btn_sair.callback = self.sair_fila
@@ -891,12 +885,6 @@ class FilaView(View):
             fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
-
-    async def chame_arquiteto(self, interaction: discord.Interaction):
-        await interaction.response.send_message(
-            "🏛️ Você chamou o Arquiteto! Um administrador será notificado.",
-            ephemeral=True
-        )
 
     async def sair_fila(self, interaction: discord.Interaction):
         if not verificar_separador_servidor(interaction.guild.id):
