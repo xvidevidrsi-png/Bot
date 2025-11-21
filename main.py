@@ -2151,64 +2151,6 @@ async def configurar_cargos(interaction: discord.Interaction, cargos: str):
     db_set_config("cargos_mencionar", cargos)
     await interaction.response.send_message("✅ Cargos configurados!", ephemeral=True)
 
-@tree.command(name="auto_fila", description="🤖 Cria automaticamente os canais para TODAS as filas (1v1, 2x2, 3x3, 4x4, Misto)")
-async def auto_fila(interaction: discord.Interaction):
-    if not is_admin(interaction.user.id, member=interaction.user):
-        await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
-        return
-
-    await interaction.response.defer(ephemeral=True)
-    
-    guild = interaction.guild
-    tipos_fila = [
-        "1v1-mobile", "1v1-emulador",
-        "2x2-emu", "3x3-emu", "4x4-emu",
-        "2x2-mobile", "3x3-mobile", "4x4-mobile",
-        "2x2-misto", "3x3-misto", "4x4-misto"
-    ]
-    
-    criados = []
-    ja_existem = []
-    
-    for tipo_fila in tipos_fila:
-        # Procurar canal com case-insensitive (Discord converte para minúsculas)
-        canal_name_search = f"📊-{tipo_fila}".lower()
-        canal_existente = discord.utils.get(guild.text_channels, name=canal_name_search)
-        
-        if canal_existente:
-            ja_existem.append(tipo_fila)
-        else:
-            try:
-                canal = await guild.create_text_channel(
-                    name=f"📊-{tipo_fila}",
-                    topic=f"Filas automáticas de {tipo_fila}"
-                )
-                criados.append(canal.mention)
-                print(f"✅ Canal criado: {canal.name}")
-            except Exception as e:
-                print(f"⚠️ Erro ao criar canal {tipo_fila}: {e}")
-    
-    embed = discord.Embed(
-        title="✅ Canais de Filas Criados!",
-        color=0x00FF00
-    )
-    
-    if criados:
-        embed.add_field(
-            name="📊 Canais Criados",
-            value="\n".join(criados),
-            inline=False
-        )
-    
-    if ja_existem:
-        embed.add_field(
-            name="⚠️ Canais que já Existem",
-            value=", ".join(ja_existem),
-            inline=False
-        )
-    
-    embed.set_footer(text="✨ Use os comandos específicos para criar as filas (/1x1-mob, /2x2-emu, etc)")
-    await interaction.followup.send(embed=embed, ephemeral=True)
 
 @tree.command(name="1x1-mob", description="⚔️ Cria todas as filas de 1v1 Mobile (Gel Normal e Infinito)")
 async def criar_filas_1v1(interaction: discord.Interaction):
