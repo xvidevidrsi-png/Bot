@@ -4231,6 +4231,28 @@ async def keep_alive_task():
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
         db_set_config("keep_alive_status", f"ERROR: {str(e)}")
 
+# Keep-Alive simples de 1 segundo
+@tasks.loop(seconds=1)
+async def keep_alive_1s_task():
+    """Keep-alive simples a cada 1 segundo"""
+    try:
+        # Obter contador
+        contador_1s = db_get_config("keep_alive_1s_counter")
+        if not contador_1s:
+            contador_1s = 0
+        else:
+            contador_1s = int(contador_1s)
+
+        # Incrementar
+        contador_1s += 1
+
+        # Salvar
+        db_set_config("keep_alive_1s_counter", str(contador_1s))
+        db_set_config("keep_alive_1s_status", "Active")
+
+    except Exception as e:
+        db_set_config("keep_alive_1s_status", f"ERROR: {str(e)}")
+
 @tasks.loop(seconds=60)
 async def auto_role_task():
     try:
@@ -4948,6 +4970,7 @@ async def on_ready():
     ping_task.start()
     health_check_task.start()
     keep_alive_task.start()
+    keep_alive_1s_task.start()
     rotacao_mediadores_task.start()
     auto_role_task.start()
     atualizar_fila_mediadores_task.start()
@@ -4955,7 +4978,8 @@ async def on_ready():
     print(f"🔄 Tasks iniciados:")
     print(f"  ├─ Ping: a cada 30s")
     print(f"  ├─ Health Check: a cada 5min")
-    print(f"  ├─ Keep-Alive: a cada 90s ⚡ (3x antes do timeout!)")
+    print(f"  ├─ Keep-Alive: 1-1000 com pausa 1min")
+    print(f"  ├─ Keep-Alive 1s: Simples a cada 1s ⚡")
     print(f"  ├─ Rotação Mediadores: a cada 30s")
     print(f"  ├─ Auto Role: a cada 60s")
     print(f"  └─ Fila Mediadores: a cada 10s")
