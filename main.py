@@ -4238,6 +4238,11 @@ async def ping_task():
         db_set_config("last_ping_latency", str(latency_ms))
         db_set_config("ping_count", str(PING_COUNT))
         db_set_config("ping_errors", str(PING_ERRORS))
+        db_set_config("last_ping_guild_count", str(guild_count))
+        db_set_config("last_ping_user_count", str(user_count))
+        db_set_config("last_ping_uptime_hours", f"{uptime_hours:.2f}")
+        db_set_config("last_ping_uptime_seconds", str(int(uptime_seconds)))
+        db_set_config("last_ping_status", f"{status_emoji} Ping #{PING_COUNT} | {latency_ms}ms | {guild_count} servidores | {user_count} usuários")
 
     except Exception as e:
         PING_ERRORS += 1
@@ -4320,10 +4325,14 @@ async def keep_alive_task():
 
         # Mostrar apenas a cada 100 (para não spammar logs)
         if contador % 100 == 0 or contador == 1:
+            # Obter últimas informações de ping
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/1000")
+            print(f"  └─ 📡 {last_ping}")
 
         # Registra status no banco de dados
-        db_set_config("keep_alive_status", f"Running {contador}/1000")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_status", f"Running {contador}/1000 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
@@ -4407,10 +4416,13 @@ async def keep_alive_1h_task():
 
         # Mostrar apenas a cada 300 (5 min) para não spammar
         if contador_1h % 300 == 0 or contador_1h == 1:
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1h: {contador_1h}/3600")
+            print(f"  └─ 📡 {last_ping}")
 
         # Registra status
-        db_set_config("keep_alive_1h_status", f"Running {contador_1h}/3600")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_1h_status", f"Running {contador_1h}/3600 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1H] ❌ Erro: {e}")
@@ -4472,10 +4484,13 @@ async def keep_alive_24h_task():
 
         # Mostrar apenas a cada 3600 (1 hora) para não spammar
         if contador_24h % 3600 == 0 or contador_24h == 1:
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 24h: {contador_24h}/86400 ({contador_24h // 3600}h)")
+            print(f"  └─ 📡 {last_ping}")
 
         # Registra status
-        db_set_config("keep_alive_24h_status", f"Running {contador_24h}/86400")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_24h_status", f"Running {contador_24h}/86400 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 24H] ❌ Erro: {e}")
@@ -4531,9 +4546,12 @@ async def keep_alive_1y_1min_task():
 
         if contador_1y_1 % 1051200 == 0 or contador_1y_1 == 1:
             dias = contador_1y_1 / (24 * 3600)
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(1-2min): {contador_1y_1}/10512000 ({dias:.1f}d)")
+            print(f"  └─ 📡 {last_ping}")
 
-        db_set_config("keep_alive_1y_1min_status", f"Running {contador_1y_1}/10512000")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_1y_1min_status", f"Running {contador_1y_1}/10512000 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-1MIN] ❌ Erro: {e}")
@@ -4589,9 +4607,12 @@ async def keep_alive_1y_2min_task():
 
         if contador_1y_2 % 1051200 == 0 or contador_1y_2 == 1:
             dias = contador_1y_2 / (24 * 3600)
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(2-3min): {contador_1y_2}/10512000 ({dias:.1f}d)")
+            print(f"  └─ 📡 {last_ping}")
 
-        db_set_config("keep_alive_1y_2min_status", f"Running {contador_1y_2}/10512000")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_1y_2min_status", f"Running {contador_1y_2}/10512000 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-2MIN] ❌ Erro: {e}")
@@ -4647,9 +4668,12 @@ async def keep_alive_1y_3min_task():
 
         if contador_1y_3 % 1051200 == 0 or contador_1y_3 == 1:
             dias = contador_1y_3 / (24 * 3600)
+            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
             print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(3min): {contador_1y_3}/10512000 ({dias:.1f}d)")
+            print(f"  └─ 📡 {last_ping}")
 
-        db_set_config("keep_alive_1y_3min_status", f"Running {contador_1y_3}/10512000")
+        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
+        db_set_config("keep_alive_1y_3min_status", f"Running {contador_1y_3}/10512000 | {last_ping}")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-3MIN] ❌ Erro: {e}")
