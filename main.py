@@ -2137,6 +2137,23 @@ async def criar_filas_1v1(interaction: discord.Interaction):
         await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer(ephemeral=True)
 
     guild_id = interaction.guild.id
@@ -2183,6 +2200,23 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2226,6 +2260,23 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2264,6 +2315,23 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2300,6 +2368,23 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
 @tree.command(name="4x4-emu", description="Cria todas as filas 4x4 Emulador")
 async def criar_filas_4x4_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
+        return
+
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
         return
 
     await interaction.response.defer()
@@ -2378,6 +2463,23 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
 
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
+        return
+
     await interaction.response.defer()
 
     guild_id = interaction.guild.id
@@ -2414,6 +2516,23 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
 @tree.command(name="4x4-mob", description="Cria todas as filas 4x4 Mobile")
 async def criar_filas_4x4_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
+        return
+
+    # Validação: verificar se configurações obrigatórias foram feitas
+    aux_config = db_get_config("aux_role_id")
+    topico_config = db_get_config("canal_partidas_id")
+    cargos_config = db_get_config("cargos_mencionar")
+    
+    if not aux_config or not topico_config or not cargos_config:
+        await interaction.response.send_message(
+            "❌ **Configuração Incompleta!**\n\n"
+            "Antes de criar filas, você precisa configurar:\n"
+            f"{'✅' if aux_config else '❌'} `/aux_config`\n"
+            f"{'✅' if topico_config else '❌'} `/topico`\n"
+            f"{'✅' if cargos_config else '❌'} `/configurar`\n\n"
+            "Configure todos esses comandos antes de criar filas.",
+            ephemeral=True
+        )
         return
 
     await interaction.response.defer()
