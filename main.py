@@ -1659,15 +1659,7 @@ class CopiarCodigoPIXView(View):
 
     @discord.ui.button(label="📋 Copiar Código PIX", style=discord.ButtonStyle.success, emoji="📋")
     async def copiar_codigo(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            f"✅ Código Pix Copia e Cola:\n{self.codigo_pix}\n\n"
-            f"💡 Como usar:\n"
-            f"1. Copie o código acima\n"
-            f"2. Abra seu app de pagamentos\n"
-            f"3. Cole no campo PIX Copia e Cola\n"
-            f"4. Confirme o pagamento",
-            ephemeral=True
-        )
+        await interaction.response.send_message(f"{self.codigo_pix}", ephemeral=True)
 
 class CopiarIDView(View):
     def __init__(self, sala_id):
