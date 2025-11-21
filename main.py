@@ -2230,10 +2230,14 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "1v1-emulador")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2266,8 +2270,6 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
         conn.commit()
         conn.close()
 
-    await interaction.followup.send("✅ Todas as filas 1x1 Emulador foram criadas!", ephemeral=True)
-
 @tree.command(name="2x2-emu", description="⚔️ Cria todas as filas de 2v2 Emulador com duplas")
 async def criar_filas_2x2_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -2290,10 +2292,14 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "2x2-emu")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2305,8 +2311,8 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Ninguém", inline=False)
 
@@ -2320,8 +2326,6 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 2x2 Emulador foram criadas!", ephemeral=True)
 
 @tree.command(name="3x3-emu", description="⚔️ Cria todas as filas de 3v3 Emulador com times")
 async def criar_filas_3x3_emu(interaction: discord.Interaction):
@@ -2345,10 +2349,14 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "3x3-emu")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2360,8 +2368,8 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Ninguém", inline=False)
 
@@ -2375,8 +2383,6 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 3x3 Emulador foram criadas!", ephemeral=True)
 
 @tree.command(name="4x4-emu", description="⚔️ Cria todas as filas de 4v4 Emulador com times")
 async def criar_filas_4x4_emu(interaction: discord.Interaction):
@@ -2400,10 +2406,14 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "4x4-emu")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2415,8 +2425,8 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Ninguém", inline=False)
 
@@ -2430,8 +2440,6 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 4x4 Emulador foram criadas!", ephemeral=True)
 
 @tree.command(name="2x2-mob", description="⚔️ Cria todas as filas de 2v2 Mobile com duplas")
 async def criar_filas_2x2_mob(interaction: discord.Interaction):
@@ -2455,10 +2463,14 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "2x2-mobile")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2470,8 +2482,8 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Nenhum jogador", inline=False)
 
@@ -2485,8 +2497,6 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 2x2 Mobile foram criadas!", ephemeral=True)
 
 @tree.command(name="3x3-mob", description="⚔️ Cria todas as filas de 3v3 Mobile com times")
 async def criar_filas_3x3_mob(interaction: discord.Interaction):
@@ -2510,10 +2520,14 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "3x3-mobile")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2525,8 +2539,8 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Nenhum jogador", inline=False)
 
@@ -2540,8 +2554,6 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 3x3 Mobile foram criadas!", ephemeral=True)
 
 @tree.command(name="4x4-mob", description="⚔️ Cria todas as filas de 4v4 Mobile com times")
 async def criar_filas_4x4_mob(interaction: discord.Interaction):
@@ -2565,10 +2577,14 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "4x4-mobile")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2580,8 +2596,8 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="🎮 Jogadores na Fila", value="Nenhum jogador", inline=False)
 
@@ -2595,8 +2611,6 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
                     (guild_id, valor, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 4x4 Mobile foram criadas!", ephemeral=True)
 
 @tree.command(name="filamisto-2x2", description="⚔️ Cria filas de 2v2 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_2x2(interaction: discord.Interaction):
@@ -2620,10 +2634,14 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "2x2-misto")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2635,8 +2653,8 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="👥 Jogadores", value="Nenhum jogador na fila", inline=False)
 
@@ -2652,8 +2670,6 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
                         (guild_id, valor, modo_fila, vagas, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 2x2 Misto foram criadas!", ephemeral=True)
 
 @tree.command(name="filamisto-3x3", description="⚔️ Cria filas de 3v3 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_3x3(interaction: discord.Interaction):
@@ -2677,10 +2693,14 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "3x3-misto")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2692,8 +2712,8 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="👥 Jogadores", value="Nenhum jogador na fila", inline=False)
 
@@ -2709,8 +2729,6 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
                         (guild_id, valor, modo_fila, vagas, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 3x3 Misto foram criadas!", ephemeral=True)
 
 @tree.command(name="filamisto-4x4", description="⚔️ Cria filas de 4v4 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_4x4(interaction: discord.Interaction):
@@ -2734,10 +2752,14 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer()
+    canal = await criar_canal_filas(interaction.guild, "4x4-misto")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2749,8 +2771,8 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
         imagem_url = db_get_config("imagem_fila_url")
         if imagem_url:
             embed.set_thumbnail(url=imagem_url)
-        elif canal.guild.icon:
-            embed.set_thumbnail(url=canal.guild.icon.url)
+        elif interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
 
         embed.add_field(name="👥 Jogadores", value="Nenhum jogador na fila", inline=False)
 
@@ -2766,8 +2788,6 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
                         (guild_id, valor, modo_fila, vagas, msg.id, datetime.datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
-
-    await interaction.followup.send("✅ Todas as filas 4x4 Misto foram criadas!", ephemeral=True)
 
 @tree.command(name="separador_de_servidor", description="⚙️ [OWNER] Registra seu servidor no Bot Zeus - OBRIGATÓRIO para usar todos os recursos")
 @app_commands.describe(
