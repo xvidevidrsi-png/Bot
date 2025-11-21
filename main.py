@@ -4748,24 +4748,27 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    await bot.process_commands(message)
-
     if not message.guild:
+        await bot.process_commands(message)
         return
 
     if not verificar_separador_servidor(message.guild.id):
+        await bot.process_commands(message)
         return
 
     if not is_admin(message.author.id, member=message.author):
+        await bot.process_commands(message)
         return
 
     content = message.content.strip()
 
     if not content.isdigit():
+        await bot.process_commands(message)
         return
 
     global ADMIN_ROOM_CREATION_STATES
     user_key = f"{message.guild.id}_{message.author.id}"
+    room_creation_done = False
 
     if len(content) >= 5 and len(content) <= 10:
         ADMIN_ROOM_CREATION_STATES[user_key] = {
@@ -4774,6 +4777,7 @@ async def on_message(message):
             'timestamp': datetime.datetime.utcnow()
         }
         await message.add_reaction('✅')
+        room_creation_done = True
 
     elif len(content) >= 1 and len(content) <= 4:
         if user_key in ADMIN_ROOM_CREATION_STATES:
@@ -4783,79 +4787,69 @@ async def on_message(message):
             if time_diff > 300:
                 del ADMIN_ROOM_CREATION_STATES[user_key]
                 await message.add_reaction('⏰')
-                return
+                room_creation_done = True
+            else:
+                room_id = state['room_id']
+                password = content
 
-            room_id = state['room_id']
-            password = content
-
-            # Renomeia o canal/thread de "mobile-X" para "paga-VALOR"
-            try:
-                # Buscar o valor da partida no banco de dados
-                conn = sqlite3.connect(DB_FILE)
-                cur = conn.cursor()
-                
-                # Buscar partida pelo canal/thread atual
-                if isinstance(message.channel, discord.Thread):
-                    cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
-                               (message.guild.id, message.channel.id))
-                else:
-                    cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
-                               (message.guild.id, message.channel.id))
-                
-                row = cur.fetchone()
-                conn.close()
-                
-                if row:
-                    valor_partida = row[0]
-                    valor_dobrado = valor_partida * 2
-                    # Formata o valor dobrado: 10.00 vira "10,00"
-                    valor_formatado = f"{valor_dobrado:.2f}".replace(".", ",")
-                    novo_nome = f"paga-{valor_formatado}"
+                try:
+                    conn = sqlite3.connect(DB_FILE)
+                    cur = conn.cursor()
                     
-                    # Verifica se é um thread ou canal
                     if isinstance(message.channel, discord.Thread):
-                        await message.channel.edit(name=novo_nome)
+                        cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
+                                   (message.guild.id, message.channel.id))
                     else:
-                        await message.channel.edit(name=novo_nome)
+                        cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
+                                   (message.guild.id, message.channel.id))
                     
-                    print(f"✅ Canal/thread renomeado para '{novo_nome}' (valor: R$ {valor_formatado})")
-                else:
-                    print(f"⚠️ Partida não encontrada para o canal {message.channel.name}")
+                    row = cur.fetchone()
+                    conn.close()
                     
-            except Exception as e:
-                print(f"⚠️ Erro ao renomear canal/thread: {e}")
+                    if row:
+                        valor_partida = row[0]
+                        valor_dobrado = valor_partida * 2
+                        valor_formatado = f"{valor_dobrado:.2f}".replace(".", ",")
+                        novo_nome = f"paga-{valor_formatado}"
+                        
+                        if isinstance(message.channel, discord.Thread):
+                            await message.channel.edit(name=novo_nome)
+                        else:
+                            await message.channel.edit(name=novo_nome)
+                        
+                        print(f"✅ Canal/thread renomeado para '{novo_nome}' (valor: R$ {valor_formatado})")
+                except Exception as e:
+                    print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-            # Envia texto formatado e bonitão
-            mensagem_sala = (
-                f"╔═══════════════════════════════════╗\n"
-                f"║  🎮 **SALA CRIADA COM SUCESSO**  ║\n"
-                f"╚═══════════════════════════════════╝\n\n"
-                f"🔑 **ID DA SALA:** `{room_id}`\n"
-                f"🔐 **SENHA:** `{password}`\n\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 Criada por: {message.author.mention}\n"
-                f"⏰ Horário: <t:{int(datetime.datetime.utcnow().timestamp())}:t>\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"**📋 INSTRUÇÕES:**\n"
-                f"1️⃣ Clique no botão abaixo para copiar o ID\n"
-                f"2️⃣ Compartilhe o ID e SENHA com seus jogadores\n"
-                f"3️⃣ Digite a senha quando pedido\n\n"
-                f"✨ Boa partida!"
-            )
+                mensagem_sala = (
+                    f"╔═══════════════════════════════════╗\n"
+                    f"║  🎮 **SALA CRIADA COM SUCESSO**  ║\n"
+                    f"╚═══════════════════════════════════╝\n\n"
+                    f"🔑 **ID DA SALA:** `{room_id}`\n"
+                    f"🔐 **SENHA:** `{password}`\n\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"👤 Criada por: {message.author.mention}\n"
+                    f"⏰ Horário: <t:{int(datetime.datetime.utcnow().timestamp())}:t>\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"**📋 INSTRUÇÕES:**\n"
+                    f"1️⃣ Clique no botão abaixo para copiar o ID\n"
+                    f"2️⃣ Compartilhe o ID e SENHA com seus jogadores\n"
+                    f"3️⃣ Digite a senha quando pedido\n\n"
+                    f"✨ Boa partida!"
+                )
 
-            view = CopiarIDView(room_id)
-            try:
-                await message.channel.send(mensagem_sala, view=view)
-            except Exception as e:
-                print(f"⚠️ Erro ao enviar mensagem de sala: {e}")
-            
-            try:
-                await message.add_reaction('✅')
-            except:
-                pass
+                view = CopiarIDView(room_id)
+                try:
+                    await message.channel.send(mensagem_sala, view=view)
+                    await message.add_reaction('✅')
+                except Exception as e:
+                    print(f"⚠️ Erro ao enviar mensagem de sala: {e}")
 
-            del ADMIN_ROOM_CREATION_STATES[user_key]
-            return
+                del ADMIN_ROOM_CREATION_STATES[user_key]
+                room_creation_done = True
+
+    if not room_creation_done:
+        await bot.process_commands(message)
 
 @bot.event
 async def on_ready():
