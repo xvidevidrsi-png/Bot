@@ -3438,13 +3438,13 @@ class RankMenuView(View):
 
     @discord.ui.button(label="👤 Meu Perfil", style=discord.ButtonStyle.primary, emoji="👤")
     async def meu_perfil(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Mostra o perfil da pessoa que clicou no botão em embed público
-        await mostrar_perfil(interaction, interaction.user, self.guild_id, ephemeral=False)
+        # Mostra o perfil só para quem clicou
+        await mostrar_perfil(interaction, interaction.user, self.guild_id, ephemeral=True)
 
     @discord.ui.button(label="🏆 Ranking", style=discord.ButtonStyle.success, emoji="🏆")
     async def ranking(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Mostra o ranking do servidor em embed público
-        await mostrar_ranking(interaction, self.guild_id, ephemeral=False)
+        # Mostra o ranking só para quem clicou
+        await mostrar_ranking(interaction, self.guild_id, ephemeral=True)
 
 @tree.command(name="rank", description="Ver seu perfil ou o ranking do servidor")
 async def rank_command(interaction: discord.Interaction):
@@ -3457,127 +3457,19 @@ async def rank_command(interaction: discord.Interaction):
         return
 
     guild_id = interaction.guild.id
-    await interaction.response.defer(ephemeral=True)
-    
-    # ======== PERFIL ========
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    usuario = interaction.user
 
-    cur.execute("""SELECT coins, vitorias, derrotas FROM usuarios 
-                   WHERE guild_id = ? AND user_id = ?""", (guild_id, usuario.id))
-    row = cur.fetchone()
+    embed = discord.Embed(
+        title="📊 Sistema de Perfil e Ranking",
+        description=(
+            "**Escolha uma opção:**\n\n"
+            "👤 **Meu Perfil** - Ver suas estatísticas completas\n"
+            "🏆 **Ranking** - Ver o top 10 jogadores do servidor"
+        ),
+        color=0x5865F2
+    )
 
-    cur.execute("""SELECT COUNT(*) + 1 FROM usuarios 
-                   WHERE guild_id = ? AND vitorias > (
-                       SELECT COALESCE(vitorias, 0) FROM usuarios 
-                       WHERE guild_id = ? AND user_id = ?
-                   )""", (guild_id, guild_id, usuario.id))
-    posicao = cur.fetchone()[0]
-
-    cur.execute("""SELECT COUNT(*) FROM usuarios 
-                   WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0)""", (guild_id,))
-    total_jogadores = cur.fetchone()[0]
-    conn.close()
-
-    if not row or (row[1] == 0 and row[2] == 0):
-        embed_perfil = discord.Embed(
-            title=f"📊 Perfil de {usuario.display_name}",
-            description="Este jogador ainda não participou de nenhuma partida.",
-            color=0x2f3136
-        )
-        embed_perfil.set_thumbnail(url=usuario.avatar.url if usuario.avatar else usuario.default_avatar.url)
-        await interaction.followup.send(embed=embed_perfil, ephemeral=True)
-    else:
-        coins, vitorias, derrotas = row
-        total_partidas = vitorias + derrotas
-        winrate = (vitorias / total_partidas * 100) if total_partidas > 0 else 0
-
-        if winrate >= 70:
-            cor = 0x00FF00
-        elif winrate >= 50:
-            cor = 0xFFAA00
-        else:
-            cor = 0xFF0000
-
-        if posicao == 1:
-            medal = "🥇"
-        elif posicao == 2:
-            medal = "🥈"
-        elif posicao == 3:
-            medal = "🥉"
-        else:
-            medal = "🏅"
-
-        embed_perfil = discord.Embed(
-            title=f"📊 Perfil de {usuario.display_name}",
-            description=f"{medal} **Posição #{posicao}** de {total_jogadores} jogadores",
-            color=cor
-        )
-        embed_perfil.set_thumbnail(url=usuario.avatar.url if usuario.avatar else usuario.default_avatar.url)
-        embed_perfil.add_field(name="💰 Coins", value=f"**{coins}**", inline=True)
-        embed_perfil.add_field(name="🏆 Vitórias", value=f"**{vitorias}**", inline=True)
-        embed_perfil.add_field(name="💔 Derrotas", value=f"**{derrotas}**", inline=True)
-
-        barra_size = 20
-        barra_cheia = int((winrate / 100) * barra_size)
-        barra_vazia = barra_size - barra_cheia
-        barra_visual = "█" * barra_cheia + "░" * barra_vazia
-        embed_perfil.add_field(name="📈 Taxa de Vitória", value=f"**{winrate:.1f}%**\n`{barra_visual}`", inline=False)
-        embed_perfil.add_field(name="🎮 Total de Partidas", value=f"**{total_partidas}**", inline=True)
-        embed_perfil.add_field(name="📊 K/D Ratio", value=f"**{(vitorias / derrotas):.2f}**" if derrotas > 0 else "**∞**", inline=True)
-        embed_perfil.add_field(name="⭐ Status", value=f"**{'Elite' if winrate >= 70 else 'Veterano' if winrate >= 50 else 'Aprendiz'}**", inline=True)
-        embed_perfil.set_footer(text=f"Solicitado por {interaction.user.display_name} • ID: {usuario.id}")
-        await interaction.followup.send(embed=embed_perfil, ephemeral=True)
-    
-    # ======== RANKING ========
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute("""SELECT user_id, coins, vitorias, derrotas 
-                   FROM usuarios 
-                   WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0)
-                   ORDER BY vitorias DESC, coins DESC
-                   LIMIT 10""", (guild_id,))
-    top_jogadores = cur.fetchall()
-    conn.close()
-
-    if not top_jogadores:
-        embed_ranking = discord.Embed(
-            title="🏆 Ranking do Servidor",
-            description="Nenhuma partida foi jogada ainda neste servidor!",
-            color=0x2f3136
-        )
-        await interaction.followup.send(embed=embed_ranking, ephemeral=True)
-    else:
-        embed_ranking = discord.Embed(
-            title=f"🏆 Ranking - {interaction.guild.name}",
-            description="**Top 10 Melhores Jogadores**\nClassificação por número de vitórias",
-            color=0xFFD700
-        )
-        if interaction.guild.icon:
-            embed_ranking.set_thumbnail(url=interaction.guild.icon.url)
-
-        ranking_text = ""
-        for i, (user_id, coins, vitorias, derrotas) in enumerate(top_jogadores, 1):
-            usuario_rank = interaction.guild.get_member(user_id)
-            nome = usuario_rank.display_name if usuario_rank else f"Usuário {user_id}"
-            total_partidas = vitorias + derrotas
-            winrate = (vitorias / total_partidas * 100) if total_partidas > 0 else 0
-
-            if i == 1:
-                medal = "🥇"
-            elif i == 2:
-                medal = "🥈"
-            elif i == 3:
-                medal = "🥉"
-            else:
-                medal = f"**{i}º**"
-
-            ranking_text += f"{medal} **{nome}**\n└ 🏆 **{vitorias}V** - 💔 **{derrotas}D** | 📈 **{winrate:.1f}%** | 💰 **{coins}** coins\n\n"
-
-        embed_ranking.add_field(name="👑 Hall da Fama", value=ranking_text, inline=False)
-        embed_ranking.set_footer(text=f"Solicitado por {interaction.user.display_name}")
-        await interaction.followup.send(embed=embed_ranking, ephemeral=True)
+    view = RankMenuView(interaction.user.id, guild_id)
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
 async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
     """Mostra o perfil detalhado de um usuário"""
