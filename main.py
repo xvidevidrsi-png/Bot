@@ -2091,8 +2091,8 @@ class FilaMediadoresView(View):
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 
-@tree.command(name="aux_config", description="Define o cargo que pode usar !aux e botões de mediador")
-@app_commands.describe(cargo="Cargo que poderá usar !aux e menu mediador")
+@tree.command(name="aux_config", description="🛡️ Define qual cargo pode usar !aux e acessar o menu de mediadores automático")
+@app_commands.describe(cargo="Selecione o cargo autorizado para usar !aux")
 async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2100,8 +2100,8 @@ async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     db_set_config("aux_role_id", str(cargo.id))
     await interaction.response.send_message(f"✅ Cargo aux definido: {cargo.mention}\n\nApenas membros com este cargo poderão usar !aux e acessar o menu mediador!", ephemeral=True)
 
-@tree.command(name="topico", description="Define o canal para criação de threads de partidas")
-@app_commands.describe(canal="Canal onde as threads de partidas serão criadas")
+@tree.command(name="topico", description="📌 Define o canal de tópicos onde as partidas serão criadas como threads")
+@app_commands.describe(canal="Selecione o canal onde os tópicos de partida aparecerão")
 async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2110,8 +2110,8 @@ async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel
     db_set_config("usar_threads", "true")
     await interaction.response.send_message(f"✅ Canal de threads de partidas definido: {canal.mention}\n\n💡 As partidas agora serão criadas como threads (tópicos) neste canal!", ephemeral=True)
 
-@tree.command(name="configurar", description="Define os cargos a mencionar nas partidas")
-@app_commands.describe(cargos="IDs dos cargos separados por vírgula")
+@tree.command(name="configurar", description="📢 Define quais cargos devem ser mencionados ao criar partidas")
+@app_commands.describe(cargos="Digite os IDs dos cargos separados por vírgula (exemplo: 123456 789012)")
 async def configurar_cargos(interaction: discord.Interaction, cargos: str):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2119,7 +2119,7 @@ async def configurar_cargos(interaction: discord.Interaction, cargos: str):
     db_set_config("cargos_mencionar", cargos)
     await interaction.response.send_message("✅ Cargos configurados!", ephemeral=True)
 
-@tree.command(name="1x1-mob", description="Cria todas as filas 1v1 Mobile")
+@tree.command(name="1x1-mob", description="⚔️ Cria todas as filas de 1v1 Mobile (Gel Normal e Infinito)")
 async def criar_filas_1v1(interaction: discord.Interaction):
     if not interaction.guild:
         await interaction.response.send_message("❌ Este comando só funciona em servidores!", ephemeral=True)
@@ -2187,7 +2187,7 @@ async def criar_filas_1v1(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 1x1 Mobile foram criadas!", ephemeral=True)
 
-@tree.command(name="1x1-emulador", description="Cria todas as filas 1v1 Emulador")
+@tree.command(name="1x1-emulador", description="⚔️ Cria todas as filas de 1v1 Emulador (Gel Normal e Infinito)")
 async def criar_filas_1x1_emulador(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2247,7 +2247,7 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 1x1 Emulador foram criadas!", ephemeral=True)
 
-@tree.command(name="2x2-emu", description="Cria todas as filas 2x2 Emulador")
+@tree.command(name="2x2-emu", description="⚔️ Cria todas as filas de 2v2 Emulador com duplas")
 async def criar_filas_2x2_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2302,7 +2302,7 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 2x2 Emulador foram criadas!", ephemeral=True)
 
-@tree.command(name="3x3-emu", description="Cria todas as filas 3x3 Emulador")
+@tree.command(name="3x3-emu", description="⚔️ Cria todas as filas de 3v3 Emulador com times")
 async def criar_filas_3x3_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2357,7 +2357,7 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 3x3 Emulador foram criadas!", ephemeral=True)
 
-@tree.command(name="4x4-emu", description="Cria todas as filas 4x4 Emulador")
+@tree.command(name="4x4-emu", description="⚔️ Cria todas as filas de 4v4 Emulador com times")
 async def criar_filas_4x4_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2412,7 +2412,7 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 4x4 Emulador foram criadas!", ephemeral=True)
 
-@tree.command(name="2x2-mob", description="Cria todas as filas 2x2 Mobile")
+@tree.command(name="2x2-mob", description="⚔️ Cria todas as filas de 2v2 Mobile com duplas")
 async def criar_filas_2x2_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2467,7 +2467,7 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 2x2 Mobile foram criadas!", ephemeral=True)
 
-@tree.command(name="3x3-mob", description="Cria todas as filas 3x3 Mobile")
+@tree.command(name="3x3-mob", description="⚔️ Cria todas as filas de 3v3 Mobile com times")
 async def criar_filas_3x3_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2522,7 +2522,7 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 3x3 Mobile foram criadas!", ephemeral=True)
 
-@tree.command(name="4x4-mob", description="Cria todas as filas 4x4 Mobile")
+@tree.command(name="4x4-mob", description="⚔️ Cria todas as filas de 4v4 Mobile com times")
 async def criar_filas_4x4_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2577,7 +2577,7 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 4x4 Mobile foram criadas!", ephemeral=True)
 
-@tree.command(name="filamisto-2x2", description="Cria todas as filas 2x2 Misto")
+@tree.command(name="filamisto-2x2", description="⚔️ Cria filas de 2v2 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_2x2(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2634,7 +2634,7 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 2x2 Misto foram criadas!", ephemeral=True)
 
-@tree.command(name="filamisto-3x3", description="Cria todas as filas 3x3 Misto")
+@tree.command(name="filamisto-3x3", description="⚔️ Cria filas de 3v3 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_3x3(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2691,7 +2691,7 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 3x3 Misto foram criadas!", ephemeral=True)
 
-@tree.command(name="filamisto-4x4", description="Cria todas as filas 4x4 Misto")
+@tree.command(name="filamisto-4x4", description="⚔️ Cria filas de 4v4 Misto (Mobile + Emulador juntos)")
 async def criar_filas_misto_4x4(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2748,7 +2748,7 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
 
     await interaction.followup.send("✅ Todas as filas 4x4 Misto foram criadas!", ephemeral=True)
 
-@tree.command(name="separador_de_servidor", description="[OWNER] Registra servidor no sistema - OBRIGATÓRIO para usar o bot")
+@tree.command(name="separador_de_servidor", description="⚙️ [OWNER] Registra seu servidor no Bot Zeus - OBRIGATÓRIO para usar todos os recursos")
 @app_commands.describe(
     id_servidor="ID do servidor (use o ID numérico do servidor Discord)",
     nome_dono="Nome do dono do servidor"
@@ -2820,7 +2820,7 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
             ephemeral=True
         )
 
-@tree.command(name="dono_comando_slash", description="Define o cargo de dono do servidor com acesso total aos comandos")
+@tree.command(name="dono_comando_slash", description="👑 Define qual cargo é o DONO do servidor e tem acesso a todos os comandos administrativos")
 @app_commands.describe(
     cargo="O cargo que terá acesso total aos comandos (este cargo não pode ser removido depois)"
 )
@@ -2888,7 +2888,7 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
 
 
 
-@tree.command(name="tirar_coin", description="Remove coins de um jogador")
+@tree.command(name="tirar_coin", description="💰 Remove coins de um jogador (para ajustes e penalidades)")
 @app_commands.describe(jogador="Jogador", qtd="Quantidade de coins")
 async def tirar_coin(interaction: discord.Interaction, jogador: discord.Member, qtd: float):
     if not verificar_separador_servidor(interaction.guild.id):
@@ -2912,7 +2912,7 @@ async def tirar_coin(interaction: discord.Interaction, jogador: discord.Member, 
     usuario_remove_coins(guild_id, jogador.id, qtd)
     await interaction.response.send_message(f"✅ {qtd} coin(s) removido(s) de {jogador.mention}!", ephemeral=True)
 
-@tree.command(name="taxa", description="Altera a taxa por jogador")
+@tree.command(name="taxa", description="📊 Altera a taxa automática descontada por jogador em cada partida")
 @app_commands.describe(valor="Novo valor da taxa (ex: 0.15)")
 async def set_taxa(interaction: discord.Interaction, valor: float):
     if not verificar_separador_servidor(interaction.guild.id):
@@ -2935,7 +2935,7 @@ async def set_taxa(interaction: discord.Interaction, valor: float):
     db_set_config("taxa_por_jogador", str(valor))
     await interaction.response.send_message(f"✅ Taxa alterada para {fmt_valor(valor)}!", ephemeral=True)
 
-@tree.command(name="definir", description="Define os valores das filas")
+@tree.command(name="definir", description="💵 Define os valores customizados das filas de partidas")
 @app_commands.describe(valores="Valores separados por vírgula (ex: 100,50,40)")
 async def definir_valores(interaction: discord.Interaction, valores: str):
     if not verificar_separador_servidor(interaction.guild.id):
@@ -2964,7 +2964,7 @@ async def definir_valores(interaction: discord.Interaction, valores: str):
     except:
         await interaction.response.send_message("❌ Formato inválido! Use: 100,50,40", ephemeral=True)
 
-@tree.command(name="addimagem", description="Adiciona uma imagem/logo às filas")
+@tree.command(name="addimagem", description="🖼️ Adiciona uma logo ou imagem customizada que aparece em todas as filas")
 @app_commands.describe(url="URL da imagem (jpg, jpeg, png, gif, webp)")
 async def add_imagem(interaction: discord.Interaction, url: str):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -2995,7 +2995,7 @@ async def add_imagem(interaction: discord.Interaction, url: str):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-@tree.command(name="removerimagem", description="Remove a imagem/logo das filas")
+@tree.command(name="removerimagem", description="🗑️ Remove a logo customizada das filas")
 async def remover_imagem(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
@@ -3010,7 +3010,7 @@ async def remover_imagem(interaction: discord.Interaction):
     db_set_config("imagem_fila_url", "")
     await interaction.response.send_message("✅ Imagem removida com sucesso! As filas não exibirão mais a imagem.", ephemeral=True)
 
-@tree.command(name="configurar_nome_bot", description="Configura o nome personalizado do bot")
+@tree.command(name="configurar_nome_bot", description="🤖 Define um nome customizado para o bot aparecer nas mensagens")
 @app_commands.describe(nome="Nome personalizado para o bot")
 async def configurar_nome_bot(interaction: discord.Interaction, nome: str):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -3028,7 +3028,7 @@ async def configurar_nome_bot(interaction: discord.Interaction, nome: str):
     except Exception as e:
         await interaction.response.send_message(f"❌ Erro ao alterar o nome do bot: {str(e)}", ephemeral=True)
 
-@tree.command(name="membro_cargo", description="Configura cargo que será dado a todos os membros do servidor")
+@tree.command(name="membro_cargo", description="🎖️ Define um cargo que será automaticamente dado a TODOS os membros do servidor")
 @app_commands.describe(cargo="Cargo que será atribuído automaticamente")
 async def membro_cargo(interaction: discord.Interaction, cargo: discord.Role):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -3085,7 +3085,7 @@ async def membro_cargo(interaction: discord.Interaction, cargo: discord.Role):
 
     await interaction.followup.send(embed=embed)
 
-@tree.command(name="remover_membro_cargo", description="Remove a configuração de cargo automático")
+@tree.command(name="remover_membro_cargo", description="🗑️ Remove a configuração de cargo automático para novos membros")
 async def remover_membro_cargo(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
@@ -3109,7 +3109,7 @@ async def remover_membro_cargo(interaction: discord.Interaction):
     remove_auto_role(guild_id)
     await interaction.response.send_message("✅ Configuração de cargo automático removida com sucesso!", ephemeral=True)
 
-@tree.command(name="cargos_membros", description="Atribui um cargo a TODOS os membros do servidor (novos e antigos)")
+@tree.command(name="cargos_membros", description="🎖️ Atribui um cargo a TODOS os membros antigos do servidor (um por um)")
 @app_commands.describe(cargo="Cargo que será dado a todos os membros")
 async def cargos_membros(interaction: discord.Interaction, cargo: discord.Role):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -3166,7 +3166,7 @@ async def cargos_membros(interaction: discord.Interaction, cargo: discord.Role):
 
     await interaction.followup.send(embed=embed)
 
-@tree.command(name="clonar_emoji", description="Configura emoji customizado para botões específicos de filas")
+@tree.command(name="clonar_emoji", description="😄 Personaliza os emojis dos botões de filas específicas")
 @app_commands.describe(
     fila="Qual fila deseja customizar",
     botao="Qual botão deseja customizar",
@@ -3226,7 +3226,7 @@ async def clonar_emoji(interaction: discord.Interaction, fila: str, botao: str, 
 
 
 
-@tree.command(name="fila_mediadores", description="Cria o menu de fila de mediadores")
+@tree.command(name="fila_mediadores", description="📋 Cria o painel de mediadores com menu automático de rotação")
 async def fila_mediadores_slash(interaction: discord.Interaction):
     if not verificar_separador_servidor(interaction.guild.id):
         await interaction.response.send_message(
@@ -3262,7 +3262,7 @@ async def fila_mediadores_slash(interaction: discord.Interaction):
     db_set_config(f"fila_mediadores_msg_id_{guild_id}", str(msg.id))
     db_set_config(f"fila_mediadores_canal_id_{guild_id}", str(interaction.channel.id))
 
-@tree.command(name="logs", description="[ADM] Cria canais de log e mostra logs de partidas do servidor")
+@tree.command(name="logs", description="📊 Cria canais de log automáticos e mostra o histórico de todas as partidas")
 @app_commands.describe(jogador="Jogador para filtrar logs (opcional)")
 async def logs_slash(interaction: discord.Interaction, jogador: discord.Member = None):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -3365,7 +3365,7 @@ async def logs_slash(interaction: discord.Interaction, jogador: discord.Member =
     embed.set_footer(text=f"Mostrando últimos {len(logs)} registros")
     await interaction.followup.send(embed=embed, ephemeral=True)
 
-@tree.command(name="deletar_logs", description="[ADM] Deleta todos os canais de log do servidor")
+@tree.command(name="deletar_logs", description="🗑️ Remove todos os canais e dados de log do servidor")
 async def deletar_logs(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         await interaction.response.send_message("❌ Apenas administradores podem usar este comando!", ephemeral=True)
@@ -3438,7 +3438,7 @@ class RankMenuView(View):
         # Mostra o ranking só para quem clicou
         await mostrar_ranking(interaction, self.guild_id, ephemeral=True)
 
-@tree.command(name="rank", description="Ver seu perfil ou o ranking do servidor")
+@tree.command(name="rank", description="🏆 Ver seu perfil e ranking com 2 botões: PERFIL (estatísticas) ou RANKING (top 10)")
 async def rank_command(interaction: discord.Interaction):
     if not verificar_separador_servidor(interaction.guild.id):
         await interaction.response.send_message(
@@ -3650,7 +3650,7 @@ async def mostrar_ranking(interaction: discord.Interaction, guild_id: int, ephem
 
     await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
-@tree.command(name="manual", description="Manual completo do bot com todos os comandos disponíveis")
+@tree.command(name="manual", description="📖 Manual COMPLETO com explicação detalhada de TODOS os comandos")
 async def config_menu(interaction: discord.Interaction):
     embed = discord.Embed(
         title="📖 Manual Completo - Bot Zeus",
@@ -3851,7 +3851,7 @@ async def config_menu(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-@tree.command(name="puxar", description="[OWNER] Busca dados de um servidor específico por ID")
+@tree.command(name="puxar", description="🔍 [OWNER] Busca e visualiza dados de um servidor específico por ID")
 @app_commands.describe(id_servidor="ID do servidor para buscar dados")
 async def puxar(interaction: discord.Interaction, id_servidor: str):
     if BOT_OWNER_ID is None:
@@ -3963,7 +3963,7 @@ async def puxar(interaction: discord.Interaction, id_servidor: str):
 
     await interaction.followup.send(embed=embed, ephemeral=True)
 
-@tree.command(name="resete_bot", description="[OWNER] Reseta completamente a memória do bot - APAGA TODOS OS DADOS!")
+@tree.command(name="resete_bot", description="⚠️ [OWNER] PERIGOSO: Reseta COMPLETAMENTE todos os dados do bot - NÃO PODE VOLTAR!")
 async def resete_bot(interaction: discord.Interaction):
     if BOT_OWNER_ID is None:
         await interaction.response.send_message(
@@ -4633,6 +4633,10 @@ async def cmd_pixmed(ctx):
     """Configurar PIX do mediador - Painel completo"""
     if not verificar_separador_servidor(ctx.guild.id):
         await ctx.send("⛔ **Servidor não registrado!**")
+        return
+
+    # EVITAR DUPLICAÇÃO: se a mensagem foi processada por on_message, não repete
+    if ctx.message.content.strip().isdigit():
         return
 
     # Data e hora de Brasília (UTC-3)
