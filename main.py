@@ -1325,10 +1325,9 @@ class ConfirmarPartidaView(View):
 
             if partida_row:
                 numero_topico, canal_id, thread_id, valor = partida_row
-                valor_dobrado = valor * 2
-                novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
+                novo_nome = f"mobile-{numero_topico}"
 
-                print(f"[RENOMEAR] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
+                print(f"[CONFIRMAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
 
                 try:
                     if thread_id and thread_id > 0:
@@ -1892,23 +1891,31 @@ class TrocarValorModal(Modal):
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
 
+            # Obter numero_topico antes de atualizar
+            cur.execute("SELECT numero_topico FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, guild_id))
+            partida_row = cur.fetchone()
+            numero_topico = partida_row[0] if partida_row else 0
+
             cur.execute("UPDATE partidas SET valor = ?, sala_id = ?, sala_senha = ? WHERE id = ? AND guild_id = ?", 
                        (novo_valor, novo_sala_id, nova_senha, self.partida_id, guild_id))
             conn.commit()
             conn.close()
 
-            nome_atual = self.canal.name
-            if "-" in nome_atual:
-                partes = nome_atual.split("-")
-                novo_nome = f"{partes[0]}-{novo_valor:.2f}".replace(".", ",")
-                try:
-                    await self.canal.edit(name=novo_nome)
-                except:
-                    pass
+            # Renomear canal/thread para PAGAR-X.XX-Y
+            valor_dobrado = novo_valor * 2
+            novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
+            
+            print(f"[REVANCHE] Partida: {self.partida_id} | Novo nome: {novo_nome} | ID: {novo_sala_id} | Senha: {nova_senha}")
+            
+            try:
+                await self.canal.edit(name=novo_nome)
+                print(f"✅ Canal renomeado para: {novo_nome}")
+            except Exception as e:
+                print(f"❌ Erro ao renomear canal: {e}")
 
             embed = discord.Embed(
                 title="🔄 Revanche - Nova Sala Criada",
-                description=f"Valor alterado para **{fmt_valor(novo_valor)}**",
+                description=f"Valor alterado para **{fmt_valor(novo_valor)}**\nCanal renomeado para **{novo_nome}**",
                 color=0x2f3136
             )
             embed.add_field(name="➡️ Nova Sala", value=f"ID: {novo_sala_id} | Senha: {nova_senha}", inline=False)
