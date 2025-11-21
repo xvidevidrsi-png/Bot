@@ -5256,28 +5256,23 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    if not message.guild:
-        await bot.process_commands(message)
-        return
-
-    if not verificar_separador_servidor(message.guild.id):
-        await bot.process_commands(message)
-        return
-
-    if not is_admin(message.author.id, member=message.author):
+    # Validações iniciais
+    if not message.guild or not verificar_separador_servidor(message.guild.id) or not is_admin(message.author.id, member=message.author):
         await bot.process_commands(message)
         return
 
     content = message.content.strip()
 
+    # Se não é dígito, processa comandos normalmente
     if not content.isdigit():
         await bot.process_commands(message)
         return
 
+    # Processamento de criação de sala (APENAS para dígitos)
     global ADMIN_ROOM_CREATION_STATES
     user_key = f"{message.guild.id}_{message.author.id}"
-    room_creation_done = False
 
+    # ROOM_ID: 5-10 dígitos
     if len(content) >= 5 and len(content) <= 10:
         ADMIN_ROOM_CREATION_STATES[user_key] = {
             'room_id': content,
@@ -5285,79 +5280,84 @@ async def on_message(message):
             'timestamp': datetime.datetime.utcnow()
         }
         await message.add_reaction('✅')
-        room_creation_done = True
+        return  # SAIR SEM CHAMAR process_commands
 
-    elif len(content) >= 1 and len(content) <= 4:
-        if user_key in ADMIN_ROOM_CREATION_STATES:
-            state = ADMIN_ROOM_CREATION_STATES[user_key]
+    # PASSWORD: 1-4 dígitos
+    if len(content) >= 1 and len(content) <= 4 and user_key in ADMIN_ROOM_CREATION_STATES:
+        state = ADMIN_ROOM_CREATION_STATES[user_key]
+        time_diff = (datetime.datetime.utcnow() - state['timestamp']).total_seconds()
+        
+        if time_diff > 300:
+            del ADMIN_ROOM_CREATION_STATES[user_key]
+            await message.add_reaction('⏰')
+            return  # SAIR SEM CHAMAR process_commands
 
-            time_diff = (datetime.datetime.utcnow() - state['timestamp']).total_seconds()
-            if time_diff > 300:
-                del ADMIN_ROOM_CREATION_STATES[user_key]
-                await message.add_reaction('⏰')
-                room_creation_done = True
+        room_id = state['room_id']
+        password = content
+
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            
+            if isinstance(message.channel, discord.Thread):
+                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
+                           (message.guild.id, message.channel.id))
             else:
-                room_id = state['room_id']
-                password = content
+                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
+                           (message.guild.id, message.channel.id))
+            
+            row = cur.fetchone()
+            conn.close()
+            
+            if row:
+                valor_partida = row[0]
+                valor_dobrado = valor_partida * 2
+                valor_formatado = f"{valor_dobrado:.2f}".replace(".", ",")
+                novo_nome = f"paga-{valor_formatado}"
+                
+                if isinstance(message.channel, discord.Thread):
+                    await message.channel.edit(name=novo_nome)
+                else:
+                    await message.channel.edit(name=novo_nome)
+                
+                print(f"✅ Canal/thread renomeado para '{novo_nome}' (valor: R$ {valor_formatado})")
+        except Exception as e:
+            print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-                try:
-                    conn = sqlite3.connect(DB_FILE)
-                    cur = conn.cursor()
-                    
-                    if isinstance(message.channel, discord.Thread):
-                        cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
-                                   (message.guild.id, message.channel.id))
-                    else:
-                        cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
-                                   (message.guild.id, message.channel.id))
-                    
-                    row = cur.fetchone()
-                    conn.close()
-                    
-                    if row:
-                        valor_partida = row[0]
-                        valor_dobrado = valor_partida * 2
-                        valor_formatado = f"{valor_dobrado:.2f}".replace(".", ",")
-                        novo_nome = f"paga-{valor_formatado}"
-                        
-                        if isinstance(message.channel, discord.Thread):
-                            await message.channel.edit(name=novo_nome)
-                        else:
-                            await message.channel.edit(name=novo_nome)
-                        
-                        print(f"✅ Canal/thread renomeado para '{novo_nome}' (valor: R$ {valor_formatado})")
-                except Exception as e:
-                    print(f"⚠️ Erro ao renomear canal/thread: {e}")
+        mensagem_sala = (
+            f"╔═══════════════════════════════════╗\n"
+            f"║  🎮 **SALA CRIADA COM SUCESSO**  ║\n"
+            f"╚═══════════════════════════════════╝\n\n"
+            f"🔑 **ID DA SALA:** `{room_id}`\n"
+            f"🔐 **SENHA:** `{password}`\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 Criada por: {message.author.mention}\n"
+            f"⏰ Horário: <t:{int(datetime.datetime.utcnow().timestamp())}:t>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**📋 INSTRUÇÕES:**\n"
+            f"1️⃣ Clique no botão abaixo para copiar o ID\n"
+            f"2️⃣ Compartilhe o ID e SENHA com seus jogadores\n"
+            f"3️⃣ Digite a senha quando pedido\n\n"
+            f"✨ Boa partida!"
+        )
 
-                mensagem_sala = (
-                    f"╔═══════════════════════════════════╗\n"
-                    f"║  🎮 **SALA CRIADA COM SUCESSO**  ║\n"
-                    f"╚═══════════════════════════════════╝\n\n"
-                    f"🔑 **ID DA SALA:** `{room_id}`\n"
-                    f"🔐 **SENHA:** `{password}`\n\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"👤 Criada por: {message.author.mention}\n"
-                    f"⏰ Horário: <t:{int(datetime.datetime.utcnow().timestamp())}:t>\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    f"**📋 INSTRUÇÕES:**\n"
-                    f"1️⃣ Clique no botão abaixo para copiar o ID\n"
-                    f"2️⃣ Compartilhe o ID e SENHA com seus jogadores\n"
-                    f"3️⃣ Digite a senha quando pedido\n\n"
-                    f"✨ Boa partida!"
-                )
+        view = CopiarIDView(room_id)
+        try:
+            await message.channel.send(mensagem_sala, view=view)
+            await message.add_reaction('✅')
+        except Exception as e:
+            print(f"⚠️ Erro ao enviar mensagem de sala: {e}")
 
-                view = CopiarIDView(room_id)
-                try:
-                    await message.channel.send(mensagem_sala, view=view)
-                    await message.add_reaction('✅')
-                except Exception as e:
-                    print(f"⚠️ Erro ao enviar mensagem de sala: {e}")
+        del ADMIN_ROOM_CREATION_STATES[user_key]
+        return  # SAIR SEM CHAMAR process_commands
 
-                del ADMIN_ROOM_CREATION_STATES[user_key]
-                room_creation_done = True
+    # Se chegou aqui, processa comandos normalmente
+    await bot.process_commands(message)
 
-    if not room_creation_done:
-        await bot.process_commands(message)
+@bot.event
+async def on_disconnect():
+    """Reconecta automaticamente quando desconecta"""
+    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⚠️ Bot desconectado! Tentando reconectar...")
 
 @bot.event
 async def on_ready():
@@ -5422,8 +5422,6 @@ async def on_ready():
     keep_alive_1s_task.start()
     keep_alive_1h_task.start()
     keep_alive_24h_task.start()
-    keep_alive_1y_1min_task.start()
-    keep_alive_1y_2min_task.start()
     keep_alive_1y_3min_task.start()
     restart_queues_monthly_task.start()
     rotacao_mediadores_task.start()
@@ -5437,8 +5435,6 @@ async def on_ready():
     print(f"  ├─ Keep-Alive 1s: Simples a cada 1s ⚡")
     print(f"  ├─ Keep-Alive 1h: 1-3600 com pausa 1min 🕐")
     print(f"  ├─ Keep-Alive 24h: 1-86400 com pausa 1min 📅")
-    print(f"  ├─ Keep-Alive 1y(1-2min): 1-10512000 com pausa 1.5min 📅")
-    print(f"  ├─ Keep-Alive 1y(2-3min): 1-10512000 com pausa 2.5min 📅")
     print(f"  ├─ Keep-Alive 1y(3min): 1-10512000 com pausa 3min 📅")
     print(f"  ├─ Reinicio Filas: a cada 1 mês (30 dias) 🔄")
     print(f"  ├─ Rotação Mediadores: a cada 30s")
