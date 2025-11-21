@@ -3667,38 +3667,71 @@ async def config_menu(interaction: discord.Interaction):
         embed.set_thumbnail(url=interaction.guild.icon.url)
 
     embed.add_field(
-        name="📊 Filas - Criar",
+        name="📱 Filas MOBILE (Jogadores no celular)",
         value=(
-            "```\n"
-            "/1x1-mob        - Filas 1v1 Mobile\n"
-            "/1x1-emulador   - Filas 1v1 Emulador\n"
-            "/2x2-mob        - Filas 2x2 Mobile\n"
-            "/2x2-emu        - Filas 2x2 Emulador\n"
-            "/3x3-mob        - Filas 3x3 Mobile\n"
-            "/3x3-emu        - Filas 3x3 Emulador\n"
-            "/4x4-mob        - Filas 4x4 Mobile\n"
-            "/4x4-emu        - Filas 4x4 Emulador\n"
-            "/filamisto-2x2  - Filas 2x2 Misto\n"
-            "/filamisto-3x3  - Filas 3x3 Misto\n"
-            "/filamisto-4x4  - Filas 4x4 Misto\n"
-            "```"
+            "**`/1x1-mob`** → 1v1 Mobile\n"
+            "└ Cria filas 1 contra 1 para jogadores de MOBILE\n\n"
+            "**`/2x2-mob`** → 2x2 Mobile\n"
+            "└ Cria filas 2 contra 2 para jogadores de MOBILE\n\n"
+            "**`/3x3-mob`** → 3x3 Mobile\n"
+            "└ Cria filas 3 contra 3 para jogadores de MOBILE\n\n"
+            "**`/4x4-mob`** → 4x4 Mobile\n"
+            "└ Cria filas 4 contra 4 para jogadores de MOBILE\n\n"
+            "💡 Use esses comandos quando seus jogadores estiverem no **celular**"
         ),
         inline=False
     )
 
     embed.add_field(
-        name="⚙️ Configuração Geral",
+        name="💻 Filas EMULADOR (Bluestacks/Nox/etc)",
         value=(
-            "```\n"
-            "/aux_config          - Define cargo auxiliar\n"
-            "/topico              - Define canal de partidas\n"
-            "/configurar          - Cargos a mencionar\n"
-            "/configurar_nome_bot - Altera nome do bot\n"
-            "/addimagem           - Adiciona logo às filas\n"
-            "/removerimagem       - Remove logo das filas\n"
-            "/taxa                - Altera taxa por jogador\n"
-            "/definir             - Define valores das filas\n"
-            "```"
+            "**`/1x1-emulador`** → 1v1 Emulador\n"
+            "└ Cria filas 1 contra 1 para jogadores em EMULADOR\n\n"
+            "**`/2x2-emu`** → 2x2 Emulador\n"
+            "└ Cria filas 2 contra 2 para jogadores em EMULADOR\n\n"
+            "**`/3x3-emu`** → 3x3 Emulador\n"
+            "└ Cria filas 3 contra 3 para jogadores em EMULADOR\n\n"
+            "**`/4x4-emu`** → 4x4 Emulador\n"
+            "└ Cria filas 4 contra 4 para jogadores em EMULADOR\n\n"
+            "💡 Use esses comandos quando seus jogadores estiverem em **Bluestacks, Nox, MEmu** ou outro emulador"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🎮 Filas MISTO (Celular + Emulador misturado)",
+        value=(
+            "**`/filamisto-2x2`** → 2x2 Misto\n"
+            "└ Cria filas 2 contra 2 com OPÇÕES de emulador ou mobile\n\n"
+            "**`/filamisto-3x3`** → 3x3 Misto\n"
+            "└ Cria filas 3 contra 3 com OPÇÕES de emulador ou mobile\n\n"
+            "**`/filamisto-4x4`** → 4x4 Misto\n"
+            "└ Cria filas 4 contra 4 com OPÇÕES de emulador ou mobile\n\n"
+            "💡 Use esses para filas **ABERTAS** (qualquer plataforma pode entrar) - ideal para aumentar matchmaking!"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="⚙️ Configuração Geral (OBRIGATÓRIO)",
+        value=(
+            "**`/aux_config`** - Define cargo auxiliar\n"
+            "└ Escolhe qual cargo recebe notificações de partidas criadas\n\n"
+            "**`/topico`** - Define canal de partidas\n"
+            "└ Escolhe qual canal as filas serão criadas\n\n"
+            "**`/configurar`** - Cargos a mencionar\n"
+            "└ Define quais cargos serão mencionados quando partida começa\n\n"
+            "⚠️ ESSES 3 COMANDOS SÃO OBRIGATÓRIOS ANTES DE CRIAR FILAS!\n\n"
+            "**`/configurar_nome_bot`** - Altera nome do bot\n"
+            "└ Muda o nome que aparece no bot em tempo real\n\n"
+            "**`/addimagem`** - Adiciona logo às filas\n"
+            "└ Coloca sua logo/imagem em cada fila criada\n\n"
+            "**`/removerimagem`** - Remove logo das filas\n"
+            "└ Remove a imagem das filas\n\n"
+            "**`/taxa`** - Altera taxa por jogador\n"
+            "└ Define quanto o MEDIADOR ganha por partida\n\n"
+            "**`/definir`** - Define valores das filas\n"
+            "└ Configura todos os valores que as filas oferecerão (0.40, 0.50, etc)"
         ),
         inline=False
     )
@@ -3706,12 +3739,14 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="😀 Personalização (Emojis)",
         value=(
-            "```\n"
-            "/clonar_emoji - Customiza emojis dos botões\n"
-            "```\n"
-            "**Opções:**\n"
-            "• **Filas 1x1:** Gel Normal, Gel Infinito\n"
-            "• **Filas 2x2+:** Entrar, Sair"
+            "**`/clonar_emoji`** - Customiza emojis dos botões\n"
+            "└ Muda os emojis que aparecem nos botões das filas\n\n"
+            "**Para Filas 1x1:**\n"
+            "• Gel Normal - emoji quando entra 1 jogador\n"
+            "• Gel Infinito - emoji para fila infinita\n\n"
+            "**Para Filas 2x2+ e Mistas:**\n"
+            "• Entrar - emoji para entrar na fila\n"
+            "• Sair - emoji para sair da fila"
         ),
         inline=False
     )
@@ -3719,10 +3754,13 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="👥 Sistema de Mediadores",
         value=(
-            "```\n"
-            "/fila_mediadores - Cria menu de mediadores\n"
-            "!pixmed          - Configura PIX (prefix)\n"
-            "```"
+            "**`/fila_mediadores`** - Cria menu de mediadores\n"
+            "└ Cria um painel onde mediadores podem ENTRAR ou SAIR de serviço\n"
+            "└ Quando um mediador entra, eles recebem chamadas de partidas\n\n"
+            "**`!pixmed`** - Configura PIX (Comando Prefix)\n"
+            "└ Cada mediador configura sua chave PIX para receber pagamentos\n"
+            "└ Digite: **`!pixmed SUA_CHAVE_PIX`** em qualquer canal\n"
+            "└ Exemplo: **`!pixmed emanoel@banco.com.br`**"
         ),
         inline=False
     )
@@ -3730,13 +3768,14 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="🏆 Perfil e Ranking",
         value=(
-            "```\n"
-            "/rank - Menu interativo com 2 opções\n"
-            "!p    - Ver perfil (prefix)\n"
-            "```\n"
-            "**Opções do /rank:**\n"
-            "• 👤 **Meu Perfil** - Suas estatísticas\n"
-            "• 🏆 **Ranking** - Top 10 do servidor"
+            "**`/rank`** - Menu interativo com 2 opções\n"
+            "└ Mostra um painel com 2 botões para você escolher\n\n"
+            "  👤 **Meu Perfil** - Ver suas estatísticas completas\n"
+            "     └ Coins, Vitórias, Derrotas, Winrate, Posição no ranking\n\n"
+            "  🏆 **Ranking** - Ver Top 10 melhores jogadores\n"
+            "     └ Hall da Fama com medals 🥇🥈🥉\n\n"
+            "**`!p`** - Ver seu perfil (Comando Prefix)\n"
+            "└ Alternativa rápida ao /rank (sem menu)"
         ),
         inline=False
     )
@@ -3744,13 +3783,16 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="🔧 Administração",
         value=(
-            "```\n"
-            "/dono_comando_slash   - Define cargo admin\n"
-            "/tirar_coin           - Remove coins\n"
-            "/membro_cargo         - Cargo automático\n"
-            "/remover_membro_cargo - Remove auto-cargo\n"
-            "/cargos_membros       - Cargo para todos\n"
-            "```"
+            "**`/dono_comando_slash`** - Define cargo admin\n"
+            "└ Escolhe qual CARGO recebe permissão de admin no bot\n\n"
+            "**`/tirar_coin`** - Remove coins de um jogador\n"
+            "└ Diminui coins de um membro (para penalidades)\n\n"
+            "**`/membro_cargo`** - Cargo automático para um membro\n"
+            "└ Dá um cargo automático quando o membro faz algo\n\n"
+            "**`/remover_membro_cargo`** - Remove cargo automático\n"
+            "└ Remove o cargo automático de um membro\n\n"
+            "**`/cargos_membros`** - Cargo para todos\n"
+            "└ Adiciona um cargo para TODOS os membros do servidor"
         ),
         inline=False
     )
@@ -3758,14 +3800,15 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="📋 Sistema de Logs",
         value=(
-            "```\n"
-            "/logs         - Cria canais e mostra histórico\n"
-            "/deletar_logs - Remove todos os logs\n"
-            "```\n"
-            "**Canais automáticos:**\n"
-            "🔥 log-criadas | ✅ log-confirmadas\n"
-            "🌐 log-iniciadas | 🏁 logs-finalizadas\n"
-            "❌ log-recusada"
+            "**`/logs`** - Cria canais e mostra histórico\n"
+            "└ Cria automaticamente 5 canais para rastrear TODAS as partidas:\n\n"
+            "🔥 **log-criadas** - Partidas recém criadas\n"
+            "✅ **log-confirmadas** - Partidas confirmadas pelos jogadores\n"
+            "🌐 **log-iniciadas** - Partidas que começaram\n"
+            "🏁 **log-finalizadas** - Partidas que terminaram (com vencedor)\n"
+            "❌ **log-recusada** - Jogadores que recusaram partida\n\n"
+            "**`/deletar_logs`** - Remove TODOS os logs\n"
+            "└ Apaga todos os canais de logs criados"
         ),
         inline=False
     )
@@ -3773,12 +3816,15 @@ async def config_menu(interaction: discord.Interaction):
     embed.add_field(
         name="👑 Comandos Owner",
         value=(
-            "```\n"
-            "/separador_de_servidor - Registra servidor\n"
-            "/resete_bot            - Reset completo\n"
-            "/puxar                 - Busca dados servidor\n"
-            "```\n"
-            "⚠️ Apenas **emanoel7269** pode usar"
+            "⚠️ **APENAS emanoel7269 (Owner) PODE USAR**\n\n"
+            "**`/separador_de_servidor`** - Registra servidor\n"
+            "└ Registra um novo servidor para usar o Bot Zeus\n"
+            "└ OBRIGATÓRIO na primeira vez que o bot entra no servidor\n\n"
+            "**`/resete_bot`** - Reset completo\n"
+            "└ Reseta TODAS as configurações e dados do servidor\n"
+            "└ ⚠️ Cuidado - não pode ser desfeito!\n\n"
+            "**`/puxar`** - Busca dados do servidor\n"
+            "└ Mostra informações completas de um servidor pelo ID"
         ),
         inline=False
     )
