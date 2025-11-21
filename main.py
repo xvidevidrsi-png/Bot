@@ -1342,13 +1342,26 @@ class ConfirmarPartidaView(View):
                 except Exception as e:
                     print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-            # Envia menu do mediador automaticamente (ANTES do PIX)
+            # Envia menu do mediador automaticamente (ANTES do PIX) com mais informações
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT valor, tipo_fila FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, interaction.guild.id))
+            partida_info = cur.fetchone()
+            conn.close()
+            
+            valor_partida = partida_info[0] if partida_info else 0
+            tipo_fila = partida_info[1] if partida_info else "unknown"
+            
             embed_menu = discord.Embed(
-                title="Menu Mediador",
-                description=f"<@{self.jogador1_id}>\n<@{self.jogador2_id}>",
+                title="📊 Menu do Mediador",
+                description=f"**Partida:** `{self.partida_id}`\n**Valor:** R$ {fmt_valor(valor_partida)}\n**Tipo:** {tipo_fila.upper()}",
                 color=0x2f3136
             )
-            view_menu = MenuMediadorView(self.partida_id)
+            embed_menu.add_field(name="🎮 Jogadores", value=f"<@{self.jogador1_id}> vs <@{self.jogador2_id}>", inline=False)
+            embed_menu.add_field(name="⚙️ Opções", value="Clique em um botão abaixo para gerenciar a partida", inline=False)
+            embed_menu.set_footer(text="⏱️ Menu ativo até o final da partida")
+            
+            view_menu = MenuMediadorView(self.partida_id, self.jogador1_id, self.jogador2_id, valor_partida, tipo_fila)
             await interaction.channel.send(embed=embed_menu, view=view_menu)
 
             # Envia PIX depois do Menu Mediador
@@ -1743,11 +1756,15 @@ class ConfirmarVencedorView(View):
         await interaction.response.edit_message(content="❌ Cancelado!", view=None)
 
 class MenuMediadorView(View):
-    def __init__(self, partida_id):
+    def __init__(self, partida_id, j1_id=None, j2_id=None, valor=None, tipo_fila=None):
         super().__init__(timeout=None)
         self.partida_id = partida_id
+        self.j1_id = j1_id
+        self.j2_id = j2_id
+        self.valor = valor
+        self.tipo_fila = tipo_fila
 
-    @discord.ui.button(label="Vitória", style=discord.ButtonStyle.success, emoji="🏆")
+    @discord.ui.button(label="Vitória", style=discord.ButtonStyle.success, emoji="🏆", row=0)
     async def vitoria(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not is_aux_permitido(interaction.user):
             await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
@@ -1766,20 +1783,9 @@ class MenuMediadorView(View):
 
         j1_id, j2_id = row
         view = EscolherVencedorView(self.partida_id, j1_id, j2_id)
-        await interaction.response.send_message("Escolha o vencedor:", view=view, ephemeral=True)
+        await interaction.response.send_message("🏆 **Escolha o vencedor:**", view=view, ephemeral=True)
 
-    @discord.ui.button(label="Finalizar aposta", style=discord.ButtonStyle.danger, emoji="🔚")
-    async def finalizar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not is_aux_permitido(interaction.user):
-            await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
-            return
-
-        await interaction.response.send_message("✅ Aposta finalizada! Canal será fechado em 10 segundos...", ephemeral=True)
-        await interaction.channel.send("🔚 Aposta finalizada. Canal será fechado em 10 segundos...")
-        await asyncio.sleep(10)
-        await interaction.channel.delete()
-
-    @discord.ui.button(label="Vitória por W.O.", style=discord.ButtonStyle.primary, emoji="⚠️")
+    @discord.ui.button(label="W.O.", style=discord.ButtonStyle.danger, emoji="⚠️", row=0)
     async def vitoria_wo(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not is_aux_permitido(interaction.user):
             await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
@@ -1798,9 +1804,9 @@ class MenuMediadorView(View):
 
         j1_id, j2_id = row
         view = EscolherVencedorView(self.partida_id, j1_id, j2_id)
-        await interaction.response.send_message("⚠️ W.O. - Escolha o vencedor:", view=view, ephemeral=True)
+        await interaction.response.send_message("⚠️ **W.O. - Escolha o vencedor:**", view=view, ephemeral=True)
 
-    @discord.ui.button(label="Revanche", style=discord.ButtonStyle.secondary, emoji="🔄")
+    @discord.ui.button(label="Revanche", style=discord.ButtonStyle.secondary, emoji="🔄", row=0)
     async def revanche(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not is_aux_permitido(interaction.user):
             await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
@@ -1808,6 +1814,24 @@ class MenuMediadorView(View):
 
         modal = TrocarValorModal(self.partida_id, interaction.channel)
         await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="Finalizar", style=discord.ButtonStyle.danger, emoji="🔚", row=1)
+    async def finalizar(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not is_aux_permitido(interaction.user):
+            await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title="🔚 Finalizando Partida",
+            description="O canal será fechado em **10 segundos**...",
+            color=0xFF6B6B
+        )
+        await interaction.response.send_message(embed=embed)
+        await asyncio.sleep(10)
+        try:
+            await interaction.channel.delete()
+        except:
+            pass
 
 class TrocarValorModal(Modal):
     def __init__(self, partida_id, canal):
