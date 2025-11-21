@@ -4166,10 +4166,13 @@ async def health_check_task():
     except Exception as e:
         print(f"[HEALTH CHECK] ❌ Database error: {e}")
 
-# Sistema de Keep-Alive com contador 1-800
+# Sistema de Keep-Alive com contador 1-1000 + pausa
+keep_alive_paused = False
+
 @tasks.loop(seconds=1)
 async def keep_alive_task():
-    """Keep-alive contador 1-800 sem bugar"""
+    """Keep-alive contador 1-1000 com 1 min de pausa após completar"""
+    global keep_alive_paused
     try:
         # Obter contador atual do banco de dados
         contador = db_get_config("keep_alive_counter")
@@ -4178,22 +4181,51 @@ async def keep_alive_task():
         else:
             contador = int(contador)
 
+        # Se está em pausa, aguarda
+        if keep_alive_paused:
+            pausa_tempo = db_get_config("keep_alive_pause_time")
+            if pausa_tempo:
+                try:
+                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
+                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
+                    
+                    if tempo_decorrido < 60:
+                        # Ainda em pausa
+                        if int(tempo_decorrido) % 10 == 0:
+                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive em pausa: {int(tempo_decorrido)}/60s")
+                        db_set_config("keep_alive_status", f"Paused {int(tempo_decorrido)}/60s")
+                        return
+                    else:
+                        # Pausa terminou, reseta
+                        keep_alive_paused = False
+                        contador = 1
+                        db_set_config("keep_alive_counter", "1")
+                        db_set_config("keep_alive_pause_time", "")
+                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive retomado! Iniciando novo ciclo...")
+                except:
+                    keep_alive_paused = False
+                    contador = 1
+
         # Incrementar contador
         contador += 1
         
-        # Se atingiu 800, reseta para 1
-        if contador > 800:
-            contador = 1
+        # Se atingiu 1000, inicia pausa
+        if contador > 1000:
+            keep_alive_paused = True
+            db_set_config("keep_alive_pause_time", datetime.datetime.utcnow().isoformat())
+            db_set_config("keep_alive_counter", "1000")
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive atingiu 1000! Iniciando pausa de 1 minuto...")
+            return
 
         # Salvar contador no banco
         db_set_config("keep_alive_counter", str(contador))
 
-        # Mostrar apenas a cada 80 (para não spammar logs)
-        if contador % 80 == 0 or contador == 1:
-            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/800")
+        # Mostrar apenas a cada 100 (para não spammar logs)
+        if contador % 100 == 0 or contador == 1:
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/1000")
 
         # Registra status no banco de dados
-        db_set_config("keep_alive_status", f"Running {contador}/800")
+        db_set_config("keep_alive_status", f"Running {contador}/1000")
 
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
