@@ -2171,7 +2171,10 @@ async def auto_fila(interaction: discord.Interaction):
     ja_existem = []
     
     for tipo_fila in tipos_fila:
-        canal_existente = discord.utils.get(guild.text_channels, name=f"📊-{tipo_fila}")
+        # Procurar canal com case-insensitive (Discord converte para minúsculas)
+        canal_name_search = f"📊-{tipo_fila}".lower()
+        canal_existente = discord.utils.get(guild.text_channels, name=canal_name_search)
+        
         if canal_existente:
             ja_existem.append(tipo_fila)
         else:
@@ -2181,6 +2184,7 @@ async def auto_fila(interaction: discord.Interaction):
                     topic=f"Filas automáticas de {tipo_fila}"
                 )
                 criados.append(canal.mention)
+                print(f"✅ Canal criado: {canal.name}")
             except Exception as e:
                 print(f"⚠️ Erro ao criar canal {tipo_fila}: {e}")
     
@@ -2203,6 +2207,7 @@ async def auto_fila(interaction: discord.Interaction):
             inline=False
         )
     
+    embed.set_footer(text="✨ Use os comandos específicos para criar as filas (/1x1-mob, /2x2-emu, etc)")
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 @tree.command(name="1x1-mob", description="⚔️ Cria todas as filas de 1v1 Mobile (Gel Normal e Infinito)")
