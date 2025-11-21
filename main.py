@@ -1314,7 +1314,14 @@ class ConfirmarPartidaView(View):
             for item in self.children:
                 item.disabled = True
 
-            await interaction.message.edit(view=self)
+            try:
+                # Pegar a mensagem original que contém o botão
+                messages = [msg async for msg in interaction.channel.history(limit=1)]
+                if messages:
+                    msg_com_botao = messages[0]
+                    await msg_com_botao.edit(view=self)
+            except:
+                pass
 
             # Renomeia o tópico/canal para PAGAR-X.XX-Y
             conn = sqlite3.connect(DB_FILE)
