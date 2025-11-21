@@ -4825,17 +4825,34 @@ async def on_message(message):
             except Exception as e:
                 print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-            # Envia texto simples com botão Copiar ID SEM ASPAS
+            # Envia texto formatado e bonitão
             mensagem_sala = (
-                f"🎮 **Sala Criada**\n\n"
-                f"**ID da Sala:** {room_id}\n"
-                f"**Senha:** {password}\n\n"
-                f"Criada por: {message.author.mention}"
+                f"╔═══════════════════════════════════╗\n"
+                f"║  🎮 **SALA CRIADA COM SUCESSO**  ║\n"
+                f"╚═══════════════════════════════════╝\n\n"
+                f"🔑 **ID DA SALA:** `{room_id}`\n"
+                f"🔐 **SENHA:** `{password}`\n\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 Criada por: {message.author.mention}\n"
+                f"⏰ Horário: <t:{int(datetime.datetime.utcnow().timestamp())}:t>\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"**📋 INSTRUÇÕES:**\n"
+                f"1️⃣ Clique no botão abaixo para copiar o ID\n"
+                f"2️⃣ Compartilhe o ID e SENHA com seus jogadores\n"
+                f"3️⃣ Digite a senha quando pedido\n\n"
+                f"✨ Boa partida!"
             )
 
             view = CopiarIDView(room_id)
-            await message.channel.send(mensagem_sala, view=view)
-            await message.add_reaction('✅')
+            try:
+                await message.channel.send(mensagem_sala, view=view)
+            except Exception as e:
+                print(f"⚠️ Erro ao enviar mensagem de sala: {e}")
+            
+            try:
+                await message.add_reaction('✅')
+            except:
+                pass
 
             del ADMIN_ROOM_CREATION_STATES[user_key]
             return
