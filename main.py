@@ -1377,15 +1377,15 @@ class ConfirmarPartidaView(View):
                 conn = sqlite3.connect(DB_FILE)
                 cur = conn.cursor()
                 cur.execute(
-    "SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?",
-    (guild_id, mediador_id)
+                    "SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?",
+                    (guild_id, mediador_id)
                 )
                 pix_row = cur.fetchone()
                 conn.close()
 
                 if pix_row:
                     taxa = get_taxa()
-                    valor_com_taxa = valor + taxa
+                    valor_com_taxa = valor_partida + taxa
                     pix_embed = discord.Embed(
                         title="💰 Informações de Pagamento",
                         description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
@@ -1400,6 +1400,8 @@ class ConfirmarPartidaView(View):
 
                     view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
                     await interaction.channel.send(embed=pix_embed, file=qr_file, view=view_pix)
+                else:
+                    print(f"⚠️ PIX do mediador {mediador_id} não encontrado no banco!")
 
     @discord.ui.button(label="Recusar", style=discord.ButtonStyle.danger, emoji="❌")
     async def recusar(self, interaction: discord.Interaction, button: discord.ui.Button):
