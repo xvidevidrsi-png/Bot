@@ -5015,6 +5015,7 @@ async def ping_handler(request):
     # Resposta simples e rápida para compatibilidade máxima
     response_text = f"pong | uptime: {uptime_hours:.2f}h | status: ok"
 
+    print(f"🏓 PONG!")
     print(f"[PING EXTERNO] ✅ Recebido de {request.remote} | Uptime: {uptime_hours:.2f}h")
 
     return web.Response(
