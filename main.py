@@ -814,15 +814,15 @@ class FilaView(View):
         emoji_infinito = get_emoji_custom(guild_id, "gel_infinito") if guild_id else None
         emoji_sair = get_emoji_custom(guild_id, "sair") if guild_id else None
 
-        self.btn_normal = Button(label="🔴 Gel Normal", style=discord.ButtonStyle.blurple, custom_id="gel_normal", emoji=emoji_normal)
+        self.btn_normal = Button(label="Gel Normal", style=discord.ButtonStyle.secondary, custom_id="gel_normal", emoji=emoji_normal, row=0)
         self.btn_normal.callback = self.gel_normal
         self.add_item(self.btn_normal)
 
-        self.btn_infinito = Button(label="🔵 Gel Infinito", style=discord.ButtonStyle.success, custom_id="gel_infinito", emoji=emoji_infinito)
+        self.btn_infinito = Button(label="Gel Inf", style=discord.ButtonStyle.secondary, custom_id="gel_infinito", emoji=emoji_infinito, row=0)
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
 
-        self.btn_sair = Button(label="❌ Sair da Fila", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji=emoji_sair)
+        self.btn_sair = Button(label="Sair", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji="⬅️", row=1)
         self.btn_sair.callback = self.sair_fila
         self.add_item(self.btn_sair)
 
