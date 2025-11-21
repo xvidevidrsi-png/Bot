@@ -4166,49 +4166,37 @@ async def health_check_task():
     except Exception as e:
         print(f"[HEALTH CHECK] ❌ Database error: {e}")
 
-# Sistema de Keep-Alive OTIMIZADO com verificação inteligente
-@tasks.loop(seconds=90)
+# Sistema de Keep-Alive com contador 1-300
+@tasks.loop(seconds=1)
 async def keep_alive_task():
-    """Keep-alive otimizado - ping a cada 90s com verificação de uptime bot externo"""
+    """Keep-alive contador 1-300 sem bugar"""
     try:
-        import aiohttp
-        uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
-        uptime_hours = uptime_seconds / 3600
+        # Obter contador atual do banco de dados
+        contador = db_get_config("keep_alive_counter")
+        if not contador:
+            contador = 0
+        else:
+            contador = int(contador)
 
-        # Pega porta do servidor (padrão 3000)
-        server_port = db_get_config("http_server_port") or "3000"
+        # Incrementar contador
+        contador += 1
+        
+        # Se atingiu 300, reseta para 1
+        if contador > 300:
+            contador = 1
 
-        # Verifica se uptime bot externo está funcionando
-        last_external_ping_str = db_get_config("last_external_ping")
-        external_ping_status = "❌ Nunca recebeu ping externo"
+        # Salvar contador no banco
+        db_set_config("keep_alive_counter", str(contador))
 
-        if last_external_ping_str:
-            try:
-                last_external_ping = datetime.datetime.fromisoformat(last_external_ping_str)
-                time_since_external = (datetime.datetime.utcnow() - last_external_ping).total_seconds()
-                time_since_minutes = time_since_external / 60
-
-                if time_since_external < 360:  # Menos de 6 minutos
-                    external_ping_status = f"✅ Uptime bot OK (último ping: {time_since_minutes:.1f}min atrás)"
-                else:
-                    external_ping_status = f"⚠️ Uptime bot inativo ({time_since_minutes:.1f}min desde último ping)"
-            except:
-                external_ping_status = "⚠️ Erro ao verificar ping externo"
-
-        # Faz auto-ping interno de qualquer forma (fallback garantido)
-        async with aiohttp.ClientSession() as session:
-            response = await session.get(f'http://0.0.0.0:{server_port}/ping', timeout=aiohttp.ClientTimeout(total=2))
-            ping_status = "✅" if response.status == 200 else f"⚠️ Status {response.status}"
-
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 90s] {ping_status} Auto-ping OK (porta {server_port}) | Uptime: {uptime_hours:.2f}h")
-        print(f"  └─ {external_ping_status}")
+        # Mostrar apenas a cada 30 (para não spammar logs)
+        if contador % 30 == 0 or contador == 1:
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/300")
 
         # Registra status no banco de dados
-        db_set_config("last_internal_ping", datetime.datetime.utcnow().isoformat())
-        db_set_config("keep_alive_status", "OK")
+        db_set_config("keep_alive_status", f"Running {contador}/300")
 
     except Exception as e:
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 90s] ❌ Erro: {e}")
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
         db_set_config("keep_alive_status", f"ERROR: {str(e)}")
 
 @tasks.loop(seconds=60)
