@@ -1316,7 +1316,7 @@ class ConfirmarPartidaView(View):
 
             await interaction.message.edit(view=self)
 
-            # Renomeia o canal/thread para mobile-X
+            # Renomeia o tópico/canal para PAGAR-X.XX-Y
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("SELECT numero_topico, canal_id, thread_id, valor FROM partidas WHERE id = ?", (self.partida_id,))
@@ -1328,19 +1328,27 @@ class ConfirmarPartidaView(View):
                 valor_dobrado = valor * 2
                 novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
 
+                print(f"[RENOMEAR] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
+
                 try:
                     if thread_id and thread_id > 0:
                         # É um thread
                         thread = interaction.guild.get_thread(thread_id)
                         if thread:
                             await thread.edit(name=novo_nome)
+                            print(f"✅ Thread renomeada para: {novo_nome}")
+                        else:
+                            print(f"❌ Thread {thread_id} não encontrada!")
                     else:
                         # É um canal
                         canal = interaction.guild.get_channel(canal_id)
                         if canal:
                             await canal.edit(name=novo_nome)
+                            print(f"✅ Canal renomeado para: {novo_nome}")
+                        else:
+                            print(f"❌ Canal {canal_id} não encontrado!")
                 except Exception as e:
-                    print(f"⚠️ Erro ao renomear canal/thread: {e}")
+                    print(f"❌ Erro ao renomear: {e}")
 
             # Envia menu do mediador automaticamente (ANTES do PIX) com mais informações
             conn = sqlite3.connect(DB_FILE)
@@ -1575,8 +1583,8 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
         pass
 
     cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?)""",
-                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, numero_topico, datetime.datetime.utcnow().isoformat()))
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, "confirmacao", numero_topico, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
