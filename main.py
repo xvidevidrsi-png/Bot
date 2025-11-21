@@ -1922,19 +1922,30 @@ class TrocarValorModal(Modal):
         self.add_item(self.nova_senha)
 
     async def on_submit(self, interaction: discord.Interaction):
+        print(f"[REVANCHE MODAL] on_submit iniciado para partida {self.partida_id}")
+        
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        
         try:
             valor_str = self.novo_valor.value.replace(",", ".")
             novo_valor = float(valor_str)
 
             if novo_valor <= 0:
-                await interaction.response.send_message("❌ O valor deve ser maior que zero!", ephemeral=True)
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("❌ O valor deve ser maior que zero!", ephemeral=True)
+                else:
+                    await interaction.followup.send("❌ O valor deve ser maior que zero!", ephemeral=True)
                 return
 
             novo_sala_id = self.novo_sala_id.value.strip()
             nova_senha = self.nova_senha.value.strip()
 
             if not novo_sala_id or not nova_senha:
-                await interaction.response.send_message("❌ ID e senha da sala são obrigatórios!", ephemeral=True)
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("❌ ID e senha da sala são obrigatórios!", ephemeral=True)
+                else:
+                    await interaction.followup.send("❌ ID e senha da sala são obrigatórios!", ephemeral=True)
                 return
 
             guild_id = interaction.guild.id
@@ -1963,6 +1974,8 @@ class TrocarValorModal(Modal):
             except Exception as e:
                 print(f"❌ Erro ao renomear canal: {e}")
 
+            print(f"[REVANCHE] Enviando embed com ID/Senha para canal {self.canal.id}")
+            
             embed = discord.Embed(
                 title="🔄 Revanche - Nova Sala Criada",
                 description=f"Valor alterado para **{fmt_valor(novo_valor)}**\nCanal renomeado para **{novo_nome}**",
@@ -1971,11 +1984,28 @@ class TrocarValorModal(Modal):
             embed.add_field(name="➡️ Nova Sala", value=f"ID: {novo_sala_id} | Senha: {nova_senha}", inline=False)
 
             view = CopiarIDView(novo_sala_id)
-            await interaction.channel.send(embed=embed, view=view)
-            await interaction.response.send_message("✅ Revanche criada com nova sala!", ephemeral=True)
+            msg_enviada = await interaction.channel.send(embed=embed, view=view)
+            print(f"✅ Embed de revanche enviada! Message ID: {msg_enviada.id}")
+            
+            if not interaction.response.is_done():
+                await interaction.response.send_message("✅ Revanche criada com nova sala!", ephemeral=True)
+            else:
+                await interaction.followup.send("✅ Revanche criada com nova sala!", ephemeral=True)
+            
+            print(f"[REVANCHE] Completo para partida {self.partida_id}")
 
-        except ValueError:
-            await interaction.response.send_message("❌ Valor inválido! Use apenas números (ex: 2.00)", ephemeral=True)
+        except ValueError as ve:
+            print(f"❌ ERRO ValueError: {ve}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message("❌ Valor inválido! Use apenas números (ex: 2.00)", ephemeral=True)
+            else:
+                await interaction.followup.send("❌ Valor inválido! Use apenas números (ex: 2.00)", ephemeral=True)
+        except Exception as e:
+            print(f"❌ ERRO GERAL no TrocarValorModal: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Erro ao processar revanche: {e}", ephemeral=True)
+            else:
+                await interaction.followup.send(f"❌ Erro ao processar revanche: {e}", ephemeral=True)
 
 class ConfigurarPIXModal(Modal):
     def __init__(self):
