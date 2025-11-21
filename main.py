@@ -855,7 +855,7 @@ class FilaView(View):
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "normal")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def gel_infinito(self, interaction: discord.Interaction):
@@ -886,7 +886,7 @@ class FilaView(View):
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
@@ -1021,7 +1021,7 @@ class FilaMobView(View):
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             await atualizar_msg_fila_mob(interaction.channel, self.valor, self.tipo_fila, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
@@ -1173,7 +1173,7 @@ class FilaMistoView(View):
             fila_remove_primeiros(guild_id, self.valor, modo_fila, 2, 'misto')
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
             registrar_historico_fila(guild_id, self.valor, modo_fila, "misto", "finalizada")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             await atualizar_msg_fila_misto(interaction.channel, self.valor, self.tipo_fila)
 
     async def sair_fila_misto(self, interaction: discord.Interaction):
@@ -3395,7 +3395,7 @@ async def logs_slash(interaction: discord.Interaction, jogador: discord.Member =
                     overwrites=overwrites
                 )
                 canais_criados.append(nome_canal)
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
             except Exception as e:
                 print(f"Erro ao criar canal {nome_canal}: {e}")
 
@@ -3472,7 +3472,7 @@ async def deletar_logs(interaction: discord.Interaction):
         try:
             canais_deletados.append(canal.name)
             await canal.delete()
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
         except Exception as e:
             print(f"Erro ao deletar canal {canal.name}: {e}")
 
