@@ -4481,6 +4481,180 @@ async def keep_alive_24h_task():
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 24H] ❌ Erro: {e}")
         db_set_config("keep_alive_24h_status", f"ERROR: {str(e)}")
 
+# Keep-Alive 1 ano (1-10512000 com pausa 1-2min)
+keep_alive_1y_1min_paused = False
+
+@tasks.loop(seconds=1)
+async def keep_alive_1y_1min_task():
+    """Keep-alive contador 1-10512000 (1 ano) com 1-2min de pausa entre ciclos"""
+    global keep_alive_1y_1min_paused
+    try:
+        contador_1y_1 = db_get_config("keep_alive_1y_1min_counter")
+        if not contador_1y_1:
+            contador_1y_1 = 0
+        else:
+            contador_1y_1 = int(contador_1y_1)
+
+        if keep_alive_1y_1min_paused:
+            pausa_tempo = db_get_config("keep_alive_1y_1min_pause_time")
+            if pausa_tempo:
+                try:
+                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
+                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
+                    pausa_duracao = 90  # 1-2min, usando 1.5min
+                    
+                    if tempo_decorrido < pausa_duracao:
+                        if int(tempo_decorrido) % 30 == 0:
+                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(1-2min) em pausa: {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        db_set_config("keep_alive_1y_1min_status", f"Paused {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        return
+                    else:
+                        keep_alive_1y_1min_paused = False
+                        contador_1y_1 = 1
+                        db_set_config("keep_alive_1y_1min_counter", "1")
+                        db_set_config("keep_alive_1y_1min_pause_time", "")
+                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive 1y(1-2min) retomado!")
+                except:
+                    keep_alive_1y_1min_paused = False
+                    contador_1y_1 = 1
+
+        contador_1y_1 += 1
+        
+        if contador_1y_1 > 10512000:
+            keep_alive_1y_1min_paused = True
+            db_set_config("keep_alive_1y_1min_pause_time", datetime.datetime.utcnow().isoformat())
+            db_set_config("keep_alive_1y_1min_counter", "10512000")
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(1-2min) completou ciclo! Pausa iniciada...")
+            return
+
+        db_set_config("keep_alive_1y_1min_counter", str(contador_1y_1))
+
+        if contador_1y_1 % 1051200 == 0 or contador_1y_1 == 1:
+            dias = contador_1y_1 / (24 * 3600)
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(1-2min): {contador_1y_1}/10512000 ({dias:.1f}d)")
+
+        db_set_config("keep_alive_1y_1min_status", f"Running {contador_1y_1}/10512000")
+
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-1MIN] ❌ Erro: {e}")
+        db_set_config("keep_alive_1y_1min_status", f"ERROR: {str(e)}")
+
+# Keep-Alive 1 ano (1-10512000 com pausa 2-3min)
+keep_alive_1y_2min_paused = False
+
+@tasks.loop(seconds=1)
+async def keep_alive_1y_2min_task():
+    """Keep-alive contador 1-10512000 (1 ano) com 2-3min de pausa entre ciclos"""
+    global keep_alive_1y_2min_paused
+    try:
+        contador_1y_2 = db_get_config("keep_alive_1y_2min_counter")
+        if not contador_1y_2:
+            contador_1y_2 = 0
+        else:
+            contador_1y_2 = int(contador_1y_2)
+
+        if keep_alive_1y_2min_paused:
+            pausa_tempo = db_get_config("keep_alive_1y_2min_pause_time")
+            if pausa_tempo:
+                try:
+                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
+                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
+                    pausa_duracao = 150  # 2-3min, usando 2.5min
+                    
+                    if tempo_decorrido < pausa_duracao:
+                        if int(tempo_decorrido) % 30 == 0:
+                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(2-3min) em pausa: {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        db_set_config("keep_alive_1y_2min_status", f"Paused {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        return
+                    else:
+                        keep_alive_1y_2min_paused = False
+                        contador_1y_2 = 1
+                        db_set_config("keep_alive_1y_2min_counter", "1")
+                        db_set_config("keep_alive_1y_2min_pause_time", "")
+                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive 1y(2-3min) retomado!")
+                except:
+                    keep_alive_1y_2min_paused = False
+                    contador_1y_2 = 1
+
+        contador_1y_2 += 1
+        
+        if contador_1y_2 > 10512000:
+            keep_alive_1y_2min_paused = True
+            db_set_config("keep_alive_1y_2min_pause_time", datetime.datetime.utcnow().isoformat())
+            db_set_config("keep_alive_1y_2min_counter", "10512000")
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(2-3min) completou ciclo! Pausa iniciada...")
+            return
+
+        db_set_config("keep_alive_1y_2min_counter", str(contador_1y_2))
+
+        if contador_1y_2 % 1051200 == 0 or contador_1y_2 == 1:
+            dias = contador_1y_2 / (24 * 3600)
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(2-3min): {contador_1y_2}/10512000 ({dias:.1f}d)")
+
+        db_set_config("keep_alive_1y_2min_status", f"Running {contador_1y_2}/10512000")
+
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-2MIN] ❌ Erro: {e}")
+        db_set_config("keep_alive_1y_2min_status", f"ERROR: {str(e)}")
+
+# Keep-Alive 1 ano (1-10512000 com pausa 3min)
+keep_alive_1y_3min_paused = False
+
+@tasks.loop(seconds=1)
+async def keep_alive_1y_3min_task():
+    """Keep-alive contador 1-10512000 (1 ano) com 3min de pausa entre ciclos"""
+    global keep_alive_1y_3min_paused
+    try:
+        contador_1y_3 = db_get_config("keep_alive_1y_3min_counter")
+        if not contador_1y_3:
+            contador_1y_3 = 0
+        else:
+            contador_1y_3 = int(contador_1y_3)
+
+        if keep_alive_1y_3min_paused:
+            pausa_tempo = db_get_config("keep_alive_1y_3min_pause_time")
+            if pausa_tempo:
+                try:
+                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
+                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
+                    pausa_duracao = 180  # 3min exato
+                    
+                    if tempo_decorrido < pausa_duracao:
+                        if int(tempo_decorrido) % 30 == 0:
+                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(3min) em pausa: {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        db_set_config("keep_alive_1y_3min_status", f"Paused {int(tempo_decorrido)}/{int(pausa_duracao)}s")
+                        return
+                    else:
+                        keep_alive_1y_3min_paused = False
+                        contador_1y_3 = 1
+                        db_set_config("keep_alive_1y_3min_counter", "1")
+                        db_set_config("keep_alive_1y_3min_pause_time", "")
+                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive 1y(3min) retomado!")
+                except:
+                    keep_alive_1y_3min_paused = False
+                    contador_1y_3 = 1
+
+        contador_1y_3 += 1
+        
+        if contador_1y_3 > 10512000:
+            keep_alive_1y_3min_paused = True
+            db_set_config("keep_alive_1y_3min_pause_time", datetime.datetime.utcnow().isoformat())
+            db_set_config("keep_alive_1y_3min_counter", "10512000")
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive 1y(3min) completou ciclo! Pausa iniciada...")
+            return
+
+        db_set_config("keep_alive_1y_3min_counter", str(contador_1y_3))
+
+        if contador_1y_3 % 1051200 == 0 or contador_1y_3 == 1:
+            dias = contador_1y_3 / (24 * 3600)
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive 1y(3min): {contador_1y_3}/10512000 ({dias:.1f}d)")
+
+        db_set_config("keep_alive_1y_3min_status", f"Running {contador_1y_3}/10512000")
+
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE 1Y-3MIN] ❌ Erro: {e}")
+        db_set_config("keep_alive_1y_3min_status", f"ERROR: {str(e)}")
+
 # Reinicio de filas a cada 1 mês (30 dias = 2592000 segundos)
 @tasks.loop(seconds=2592000)
 async def restart_queues_monthly_task():
@@ -5224,6 +5398,9 @@ async def on_ready():
     keep_alive_1s_task.start()
     keep_alive_1h_task.start()
     keep_alive_24h_task.start()
+    keep_alive_1y_1min_task.start()
+    keep_alive_1y_2min_task.start()
+    keep_alive_1y_3min_task.start()
     restart_queues_monthly_task.start()
     rotacao_mediadores_task.start()
     auto_role_task.start()
@@ -5236,6 +5413,9 @@ async def on_ready():
     print(f"  ├─ Keep-Alive 1s: Simples a cada 1s ⚡")
     print(f"  ├─ Keep-Alive 1h: 1-3600 com pausa 1min 🕐")
     print(f"  ├─ Keep-Alive 24h: 1-86400 com pausa 1min 📅")
+    print(f"  ├─ Keep-Alive 1y(1-2min): 1-10512000 com pausa 1.5min 📅")
+    print(f"  ├─ Keep-Alive 1y(2-3min): 1-10512000 com pausa 2.5min 📅")
+    print(f"  ├─ Keep-Alive 1y(3min): 1-10512000 com pausa 3min 📅")
     print(f"  ├─ Reinicio Filas: a cada 1 mês (30 dias) 🔄")
     print(f"  ├─ Rotação Mediadores: a cada 30s")
     print(f"  ├─ Auto Role: a cada 60s")
