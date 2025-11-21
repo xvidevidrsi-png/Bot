@@ -822,7 +822,7 @@ class FilaView(View):
         self.btn_infinito.callback = self.gel_infinito
         self.add_item(self.btn_infinito)
 
-        self.btn_sair = Button(label="Sair", style=discord.ButtonStyle.danger, custom_id="sair_fila", emoji="⬅️", row=1)
+        self.btn_sair = Button(label="Sair", style=discord.ButtonStyle.red, custom_id="sair_fila", emoji="⬅️", row=1)
         self.btn_sair.callback = self.sair_fila
         self.add_item(self.btn_sair)
 
