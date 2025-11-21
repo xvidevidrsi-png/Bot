@@ -3467,31 +3467,6 @@ async def mostrar_ranking(interaction: discord.Interaction, guild_id: int, ephem
         inline=False
     )
 
-    # Estatísticas gerais do servidor
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-
-    cur.execute("""SELECT 
-                   COUNT(*) as total_jogadores,
-                   SUM(vitorias + derrotas) as total_partidas,
-                   SUM(coins) as total_coins
-                   FROM usuarios 
-                   WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0)""", (guild_id,))
-    stats = cur.fetchone()
-    conn.close()
-
-    if stats:
-        total_jogadores, total_partidas, total_coins = stats
-        embed.add_field(
-            name="📊 Estatísticas Gerais do Servidor",
-            value=(
-                f"👥 **{total_jogadores}** jogadores ativos\n"
-                f"🎮 **{total_partidas}** partidas disputadas\n"
-                f"💰 **{total_coins}** coins em circulação"
-            ),
-            inline=False
-        )
-
     embed.set_footer(text=f"Solicitado por {interaction.user.display_name} • Use /rank tipo:Meu Perfil para ver seu perfil")
 
     await interaction.followup.send(embed=embed, ephemeral=ephemeral)
@@ -4607,8 +4582,9 @@ async def on_message(message):
                 
                 if row:
                     valor_partida = row[0]
-                    # Formata o valor: 10.00 vira "10,00"
-                    valor_formatado = f"{valor_partida:.2f}".replace(".", ",")
+                    valor_dobrado = valor_partida * 2
+                    # Formata o valor dobrado: 10.00 vira "10,00"
+                    valor_formatado = f"{valor_dobrado:.2f}".replace(".", ",")
                     novo_nome = f"paga-{valor_formatado}"
                     
                     # Verifica se é um thread ou canal
