@@ -2810,78 +2810,51 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
         conn.commit()
         conn.close()
 
-@tree.command(name="separador_de_servidor", description="⚙️ [OWNER] Registra seu servidor no Bot Zeus - OBRIGATÓRIO para usar todos os recursos")
-@app_commands.describe(
-    id_servidor="ID do servidor (use o ID numérico do servidor Discord)",
-    nome_dono="Nome do dono do servidor"
-)
-async def separador_servidor(interaction: discord.Interaction, id_servidor: str, nome_dono: str):
-    global BOT_OWNER_ID
-
-    if BOT_OWNER_ID is None:
-        await interaction.response.send_message(
-            "❌ Owner do bot não foi identificado! Não é possível usar este comando.",
-            ephemeral=True
-        )
-        return
-
-    if interaction.user.id != BOT_OWNER_ID:
-        await interaction.response.send_message(
-            "⛔ **Acesso Negado**\n\n"
-            "Este comando é exclusivo do owner do bot (**emanoel7269**).\n\n"
-            "📝 **Precisa registrar seu servidor?**\n"
-            "Entre em contato com **emanoel7269** para registrar seu servidor no Bot Zeus.\n"
-            "O registro é **obrigatório** para usar qualquer funcionalidade do bot!",
-            ephemeral=True
-        )
-        return
-
-    try:
-        guild_id_int = int(id_servidor)
-    except ValueError:
-        await interaction.response.send_message("❌ ID do servidor inválido! Use o ID numérico do servidor.", ephemeral=True)
-        return
-
+# Auto-register servidor quando o bot entra
+@bot.event
+async def on_guild_join(guild):
+    """Auto-registra servidor quando bot entra"""
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
 
-    cur.execute("SELECT guild_id FROM servidores WHERE guild_id = ?", (guild_id_int,))
+    cur.execute("SELECT guild_id FROM servidores WHERE guild_id = ?", (guild.id,))
     existe = cur.fetchone()
 
-    if existe:
-        cur.execute("UPDATE servidores SET nome_dono = ?, ativo = 1 WHERE guild_id = ?",
-                    (nome_dono, guild_id_int))
-        conn.commit()
-        conn.close()
-        await interaction.response.send_message(
-            f"✅ **Servidor Atualizado com Sucesso!**\n\n"
-            f"**ID do Servidor:** {guild_id_int}\n"
-            f"**Dono:** {nome_dono}\n"
-            f"**Status:** ✅ Ativo\n\n"
-            f"🎉 **O servidor já está autorizado a usar o Bot Zeus!**\n"
-            f"Todos os comandos estão disponíveis para este servidor.",
-            ephemeral=True
-        )
-    else:
+    if not existe:
         cur.execute("INSERT INTO servidores (guild_id, nome_dono, ativo, data_registro) VALUES (?, ?, 1, ?)",
-                    (guild_id_int, nome_dono, datetime.datetime.utcnow().isoformat()))
+                    (guild.id, guild.owner.name if guild.owner else "Unknown", datetime.datetime.utcnow().isoformat()))
         conn.commit()
-        conn.close()
-        await interaction.response.send_message(
-            f"✅ **Servidor Registrado com Sucesso!**\n\n"
-            f"**ID do Servidor:** {guild_id_int}\n"
-            f"**Dono:** {nome_dono}\n"
-            f"**Status:** ✅ Ativo\n"
-            f"**Data de Registro:** {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"🎉 **O servidor agora está autorizado a usar o Bot Zeus!**\n\n"
-            f"📋 **Próximas Ações (Obrigatórias):**\n"
-            f"1️⃣ **Use `/dono_comando_slash`** para definir o cargo de administração\n"
-            f"2️⃣ Configure os canais necessários com `/auto_fila`\n"
-            f"3️⃣ Use `/manual` para ver todos os comandos disponíveis\n\n"
-            f"💡 Este registro garante isolamento de dados e previne bugs críticos.\n"
-            f"⏭️ **Clique em `/dono_comando_slash` agora para continuar a configuração!**",
-            ephemeral=True
-        )
+        print(f"✅ Servidor {guild.name} (ID: {guild.id}) auto-registrado!")
+    else:
+        print(f"ℹ️ Servidor {guild.name} (ID: {guild.id}) já estava registrado.")
+
+    conn.close()
+
+    # Enviar mensagem de boas-vindas
+    if guild.owner:
+        try:
+            embed = discord.Embed(
+                title="🎉 Bot Zeus - Bem-vindo!",
+                description=f"Olá {guild.owner.mention}! Seu servidor foi registrado automaticamente.",
+                color=0x5865F2
+            )
+            embed.add_field(
+                name="📋 Próximas Ações (Obrigatórias):",
+                value="1️⃣ Use `/dono_comando_slash` para definir o cargo de administração\n"
+                      "2️⃣ Use `/auto_fila` para criar os canais de filas\n"
+                      "3️⃣ Use `/manual` para ver todos os comandos disponíveis",
+                inline=False
+            )
+            embed.add_field(
+                name="💡 Dica:",
+                value="O registro garante isolamento de dados e previne bugs críticos.",
+                inline=False
+            )
+            embed.set_footer(text="Comece agora com /dono_comando_slash!")
+            
+            await guild.owner.send(embed=embed)
+        except:
+            pass
 
 @tree.command(name="dono_comando_slash", description="👑 Define qual cargo é o DONO do servidor e tem acesso a todos os comandos administrativos")
 @app_commands.describe(
@@ -2901,11 +2874,10 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
         await interaction.response.send_message(
             "⛔ **Servidor não registrado!**\n\n"
             "❌ Este servidor ainda não foi registrado no Bot Zeus.\n\n"
-            "📋 **Para registrar seu servidor:**\n"
-            "1. Peça ao owner do bot (**emanoel7269**) para executar:\n"
-            "   `/separador_de_servidor` com o ID do seu servidor\n\n"
-            "🔑 **Seu ID do Servidor:** `{guild_id}`\n\n"
-            "💡 Após o registro, você poderá usar todos os comandos de configuração!",
+            "📋 **O que fazer:**\n"
+            "O servidor é auto-registrado quando o bot entra.\n"
+            "Se esse for um servidor novo, tente novamente em alguns segundos.\n\n"
+            "💡 Se o problema persistir, reinvite o bot para o servidor.",
             ephemeral=True
         )
         return
