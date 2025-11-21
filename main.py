@@ -225,6 +225,24 @@ def init_db():
     conn.commit()
     conn.close()
 
+async def criar_canal_filas(guild, tipo_fila):
+    """Cria automaticamente um canal para as filas e retorna o canal"""
+    try:
+        # Verificar se canal já existe
+        canal_existente = discord.utils.get(guild.text_channels, name=f"📊-{tipo_fila}")
+        if canal_existente:
+            return canal_existente
+        
+        # Criar novo canal
+        canal = await guild.create_text_channel(
+            name=f"📊-{tipo_fila}",
+            topic=f"Filas automáticas de {tipo_fila}"
+        )
+        return canal
+    except Exception as e:
+        print(f"⚠️ Erro ao criar canal de filas: {e}")
+        return None
+
 def db_set_config(k, v):
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -2146,10 +2164,15 @@ async def criar_filas_1v1(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.defer(ephemeral=True)
+    # Auto-criar canal e responder imediatamente
+    canal = await criar_canal_filas(interaction.guild, "1v1-mobile")
+    if not canal:
+        await interaction.response.send_message("❌ Erro ao criar canal de filas!", ephemeral=True)
+        return
+    
+    await interaction.response.send_message(f"✅ Criando filas em {canal.mention}...", ephemeral=True)
 
     guild_id = interaction.guild.id
-    canal = interaction.channel
 
     for valor in VALORES_FILAS_1V1:
         embed = discord.Embed(
@@ -2184,8 +2207,6 @@ async def criar_filas_1v1(interaction: discord.Interaction):
 
         registrar_historico_fila(guild_id, valor, "normal", "mob", "criada")
         registrar_historico_fila(guild_id, valor, "infinito", "mob", "criada")
-
-    await interaction.followup.send("✅ Todas as filas 1x1 Mobile foram criadas!", ephemeral=True)
 
 @tree.command(name="1x1-emulador", description="⚔️ Cria todas as filas de 1v1 Emulador (Gel Normal e Infinito)")
 async def criar_filas_1x1_emulador(interaction: discord.Interaction):
