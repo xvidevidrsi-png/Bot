@@ -853,8 +853,10 @@ class FilaView(View):
         await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
         if len(jogadores) >= 2:
+            print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores[:2]}")
             fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
             fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
+            print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "normal")
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
@@ -884,8 +886,10 @@ class FilaView(View):
         await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
         if len(jogadores) >= 2:
+            print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores[:2]}")
             fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
             fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
+            print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
@@ -936,6 +940,8 @@ async def atualizar_msg_fila(canal, valor, tipo_jogo='mob'):
         jogadores_normal = fila_get_jogadores(guild_id, valor, "normal", tipo_jogo)
         jogadores_infinito = fila_get_jogadores(guild_id, valor, "infinito", tipo_jogo)
 
+        print(f"[FILA UPDATE] Valor: {fmt_valor(valor)} | Normal: {jogadores_normal} | Infinito: {jogadores_infinito}")
+
         if tipo_jogo == 'emu':
             titulo = "1v1 Emulador"
             descricao_modo = "1v1 Emulador"
@@ -972,6 +978,7 @@ async def atualizar_msg_fila(canal, valor, tipo_jogo='mob'):
             embed.add_field(name="🔵 Gel Infinito", value="Nenhum jogador", inline=True)
 
         await msg.edit(embed=embed)
+        print(f"✅ Mensagem da fila atualizada!")
     except Exception as e:
         print(f"⚠️ Erro ao atualizar mensagem da fila: {e}")
 
