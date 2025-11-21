@@ -62,13 +62,21 @@ export default function Config() {
               <Label htmlFor="taxa">Taxa Administrativa (%)</Label>
               <Input id="taxa" type="number" defaultValue="10" />
               <p className="text-[0.8rem] text-muted-foreground">
-                Porcentagem retida pelo bot em cada partida.
+                Porcentagem retida pelo bot em cada partida. (Valor atual: 0.10)
               </p>
             </div>
             
             <div className="grid gap-2">
               <Label htmlFor="min-saque">Valor Mínimo de Saque (R$)</Label>
               <Input id="min-saque" type="number" defaultValue="5.00" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="coin-win">Coins por Vitória</Label>
+              <Input id="coin-win" type="number" defaultValue="1" />
+              <p className="text-[0.8rem] text-muted-foreground">
+                Quantidade de coins recebidos ao vencer uma partida.
+              </p>
             </div>
           </CardContent>
         </Card>

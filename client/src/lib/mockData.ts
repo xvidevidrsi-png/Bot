@@ -27,12 +27,20 @@ export const mockUsers: User[] = [
   { id: '5', username: 'NoobSlayer', avatar: '', coins: 50.00, wins: 10, losses: 5, rank: 'Bronze', winRate: 66 },
 ];
 
+// Values from main.py: [100.00, 50.00, 40.00, 30.00, 20.00, 10.00, 5.00, 3.00, 2.00, 1.00, 0.80, 0.40]
 export const mockQueues: Queue[] = [
   { id: 'q1', value: 0.40, type: '1v1', players: 0, status: 'open' },
-  { id: 'q2', value: 1.00, type: '1v1', players: 1, status: 'open' },
-  { id: 'q3', value: 5.00, type: 'emulador', players: 2, status: 'closed' },
-  { id: 'q4', value: 10.00, type: 'emulador', players: 0, status: 'open' },
-  { id: 'q5', value: 50.00, type: '1v1', players: 1, status: 'open' },
+  { id: 'q2', value: 0.80, type: '1v1', players: 1, status: 'open' },
+  { id: 'q3', value: 1.00, type: '1v1', players: 2, status: 'closed' },
+  { id: 'q4', value: 2.00, type: '1v1', players: 0, status: 'open' },
+  { id: 'q5', value: 3.00, type: '1v1', players: 0, status: 'open' },
+  { id: 'q6', value: 5.00, type: '1v1', players: 1, status: 'open' },
+  { id: 'q7', value: 10.00, type: 'emulador', players: 1, status: 'open' },
+  { id: 'q8', value: 20.00, type: 'emulador', players: 0, status: 'open' },
+  { id: 'q9', value: 30.00, type: 'emulador', players: 0, status: 'open' },
+  { id: 'q10', value: 40.00, type: 'emulador', players: 2, status: 'closed' },
+  { id: 'q11', value: 50.00, type: '1v1', players: 0, status: 'open' },
+  { id: 'q12', value: 100.00, type: '1v1', players: 0, status: 'open' },
 ];
 
 export const mockLogs = [
