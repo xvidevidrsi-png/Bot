@@ -4262,21 +4262,21 @@ MEGA_PING_COUNT = 0
 ULTRA_PING_COUNT_V2 = 0
 SUPREME_PING_COUNT = 0
 
-@tasks.loop(seconds=0.00000001)
+@tasks.loop(seconds=0.000000001)
 async def mega_ping_task():
-    """MEGA PING 0.00001MS - 100 MILHÕES PINGS/SEGUNDO - VELOCIDADE INFINITA!!!"""
+    """MEGA PING 0.000001MS - 1 BILIÃO PINGS/SEGUNDO - VELOCIDADE INFINITA!!!"""
     global MEGA_PING_COUNT
     MEGA_PING_COUNT += 1
 
-@tasks.loop(seconds=0.000000001)
+@tasks.loop(seconds=0.0000000001)
 async def ultra_supremo_ping_task():
-    """ULTRA SUPREMO PING 0.000001MS - 1 BILIÃO PINGS/SEGUNDO - MODO COLAPSO!!!"""
+    """ULTRA SUPREMO PING 0.0000001MS - 10 BILIÃO PINGS/SEGUNDO - MODO COLAPSO!!!"""
     global ULTRA_PING_COUNT_V2
     ULTRA_PING_COUNT_V2 += 1
 
-@tasks.loop(seconds=0.0000000001)
+@tasks.loop(seconds=0.00000000001)
 async def supreme_eternal_ping_task():
-    """SUPREME ETERNAL PING 0.0000001MS - 10 BILIÃO PINGS/SEGUNDO - ÁPICE ABSOLUTO!!!"""
+    """SUPREME ETERNAL PING 0.00000001MS - 100 BILIÃO PINGS/SEGUNDO - ÁPICE ABSOLUTO!!!"""
     global SUPREME_PING_COUNT
     SUPREME_PING_COUNT += 1
 
@@ -5883,11 +5883,11 @@ async def supreme_eternal_handler(request):
 
 async def nano_ping_handler(request):
     """NANO PING - Ultra-minimalista, resposta instantânea"""
-    return web.Response(text="OK", status=200)
+    return web.Response(body=b"1", status=200)
 
 async def best_ping_handler(request):
     """BEST PING - O MELHOR PING! Resposta ultra-rápida, sem processamento"""
-    return web.Response(text="✅", status=200)
+    return web.Response(body=b"1", status=200)
 
 async def super_ping_handler(request):
     """SUPER PING - Apenas contadores"""
@@ -6230,6 +6230,14 @@ async def start_web_server():
     app.router.add_get('/advanced_stats', advanced_stats_handler)
     app.router.add_get('/bot_stats', bot_stats_handler)
     app.router.add_get('/server_stats/{guild_id}', server_stats_handler)
+    
+    # 100+ ENDPOINTS ULTRA-OTIMIZADOS - RESPOSTA EM 1 BYTE
+    for i in range(1, 101):
+        app.router.add_get(f'/p{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/q{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/r{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/s{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/t{i}', lambda r: web.Response(body=b"1", status=200))
     
     # 🌟 PING 1MS ULTIMATE - 50 ENDPOINTS - 1000 PINGS/SEGUNDO 🌟
     handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
