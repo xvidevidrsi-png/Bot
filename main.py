@@ -6049,72 +6049,26 @@ async def start_tcp_ping_server():
     async with server:
         await server.serve_forever()
 
-def start_udp_ping_server():
-    """Servidor UDP EXTREMAMENTE RÁPIDO na porta 5002 - Sem overhead TCP"""
+def start_ping_supremo():
+    """PING INFINITO - VELOCIDADE MÁXIMA - 1 thread ultra otimizada"""
     import socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('0.0.0.0', 5002))
-    sock.setblocking(False)
     
-    async def udp_loop():
-        loop = asyncio.get_event_loop()
-        while True:
-            try:
-                await loop.sock_recv(sock, 1024)
-                addr = sock.recvfrom_into(bytearray(1024))
-            except:
-                pass
-            finally:
-                await asyncio.sleep(0)
+    # Socket único com backlog gigante
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    s.bind(('0.0.0.0', 8080))
+    s.listen(65535)
     
-    asyncio.create_task(udp_loop())
-
-def start_ultra_ping_server():
-    """PING DEFINITIVO - HTTP RAW PURO - Resposta em nanosegundos"""
-    import socket, threading
+    resp = b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n1"
     
-    # HTTP Response minimalista - 1 byte de corpo
-    http_resp = b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\nConnection: close\r\n\r\n1"
-    raw_resp = b"1"
-    
-    # HTTP RAW SERVER na porta 8080 para bypass de aiohttp overhead
-    def http_raw(port):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        s.bind(('0.0.0.0', port))
-        s.listen(16384)
-        while 1:
-            try:
-                c, _ = s.accept()
-                c.send(http_resp)
-                c.close()
-            except:pass
-    
-    # TCP RAW - máxima velocidade pura
-    def tcp_raw(port):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        s.bind(('0.0.0.0', port))
-        s.listen(16384)
-        while 1:
-            try:
-                c, _ = s.accept()
-                c.send(raw_resp)
-                c.close()
-            except:pass
-    
-    # 64 threads HTTP + 128 threads TCP puro
-    for _ in range(64):
-        t = threading.Thread(target=http_raw, args=(8080,), daemon=True)
-        t.start()
-    
-    for port in [5003, 5004, 5005, 5006]:
-        for _ in range(32):
-            t = threading.Thread(target=tcp_raw, args=(port,), daemon=True)
-            t.start()
+    # Loop single thread - mais rápido que múltiplas threads
+    while 1:
+        try:
+            c, _ = s.accept()
+            c.send(resp)
+            c.close()
+        except:pass
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
@@ -6123,8 +6077,10 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
-    # INICIA PING SERVERS PRIMEIRO - Máxima prioridade
-    start_ultra_ping_server()
+    # INICIA PING SUPREMO EM THREAD SEPARADA - MÁXIMA VELOCIDADE
+    import threading
+    t = threading.Thread(target=start_ping_supremo, daemon=True)
+    t.start()
     
     await start_web_server()
     await bot.start(token)
