@@ -5793,9 +5793,7 @@ async def nano_ping_handler(request):
     return web.Response(body=b"1", status=200)
 
 async def best_ping_handler(request):
-    """BEST PING - O MELHOR PING! Resposta ultra-rápida, sem processamento - 204 NO CONTENT (ZERO LATÊNCIA)"""
-    if request.method == 'HEAD':
-        return web.Response(status=204)
+    """BEST PING - ZERO LATÊNCIA - Resposta vazia pura"""
     return web.Response(status=204)
 
 async def super_ping_handler(request):
