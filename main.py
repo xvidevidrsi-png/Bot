@@ -6075,17 +6075,19 @@ def start_raw_socket_ping():
     import socket
     import threading
     
-    def raw_loop():
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 32)
-        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        s.bind(('0.0.0.0', 5003))
-        s.listen(512)
-        
-        response = b"1"
-        
+    # Cria socket ÚNICO compartilhado
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 16)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 16)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    s.bind(('0.0.0.0', 5003))
+    s.listen(1024)
+    
+    response = b"1"
+    
+    def raw_worker():
         while True:
             try:
                 conn, _ = s.accept()
@@ -6094,10 +6096,12 @@ def start_raw_socket_ping():
             except:
                 pass
     
-    # Inicia múltiplas threads para distribuição de carga
-    for _ in range(4):
-        thread = threading.Thread(target=raw_loop, daemon=True)
+    # Inicia 8 threads worker compartilhando o mesmo socket
+    for _ in range(8):
+        thread = threading.Thread(target=raw_worker, daemon=True)
         thread.start()
+    
+    print(f'✅ Socket RAW SUPREMO na porta 5003 com 8 workers - PING INFINITO')
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
