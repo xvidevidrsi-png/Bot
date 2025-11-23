@@ -6071,24 +6071,49 @@ def start_udp_ping_server():
     asyncio.create_task(udp_loop())
 
 def start_raw_socket_ping():
-    """Socket RAW super-primitivo - Máxima velocidade"""
+    """Socket RAW ULTRA-VELOCIDADE - Máximo throughput possível"""
     import socket
+    import select
     import threading
     
     def raw_loop():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 64)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 64)
         s.bind(('0.0.0.0', 5003))
-        s.listen(1)
-        s.setblocking(False)
+        s.listen(128)  # Max backlog
+        
+        response = b"1"
+        conns = []
         
         while True:
             try:
-                conn, addr = s.accept()
-                conn.send(b"1")
-                conn.close()
-            except BlockingIOError:
-                pass
+                readable, _, _ = select.select([s] + conns, conns, [], 0.001)
+                
+                for sock in readable:
+                    if sock == s:
+                        try:
+                            conn, _ = s.accept()
+                            conns.append(conn)
+                        except:
+                            pass
+                    else:
+                        try:
+                            sock.recv(1)
+                        except:
+                            pass
+                
+                for conn in conns[:]:
+                    try:
+                        conn.send(response)
+                        conn.close()
+                        conns.remove(conn)
+                    except:
+                        try:
+                            conns.remove(conn)
+                        except:
+                            pass
             except:
                 pass
     
