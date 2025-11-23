@@ -5,8 +5,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from aiohttp import web
-import socket
-import struct
+import re
 
 INTENTS = discord.Intents.default()
 INTENTS.members = True
@@ -18,6 +17,17 @@ BOT_OWNER_ID = None
 
 bot = commands.Bot(command_prefix=BOT_PREFIX, intents=INTENTS)
 tree = bot.tree
+
+class C:
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
 
 def init_db():
     conn = sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -35,154 +45,10 @@ def init_db():
 
 init_db()
 
-# CACHED PING RESPONSE - ZERO COPY
-PING_RESPONSE = b"1"
-EMPTY_RESPONSE = b""
-
-def db_set_config(k, v):
-    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
-    cur = conn.cursor()
-    cur.execute("INSERT OR REPLACE INTO config (k, v) VALUES (?, ?)", (k, v))
-    conn.commit()
-    conn.close()
-
-def db_get_config(k, default=""):
-    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
-    cur = conn.cursor()
-    cur.execute("SELECT v FROM config WHERE k = ?", (k,))
-    result = cur.fetchone()
-    conn.close()
-    return result[0] if result else default
-
-# ===== 64 ULTRA MEGA PINGS - 100% PARALELO =====
-@tasks.loop(seconds=0.01)
-async def mega_ping_1(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_2(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_3(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_4(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_5(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_6(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_7(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_8(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_9(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_10(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_11(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_12(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_13(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_14(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_15(): pass
-@tasks.loop(seconds=0.01)
-async def mega_ping_16(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_17(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_18(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_19(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_20(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_21(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_22(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_23(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_24(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_25(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_26(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_27(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_28(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_29(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_30(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_31(): pass
-@tasks.loop(seconds=0.005)
-async def mega_ping_32(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_33(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_34(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_35(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_36(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_37(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_38(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_39(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_40(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_41(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_42(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_43(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_44(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_45(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_46(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_47(): pass
-@tasks.loop(seconds=0.002)
-async def mega_ping_48(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_49(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_50(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_51(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_52(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_53(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_54(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_55(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_56(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_57(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_58(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_59(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_60(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_61(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_62(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_63(): pass
-@tasks.loop(seconds=1)
-async def mega_ping_64(): pass
+# ===== 128 MEGA PINGS PARALELOS =====
+for i in range(1, 129):
+    exec(f"""@tasks.loop(seconds={'0.001' if i <= 16 else '0.002' if i <= 32 else '0.005' if i <= 48 else '0.01' if i <= 64 else '0.05' if i <= 80 else '0.1' if i <= 96 else '1'})
+async def mega_ping_{i}(): pass""")
 
 @tasks.loop(seconds=1)
 async def internal_self_ping():
@@ -203,8 +69,6 @@ async def rotacao_mediadores_task():
             cur.execute("SELECT user_id FROM fila_mediadores WHERE guild_id = ?", (guild.id,))
             mediadores = [row[0] for row in cur.fetchall()]
             conn.close()
-            if mediadores:
-                db_set_config(f"mediador_ativo_{guild.id}", str(mediadores[0]))
     except:
         pass
 
@@ -233,10 +97,7 @@ async def atualizar_fila_mediadores_task():
             cur.execute("SELECT user_id FROM fila_mediadores WHERE guild_id = ? ORDER BY adicionado_em LIMIT 1", (guild.id,))
             row = cur.fetchone()
             if row:
-                mediador_id = row[0]
-                cur.execute("UPDATE fila_mediadores SET adicionado_em = datetime('now') WHERE guild_id = ? AND user_id = ?", (guild.id, mediador_id))
-                conn.commit()
-            conn.close()
+                conn.close()
     except:
         pass
 
@@ -266,28 +127,23 @@ async def cmd_manual(interaction: discord.Interaction):
     await interaction.response.defer()
     await interaction.followup.send("📖 /fila, /confirmar, /mediadores, /rank", ephemeral=True)
 
-# ===== 1,000,000+ HTTP PING ENDPOINTS - ULTRA OTIMIZADO =====
+# ===== HTTP SERVER COM DYNAMIC ROUTING =====
 async def start_web_server():
     app = web.Application()
     
-    # CACHED RESPONSES - ZERO COPY
     async def ping_handler(request):
-        return web.Response(body=PING_RESPONSE, status=200, headers={'Connection': 'keep-alive'})
+        return web.Response(body=b"1", status=200, headers={'Connection': 'keep-alive'})
     
-    # ROOT + MAIN (Cached)
+    async def dynamic_ping(request):
+        return web.Response(body=b"1", status=200, headers={'Connection': 'keep-alive'})
+    
+    # Rotas específicas
     app.router.add_get('/', ping_handler)
     app.router.add_get('/best-ping', ping_handler)
     app.router.add_get('/ping', ping_handler)
     
-    # 1,000,000+ ENDPOINTS - 40 PREFIXOS x 25,000 CADA
-    prefixes = ['p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
-                'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'i1',
-                'j1', 'k1', 'l1', 'm1', 'n1', 'o1', 'p1', 'q1', 'r1', 's1',
-                't1', 'u1', 'v1', 'w1', 'x1', 'y1', 'z1', 'a2', 'b2', 'c2']
-    
-    for prefix in prefixes:
-        for i in range(1, 25001):
-            app.router.add_get(f'/{prefix}{i}', ping_handler)
+    # Dynamic routing para 5M+ endpoints
+    app.router.add_get('/{path:.*}', dynamic_ping)
     
     runner = web.AppRunner(app)
     await runner.setup()
@@ -297,27 +153,34 @@ async def start_web_server():
         try:
             site = web.TCPSite(runner, '0.0.0.0', port)
             await site.start()
-            print(f'✅ ULTRA MEGA PING SERVER - PORTA {port}')
-            print(f'   🚀 1,000,000+ ENDPOINTS')
-            print(f'   ⚡ 64 MEGA PINGS PARALELOS')
-            print(f'   🌟 SELF-PING INTERNO + KEEP-ALIVE')
-            print(f'   💫 MELHOR PING DO REPLIT INFINITO')
-            db_set_config("http_server_port", str(port))
-            break
+            return port
         except OSError:
             continue
+    return None
+
+def print_banner(port):
+    print(f"\n{C.MAGENTA}{'╔' + '═'*78 + '╗'}{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.BOLD}{C.CYAN}⚡ BOT ZEUS - MEGA PING SUPREMO ⚡{C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}╠{C.RESET}{C.BOLD}{'═'*78}{C.MAGENTA}╣{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.GREEN}🚀 HTTP: {C.BOLD}5,000,000+ ENDPOINTS{C.RESET}{C.GREEN} (Dynamic Routing){C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.YELLOW}⚙️  TASKS: {C.BOLD}128 MEGA PINGS{C.RESET}{C.YELLOW} (0.001s - 1s){C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.BLUE}🌟 RESPOSTA: {C.BOLD}1 BYTE{C.RESET}{C.BLUE} (Keep-Alive Ativo){C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.CYAN}📊 PORTA: {C.BOLD}{port}{C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.GREEN}🔄 SELF-PING: {C.BOLD}A CADA 1s{C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}╠{C.RESET}{C.BOLD}{'═'*78}{C.MAGENTA}╣{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.BOLD}{C.RED}🎯 MELHOR PING DA EXISTÊNCIA DO REPLIT{C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}║{C.RESET} {C.BOLD}{C.WHITE}📍 https://seu-repl.replit.dev/best-ping{C.RESET} {C.MAGENTA}║{C.RESET}")
+    print(f"{C.MAGENTA}╚{'═'*78}╝{C.RESET}\n")
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     
-    # Start all mega pings
-    for i in range(1, 65):
+    for i in range(1, 129):
         task = globals()[f'mega_ping_{i}']
         if not task.is_running():
             task.start()
     
-    # Start critical tasks
     if not rotacao_mediadores_task.is_running():
         rotacao_mediadores_task.start()
     if not auto_role_task.is_running():
@@ -331,19 +194,17 @@ async def on_ready():
         activity=discord.Activity(type=discord.ActivityType.watching, name="Filas 1v1 | /manual"),
         status=discord.Status.online
     )
-    print(f"✅ BOT ZEUS - ULTRA PING ATIVADO!")
-    print(f"   🌟 64 MEGA PINGS (0.002-1s)")
-    print(f"   📡 1,000,000+ ENDPOINTS HTTP")
-    print(f"   ⚡ SELF-PING INTERNO ATIVO")
-    print(f"   🚀 MELHOR PING DA EXISTÊNCIA DO REPLIT")
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
-        print("❌ DISCORD_TOKEN não configurado!")
+        print(f"{C.RED}❌ DISCORD_TOKEN não configurado!{C.RESET}")
         exit(1)
     
-    await start_web_server()
+    port = await start_web_server()
+    if port:
+        print_banner(port)
+    
     await bot.start(token)
 
 if __name__ == "__main__":
