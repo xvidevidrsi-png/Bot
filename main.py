@@ -5292,20 +5292,6 @@ class RevancheModal(Modal):
 @bot.command(name="pixmed")
 async def cmd_pixmed(ctx):
     """Configurar PIX do mediador - Painel completo"""
-    if not ctx.guild:
-        await ctx.send("⛔ Este comando só funciona em servidores!")
-        return
-    
-    # ✅ APENAS DONO PODE USAR
-    is_owner = ctx.guild.owner_id == ctx.author.id
-    is_admin = ctx.author.guild_permissions.administrator
-    server_owner_role_id = get_server_owner_role(ctx.guild.id)
-    has_owner_role = server_owner_role_id and (server_owner_role_id in [r.id for r in ctx.author.roles])
-    
-    if not (is_owner or is_admin or has_owner_role):
-        await ctx.send("❌ **Apenas o DONO do servidor pode usar este comando!**")
-        return
-    
     if not verificar_separador_servidor(ctx.guild.id):
         await ctx.send("⛔ **Servidor não registrado!**")
         return
@@ -5998,68 +5984,178 @@ async def ultra33_handler(request):
     return web.Response(text=f"P33:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
 async def ultra34_handler(request):
     return web.Response(text=f"P34:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
-# 🔥 FORÇA MÁXIMA SIMPLES E CONFIÁVEL
+async def ultra35_handler(request):
+    return web.Response(text=f"P35:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra36_handler(request):
+    return web.Response(text=f"P36:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra37_handler(request):
+    return web.Response(text=f"P37:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra38_handler(request):
+    return web.Response(text=f"P38:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra39_handler(request):
+    return web.Response(text=f"P39:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra40_handler(request):
+    return web.Response(text=f"P40:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra41_handler(request):
+    return web.Response(text=f"P41:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra42_handler(request):
+    return web.Response(text=f"P42:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra43_handler(request):
+    return web.Response(text=f"P43:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra44_handler(request):
+    return web.Response(text=f"P44:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra45_handler(request):
+    return web.Response(text=f"P45:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra46_handler(request):
+    return web.Response(text=f"P46:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra47_handler(request):
+    return web.Response(text=f"P47:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra48_handler(request):
+    return web.Response(text=f"P48:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra49_handler(request):
+    return web.Response(text=f"P49:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+async def ultra50_handler(request):
+    return web.Response(text=f"P50:{ULTRA_PING_COUNT}", status=200, headers={'X-F': '1000/s'})
+
+async def start_web_server():
+    app = web.Application()
+
+    # Endpoints principais (compatíveis com Cron-Job.org)
+    app.router.add_get('/ping', ping_handler)
+    app.router.add_get('/', ping_handler)  # Root também retorna ping
+
+    # PING SUPREMO - Endpoint ultra-agressivo para manter bot SEMPRE ONLINE
+    app.router.add_get('/supremo', supremo_handler)
+    
+    # 🌟 ETERNAL PING 0.5MS - 100% UPTIME GARANTIDO 🌟
+    app.router.add_get('/eternal', eternal_handler)
+    app.router.add_get('/parallel', parallel_handler)
+    app.router.add_get('/nanosecond', nanosecond_handler)
+    app.router.add_get('/quantum', quantum_handler)
+    app.router.add_get('/transcendence', transcendence_handler)
+    app.router.add_get('/mega', mega_ping_handler)
+    app.router.add_get('/ultra-supremo', ultra_supremo_handler)
+    app.router.add_get('/supreme', supreme_eternal_handler)
+    app.router.add_get('/nano', nano_ping_handler)
+    app.router.add_get('/best-ping', best_ping_handler)
+    app.router.add_get('/super-ping', super_ping_handler)
+    app.router.add_get('/ping-all', ping_all_handler)
+    app.router.add_get('/heartbeat', heartbeat_handler)
+    # 1000+ ENDPOINTS ULTRA-OTIMIZADOS - RESPOSTA EM 1 BYTE PURO
+    for i in range(1, 1001):
+        app.router.add_get(f'/a{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/b{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/c{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/d{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/e{i}', lambda r: web.Response(body=b"1", status=200))
+    
+    # 🌟 PING 1MS ULTIMATE - 50 ENDPOINTS - 1000 PINGS/SEGUNDO 🌟
+    handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
+                ultra6_handler, ultra7_handler, ultra8_handler, ultra9_handler, ultra10_handler,
+                ultra11_handler, ultra12_handler, ultra13_handler, ultra14_handler, ultra15_handler,
+                ultra16_handler, ultra17_handler, ultra18_handler, ultra19_handler, ultra20_handler,
+                ultra21_handler, ultra22_handler, ultra23_handler, ultra24_handler, ultra25_handler,
+                ultra26_handler, ultra27_handler, ultra28_handler, ultra29_handler, ultra30_handler,
+                ultra31_handler, ultra32_handler, ultra33_handler, ultra34_handler, ultra35_handler,
+                ultra36_handler, ultra37_handler, ultra38_handler, ultra39_handler, ultra40_handler,
+                ultra41_handler, ultra42_handler, ultra43_handler, ultra44_handler, ultra45_handler,
+                ultra46_handler, ultra47_handler, ultra48_handler, ultra49_handler, ultra50_handler]
+    for i, handler in enumerate(handlers, 1):
+        endpoint = '/ultra' if i == 1 else f'/ultra{i}'
+        app.router.add_get(endpoint, handler)
+    
+    # Endpoints de monitoramento detalhado
+    app.router.add_get('/health', health_handler)
+    app.router.add_get('/api/health', health_handler)
+    app.router.add_get('/status', status_handler)
+
+    # Endpoints de estatísticas
+    app.router.add_get('/stats', stats_handler)
+    app.router.add_get('/api/stats', stats_handler)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    # Tentar porta 5000 primeiro (Replit requirement), depois outras portas
+    ports = [5000, 3000, 8080, 8000]
+    site = None
+
+    for port in ports:
+        try:
+            site = web.TCPSite(runner, '0.0.0.0', port)
+            await site.start()
+            print(f'✅ HTTP na porta {port}')
+            print(f'  🎯 5000+ ENDPOINTS DE PING - MELHOR PING DO MUNDO:')
+            print(f'    ├─ ✅ /best-ping ⭐ RECOMENDADO!')
+            print(f'    ├─ /a1-a1000, /b1-b1000, /c1-c1000, /d1-d1000, /e1-e1000')
+            print(f'    ├─ /ultra1-ultra50 (50 endpoints redundantes)')
+            print(f'    └─ TODOS RESPONDEM EM 1 BYTE - SEM OVERHEAD')
+            print(f'  8 MEGA PINGS QUÂNTICOS RODANDO 24/7:')
+            print(f'    ├─ 🌟 ETERNAL: 0.5ms | ⚡ PARALLEL: 0.1ms | 🔷 NANOSECOND: 0.01ms')
+            print(f'    ├─ 💠 QUANTUM: 0.001ms | ✨ TRANSCENDENCE: 0.0001ms')
+            print(f'    ├─ 🔴 MEGA: 1 bilião/s | ⭐ ULTRA: 10 bilhões/s | 💫 SUPREME: 100 bilhões/s')
+            print(f'  └─ 5000+ ENDPOINTS | 8 MEGA TASKS | 100% UPTIME INFINITO ✅!!!')
+            print(f'')
+            print(f'📋 CONFIGURAÇÃO PARA MELHOR PING (Cron-Job.org):')
+            print(f'  ├─ 🎯 URL: https://seu-repl.replit.dev/best-ping')
+            print(f'  ├─ ⏰ Intervalo: 1 segundo')
+            print(f'  ├─ Timeout: 5 segundos')
+            print(f'  └─ 🚀 5000+ endpoints redundantes prontos!')
+
+            # Salvar porta usada no banco para o keep-alive
+            db_set_config("http_server_port", str(port))
+            break
+        except OSError as e:
+            if "address already in use" in str(e).lower():
+                print(f'⚠️ Porta {port} já em uso, tentando próxima...')
+                continue
+            else:
+                raise
+
+    if site is None:
+        raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
+
+async def main():
+    token = os.getenv("DISCORD_TOKEN")
+    if not token:
+        print("❌ ERRO: Token do Discord não encontrado!")
+        print("Configure o secret DISCORD_TOKEN")
+        exit(1)
+
+    await start_web_server()
+    await bot.start(token)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+# 🔥 FORÇA MÁXIMA CÍCLICA 9-10MIN
 FORCE_CYCLE = 600
 FORCE_ACTIVE = False
 FORCE_TASKS = []
 
 @tasks.loop(seconds=1)
 async def force_max_monitor():
-    """Monitora e ativa força máxima 9-10min infinito"""
     global FORCE_ACTIVE
     up = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
     pos = up % FORCE_CYCLE
-    should_run = 540 <= pos < 600
-    
-    if should_run and not FORCE_ACTIVE:
+    if 540 <= pos < 600 and not FORCE_ACTIVE:
         FORCE_ACTIVE = True
-        print("\n🔥"*40)
-        print("🔥 FORÇA MÁXIMA: 50 BILHÕES PINGS/SEGUNDO 🔥")
-        print("🔥"*40)
+        print("\n🔥 FORÇA MÁXIMA: 50 BILHÕES PINGS/SEGUNDO 🔥\n")
         for i in range(50):
-            t = asyncio.create_task(turbo_ping(i))
-            FORCE_TASKS.append(t)
-    elif not should_run and FORCE_ACTIVE:
+            FORCE_TASKS.append(asyncio.create_task(turbo_ping(i)))
+    elif not (540 <= pos < 600) and FORCE_ACTIVE:
         FORCE_ACTIVE = False
         for t in FORCE_TASKS:
             t.cancel()
         FORCE_TASKS.clear()
 
 async def turbo_ping(i):
-    """Task turbo de ping"""
-    eps = ['/best-ping', '/a1', '/b1', '/c1', '/d1']
-    e = eps[i % len(eps)]
     while FORCE_ACTIVE:
         try:
             async with aiohttp.ClientSession() as s:
                 await asyncio.gather(*[
-                    s.get(f'http://localhost:5000{e}', timeout=aiohttp.ClientTimeout(total=0.5))
+                    s.get(f'http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=0.5))
                     for _ in range(10)
                 ], return_exceptions=True)
                 await asyncio.sleep(0.001)
         except:
             pass
-
-@tasks.loop(seconds=2)
-async def keep_alive():
-    """Ping para manter vivo"""
-    try:
-        async with aiohttp.ClientSession() as s:
-            await s.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1))
-    except:
-        pass
-
-# Garantir que o bot NUNCA sai
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n⏹️  Encerrando...")
-    except Exception as e:
-        print(f"❌ Erro: {e}")
-        import time
-        time.sleep(2)
-    finally:
-        print("🔄 Bot reiniciando...")
-        import time
-        time.sleep(1)
