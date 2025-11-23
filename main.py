@@ -1349,7 +1349,7 @@ class ConfirmarPartidaView(View):
                 pass
 
             # Envia mensagem visual de confirmação completa
-            await interaction.channel.send("🎮 **PARTIDA CONFIRMADA POR AMBOS OS JOGADORES!**\n✅ Processando pagamento e criando sala...")
+            await interaction.channel.send("🎮 **PARTIDA CONFIRMADA POR AMBOS OS JOGADORES!**")
 
             # LIMPAR OS JOGADORES DA FILA
             conn = sqlite3.connect(DB_FILE)
