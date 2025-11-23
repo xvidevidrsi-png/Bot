@@ -4232,8 +4232,38 @@ PING_START_TIME = None
 PING_COUNT = 0
 PING_ERRORS = 0
 LAST_PING_STATUS = "OK"
+SUPREMO_PING_COUNT = 0
+SUPREMO_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
+
+@tasks.loop(seconds=60)
+async def ping_supremo_task():
+    """PING SUPREMO - A cada 60 segundos com retry automático para manter bot SEMPRE ONLINE"""
+    global SUPREMO_PING_COUNT, SUPREMO_PING_ERRORS
+    SUPREMO_PING_COUNT += 1
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            latency_ms = round(bot.latency * 1000, 2)
+            guild_count = len(bot.guilds)
+            user_count = sum([g.member_count for g in bot.guilds])
+            uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
+            
+            status_emoji = "🚀" if latency_ms < 100 else "⚡" if latency_ms < 300 else "⚠️"
+            
+            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] {status_emoji} PING SUPREMO #{SUPREMO_PING_COUNT} | {latency_ms}ms | {guild_count} servidores | {user_count} usuários")
+            db_set_config("supremo_ping_count", str(SUPREMO_PING_COUNT))
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2)
+                continue
+            else:
+                SUPREMO_PING_ERRORS += 1
+                print(f"[PING SUPREMO] ❌ Erro após {max_retries} tentativas: {e}")
+                break
 
 @tasks.loop(seconds=30)
 async def ping_task():
@@ -5669,6 +5699,29 @@ async def status_handler(request):
         headers={'Content-Type': 'text/plain'}
     )
 
+async def supremo_handler(request):
+    """PING SUPREMO - Endpoint ultra-agressivo para manter bot SEMPRE ONLINE 🚀"""
+    uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
+    uptime_hours = uptime_seconds / 3600
+    latency_ms = round(bot.latency * 1000, 2)
+    
+    db_set_config("last_supremo_ping", datetime.datetime.utcnow().isoformat())
+    
+    response_text = f"🚀 SUPREMO PONG | uptime: {uptime_hours:.2f}h | latency: {latency_ms}ms | status: ALWAYS_ONLINE"
+    
+    print(f"🚀 PING SUPREMO recebido de {request.remote} | Uptime: {uptime_hours:.2f}h")
+    
+    return web.Response(
+        text=response_text,
+        status=200,
+        headers={
+            'Content-Type': 'text/plain',
+            'X-Bot-Uptime-Hours': str(round(uptime_hours, 2)),
+            'X-Bot-Status': 'SUPREMO_ONLINE',
+            'X-Bot-Latency-Ms': str(latency_ms)
+        }
+    )
+
 async def start_web_server():
     app = web.Application()
 
@@ -5676,6 +5729,9 @@ async def start_web_server():
     app.router.add_get('/ping', ping_handler)
     app.router.add_get('/', ping_handler)  # Root também retorna ping
 
+    # PING SUPREMO - Endpoint ultra-agressivo para manter bot SEMPRE ONLINE
+    app.router.add_get('/supremo', supremo_handler)
+    
     # Endpoints de monitoramento detalhado
     app.router.add_get('/health', health_handler)
     app.router.add_get('/api/health', health_handler)
@@ -5698,6 +5754,7 @@ async def start_web_server():
             await site.start()
             print(f'✅ Servidor HTTP rodando na porta {port}')
             print(f'  ├─ GET /ping - Ping otimizado (Cron-Job.org compatible)')
+            print(f'  ├─ GET /supremo - 🚀 PING SUPREMO (Ultra-agressivo - Sempre ONLINE)')
             print(f'  ├─ GET /status - Status rápido em texto')
             print(f'  ├─ GET /health - Health check JSON detalhado')
             print(f'  └─ GET /stats - Estatísticas do banco de dados')
