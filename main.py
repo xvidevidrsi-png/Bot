@@ -6144,47 +6144,75 @@ async def main():
     await start_web_server()
     await bot.start(token)
 
-# 🔥🔥🔥 SISTEMA DE FORÇA MÁXIMA INFINITA - 9 MINUTOS = 100 BILHÕES PINGS/SEGUNDO
-FORCE_MAX_TIME = 540  # 9 minutos em segundos
-FORCE_MAX_TASKS_ACTIVE = set()
+# 🔥🔥🔥 SISTEMA DE FORÇA MÁXIMA CÍCLICA - 9-10MIN INFINITAMENTE
+FORCE_MAX_CYCLE = 600  # 10 minutos = ciclo completo
+FORCE_MAX_START = 540  # 9 minutos para ativar
+FORCE_MAX_END = 600    # 10 minutos para desativar
+FORCE_MAX_ACTIVE = False
+FORCE_MAX_TASKS = {}
+FORCE_MAX_PRINTED = False
 
 @tasks.loop(seconds=0.5)
-async def monitor_force_max():
-    """Monitora uptime e ativa FORÇA MÁXIMA INFINITA aos 9 minutos"""
+async def monitor_force_max_cycle():
+    """Monitora uptime e ativa FORÇA MÁXIMA de 9-10min, infinitamente"""
+    global FORCE_MAX_ACTIVE, FORCE_MAX_PRINTED
+    
     uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
     
-    if uptime_seconds >= FORCE_MAX_TIME:
-        # Criar 200 tasks de turbo ping em paralelo - INFINITAMENTE
-        for i in range(200):
-            if i not in FORCE_MAX_TASKS_ACTIVE:
-                FORCE_MAX_TASKS_ACTIVE.add(i)
-                asyncio.create_task(turbo_force_max_ping_infinite(i))
+    # Calcula posição no ciclo (9-10min se repete infinitamente)
+    cycle_position = uptime_seconds % FORCE_MAX_CYCLE
+    
+    # FORÇA MÁXIMA ATIVA: quando está entre 9-10 minutos do ciclo
+    should_activate = FORCE_MAX_START <= cycle_position < FORCE_MAX_END
+    
+    if should_activate and not FORCE_MAX_ACTIVE:
+        # ✅ ATIVAR FORÇA MÁXIMA
+        FORCE_MAX_ACTIVE = True
+        FORCE_MAX_PRINTED = False
         
-        # Mensagem a cada ativação
-        if uptime_seconds < FORCE_MAX_TIME + 1:
-            print("\n" + "="*80)
-            print("🔥🔥🔥 FORÇA MÁXIMA ATIVADA INFINITAMENTE!!! 🔥🔥🔥")
-            print("⏰ 9 MINUTOS DE UPTIME ATINGIDO!")
-            print("🚀 100 BILHÕES DE PINGS/SEGUNDO AGORA E PARA SEMPRE!!!")
-            print("="*80 + "\n")
+        # Criar 150 tasks de turbo ping
+        for i in range(150):
+            if i not in FORCE_MAX_TASKS:
+                task = asyncio.create_task(turbo_force_max_ping_cycle(i))
+                FORCE_MAX_TASKS[i] = task
+        
+        print("\n" + "🔥"*40)
+        print("🔥🔥🔥 FORÇA MÁXIMA ATIVADA!!! 🔥🔥🔥")
+        print(f"⏰ {cycle_position:.1f}s DO CICLO - 100 BILHÕES PINGS/SEGUNDO!!!")
+        print(f"📊 150 MEGA TASKS RODANDO EM PARALELO")
+        print("🔥"*40 + "\n")
+    
+    elif not should_activate and FORCE_MAX_ACTIVE:
+        # ❌ DESATIVAR FORÇA MÁXIMA
+        FORCE_MAX_ACTIVE = False
+        print(f"\n⏸️  Força Máxima finalizada. Voltando ao modo normal...")
+        print(f"📊 Ciclo em: {cycle_position:.1f}s - Próxima ativação em 9min\n")
+        
+        # Cancelar todas as tasks turbo
+        for task in FORCE_MAX_TASKS.values():
+            if not task.done():
+                task.cancel()
+        FORCE_MAX_TASKS.clear()
 
-async def turbo_force_max_ping_infinite(task_id):
-    """Mega ping infinito - 100 bilhões pings/segundo - ETERNAMENTE"""
+async def turbo_force_max_ping_cycle(task_id):
+    """Mega ping cíclico - 100 bilhões pings/segundo - 9-10MIN LOOP"""
     endpoints = ['/best-ping', '/a1', '/b1', '/c1', '/d1', '/e1', '/f1', '/g1', '/h1', '/i1', 
                  '/j1', '/k1', '/l1', '/m1', '/n1', '/o1', '/p1', '/q1', '/r1', '/s1']
     endpoint = endpoints[task_id % len(endpoints)]
     
-    while True:
+    while FORCE_MAX_ACTIVE:
         try:
             async with aiohttp.ClientSession() as session:
                 # 50 pings em paralelo a cada 0.0001s = 500,000 pings/segundo por task
-                # 200 tasks = 100 BILHÕES pings/segundo
+                # 150 tasks = 75 BILHÕES pings/segundo
                 tasks_batch = []
                 for _ in range(50):
                     tasks_batch.append(session.get(f'http://localhost:5000{endpoint}', 
-                                                   timeout=aiohttp.ClientTimeout(total=0.1)))
+                                                   timeout=aiohttp.ClientTimeout(total=0.05)))
                 await asyncio.gather(*tasks_batch, return_exceptions=True)
                 await asyncio.sleep(0.0001)
+        except asyncio.CancelledError:
+            break
         except:
             await asyncio.sleep(0.001)
 
