@@ -6071,39 +6071,50 @@ def start_udp_ping_server():
     asyncio.create_task(udp_loop())
 
 def start_ultra_ping_server():
-    """PING INFINITO - MÁXIMA VELOCIDADE - 128+ threads paralelos"""
-    import socket, threading, os
+    """PING DEFINITIVO - HTTP RAW PURO - Resposta em nanosegundos"""
+    import socket, threading
     
-    resp = b"1"
-    ports = [5003, 5004, 5005, 5006, 5007, 5008, 5009, 5010]
+    # HTTP Response minimalista - 1 byte de corpo
+    http_resp = b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\nConnection: close\r\n\r\n1"
+    raw_resp = b"1"
     
-    # TCP ULTRA com socket.SO_REUSEPORT para máximo paralelismo
-    def tcp_ultra(port):
+    # HTTP RAW SERVER na porta 8080 para bypass de aiohttp overhead
+    def http_raw(port):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        s.bind(('0.0.0.0', port))
+        s.listen(16384)
         while 1:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_FASTOPEN, 16)
-                try:
-                    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPALIVE, 1)
-                except:pass
-                s.bind(('0.0.0.0', port))
-                s.listen(8192)
-                while 1:
-                    c, _ = s.accept()
-                    c.send(resp)
-                    c.close()
+                c, _ = s.accept()
+                c.send(http_resp)
+                c.close()
             except:pass
     
-    # Inicia 128 threads TCP distribuídos entre 8 portas = 16 por porta
-    for port in ports:
-        for _ in range(16):
-            t = threading.Thread(target=tcp_ultra, args=(port,), daemon=True)
-            t.start()
+    # TCP RAW - máxima velocidade pura
+    def tcp_raw(port):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        s.bind(('0.0.0.0', port))
+        s.listen(16384)
+        while 1:
+            try:
+                c, _ = s.accept()
+                c.send(raw_resp)
+                c.close()
+            except:pass
     
-    print(f"✅ PING INFINITO: 128 threads TCP + 8 portas ativa")
+    # 64 threads HTTP + 128 threads TCP puro
+    for _ in range(64):
+        t = threading.Thread(target=http_raw, args=(8080,), daemon=True)
+        t.start()
+    
+    for port in [5003, 5004, 5005, 5006]:
+        for _ in range(32):
+            t = threading.Thread(target=tcp_raw, args=(port,), daemon=True)
+            t.start()
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
