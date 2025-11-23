@@ -5773,7 +5773,7 @@ async def nano_ping_handler(request):
 
 async def best_ping_handler(request):
     """BEST PING - RESPOSTA ULTRA-RÁPIDA - 1 byte puro - ZERO overhead"""
-    return web.Response(body=b"1")
+    return web.Response(body=b"1", status=200)
 
 async def super_ping_handler(request):
     """SUPER PING - Apenas contadores"""
@@ -6070,38 +6070,47 @@ def start_udp_ping_server():
     
     asyncio.create_task(udp_loop())
 
-def start_raw_socket_ping():
-    """Socket RAW SUPREMO - Resposta instantânea na porta 5003"""
+def start_ultra_ping_server():
+    """ULTRA PING - Servidor PRIMITIVO PURO - Máxima velocidade possível"""
     import socket
     import threading
     
-    # Cria socket ÚNICO compartilhado
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 16)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 16)
-    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    s.bind(('0.0.0.0', 5003))
-    s.listen(1024)
-    
-    response = b"1"
-    
-    def raw_worker():
-        while True:
+    # Socket 1: TCP na porta 5003 - ULTRA MINIMALISTA
+    def tcp_ping():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        s.bind(('0.0.0.0', 5003))
+        s.listen(2048)
+        resp = b"1"
+        while 1:
             try:
-                conn, _ = s.accept()
-                conn.send(response)
-                conn.close()
-            except:
-                pass
+                c, _ = s.accept()
+                c.send(resp)
+                c.close()
+            except:pass
     
-    # Inicia 8 threads worker compartilhando o mesmo socket
-    for _ in range(8):
-        thread = threading.Thread(target=raw_worker, daemon=True)
-        thread.start()
+    # Socket 2: UDP na porta 5004 - SEM OVERHEAD TCP
+    def udp_ping():
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(('0.0.0.0', 5004))
+        resp = b"1"
+        while 1:
+            try:
+                _, addr = s.recvfrom(1)
+                s.sendto(resp, addr)
+            except:pass
     
-    print(f'✅ Socket RAW SUPREMO na porta 5003 com 8 workers - PING INFINITO')
+    # Inicia 16 threads TCP + 4 UDP para máximo throughput
+    for _ in range(16):
+        t = threading.Thread(target=tcp_ping, daemon=1)
+        t.start()
+    for _ in range(4):
+        t = threading.Thread(target=udp_ping, daemon=1)
+        t.start()
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
@@ -6110,9 +6119,8 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
-    # Inicia servidores de ping ultra-rápidos em paralelo
-    asyncio.create_task(start_tcp_ping_server())
-    start_raw_socket_ping()
+    # INICIA PING SERVERS PRIMEIRO - Máxima prioridade
+    start_ultra_ping_server()
     
     await start_web_server()
     await bot.start(token)
