@@ -1567,138 +1567,88 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
     await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, modo)
 
 async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
-    canal_id = db_get_config("canal_partidas_id")
-    if not canal_id:
-        return
-
-    canal = guild.get_channel(int(canal_id))
-    if not canal:
-        return
-
-    partida_id = str(random.randint(100000, 9999999))
-    usar_threads = db_get_config("usar_threads")
-
-    # Contador de tópicos criados
-    contador_topicos = db_get_config("contador_topicos")
-    if not contador_topicos:
-        contador_topicos = "1"
-    numero_topico = int(contador_topicos)
-    db_set_config("contador_topicos", str(numero_topico + 1))
-
-    if usar_threads == "true":
-        thread_name = f"aguardando-{numero_topico}"
-        thread = await canal.create_thread(
-            name=thread_name,
-            type=discord.ChannelType.private_thread,
-            invitable=False
-        )
-
-        jogador1 = guild.get_member(j1_id)
-        jogador2 = guild.get_member(j2_id)
-        if jogador1:
-            await thread.add_user(jogador1)
-        if jogador2:
-            await thread.add_user(jogador2)
-
-        canal_ou_thread_id = thread.id
-        thread_id = thread.id
-        canal_partida = thread
-    else:
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            guild.get_member(j1_id): discord.PermissionOverwrite(read_messages=True, send_messages=True),
-            guild.get_member(j2_id): discord.PermissionOverwrite(read_messages=True, send_messages=True),
-            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-        }
-
-        canal_partida = await guild.create_text_channel(
-            f"aguardando-{numero_topico}",
-            category=canal.category,
-            overwrites=overwrites
-        )
-        canal_ou_thread_id = canal_partida.id
-        thread_id = 0
-
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-
-    # Adiciona coluna numero_topico se não existir
     try:
-        cur.execute("ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0")
-    except sqlite3.OperationalError:
-        pass
+        canal_id = db_get_config("canal_partidas_id")
+        if not canal_id:
+            return
 
-    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, "confirmacao", numero_topico, datetime.datetime.utcnow().isoformat()))
-    conn.commit()
-    conn.close()
+        canal = guild.get_channel(int(canal_id))
+        if not canal:
+            return
 
-    mediador_id = mediador_get_next(guild.id)
-    if mediador_id:
-        mediador_rotacionar(guild.id, mediador_id)
+        partida_id = str(random.randint(100000, 9999999))
 
-        mediador = guild.get_member(mediador_id)
-        if mediador:
-            if usar_threads == "true":
-                await canal_partida.add_user(mediador)
-            else:
-                await canal_partida.set_permissions(mediador, read_messages=True, send_messages=True)
+        conn = sqlite3.connect(DB_FILE)
+        cur = conn.cursor()
 
+        cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, criado_em)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (partida_id, guild.id, canal.id, 0, valor, j1_id, j2_id, "confirmacao", datetime.datetime.utcnow().isoformat()))
+        conn.commit()
+        conn.close()
+
+        mediador_id = mediador_get_next(guild.id)
+        if mediador_id:
+            mediador_rotacionar(guild.id, mediador_id)
+            
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("UPDATE partidas SET mediador = ? WHERE id = ?", (mediador_id, partida_id))
             conn.commit()
             conn.close()
 
-    cargos_str = db_get_config("cargos_mencionar")
-    mencoes = f"<@{j1_id}> <@{j2_id}>"
-    if cargos_str:
-        cargos_ids = cargos_str.split(",")
-        for cargo_id in cargos_ids:
-            mencoes += f" <@&{cargo_id}>"
-    if mediador_id:
-        mencoes += f" <@{mediador_id}>"
+        cargos_str = db_get_config("cargos_mencionar")
+        mencoes = f"<@{j1_id}> <@{j2_id}>"
+        if cargos_str:
+            cargos_ids = cargos_str.split(",")
+            for cargo_id in cargos_ids:
+                if cargo_id.strip():
+                    mencoes += f" <@&{cargo_id.strip()}>"
+        if mediador_id:
+            mencoes += f" <@{mediador_id}>"
 
-    valor_dobrado = valor * 2
+        valor_dobrado = valor * 2
 
-    embed = discord.Embed(
-        title="🎮 Partida Encontrada!",
-        color=0x5865F2
-    )
+        embed = discord.Embed(
+            title="🎮 Partida Encontrada!",
+            color=0x5865F2
+        )
 
-    embed.add_field(
-        name="🎯 Modo de Jogo",
-        value=f"{tipo_fila.upper()} Mobile",
-        inline=False
-    )
+        embed.add_field(
+            name="🎯 Modo",
+            value=f"{tipo_fila.upper()} Mobile",
+            inline=False
+        )
 
-    embed.add_field(
-        name="💰 Valor da Partida",
-        value=f"**Entrada:** {fmt_valor(valor)}\n**PAGAR:** {fmt_valor(valor_dobrado)}",
-        inline=False
-    )
+        embed.add_field(
+            name="💰 Valor",
+            value=f"**Entrada:** {fmt_valor(valor)}\n**PAGAR:** {fmt_valor(valor_dobrado)}",
+            inline=False
+        )
 
-    embed.add_field(
-        name="👥 Jogadores",
-        value=f"<@{j1_id}>\n<@{j2_id}>",
-        inline=False
-    )
+        embed.add_field(
+            name="👥 Jogadores",
+            value=f"<@{j1_id}>\n<@{j2_id}>",
+            inline=False
+        )
 
-    if mediador_id:
-        embed.add_field(name="👨‍⚖️ Mediador", value=f"<@{mediador_id}>", inline=False)
+        if mediador_id:
+            embed.add_field(name="👨‍⚖️ Mediador", value=f"<@{mediador_id}>", inline=False)
 
-    embed.add_field(
-        name="⚠️ Confirmação Necessária",
-        value="Ambos os jogadores devem confirmar clicando em ✅ Confirmar",
-        inline=False
-    )
+        embed.add_field(
+            name="⚠️ Confirmação",
+            value="Ambos devem confirmar com ✅",
+            inline=False
+        )
 
-    view = ConfirmarPartidaView(partida_id, j1_id, j2_id)
-    await canal_partida.send(mencoes, embed=embed, view=view)
+        view = ConfirmarPartidaView(partida_id, j1_id, j2_id)
+        await canal.send(mencoes, embed=embed, view=view)
 
-    registrar_log_partida(partida_id, guild.id, "partida_criada", j1_id, j2_id, mediador_id, valor, f"1x1-{tipo_fila}")
-    await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, tipo_fila)
+        registrar_log_partida(partida_id, guild.id, "partida_criada", j1_id, j2_id, mediador_id, valor, f"1x1-{tipo_fila}")
+        await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, tipo_fila)
+
+    except Exception as e:
+        print(f"[ERRO criar_partida_mob] {e}")
 
 class CopiarChavePIXView(View):
     def __init__(self, chave_pix):
@@ -2207,82 +2157,37 @@ async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     db_set_config("aux_role_id", str(cargo.id))
     await interaction.response.send_message(f"✅ Cargo aux definido: {cargo.mention}\n\nApenas membros com este cargo poderão usar !aux e acessar o menu mediador!", ephemeral=True)
 
-@tree.command(name="topico", description="📌 Define o canal de tópicos onde as partidas serão criadas como threads")
-@app_commands.describe(canal="Selecione o canal onde os tópicos de partida aparecerão")
+@tree.command(name="topico", description="📌 Define o canal onde as partidas serão criadas")
+@app_commands.describe(canal="Selecione o canal para partidas")
 async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel):
     if not is_admin(interaction.user.id, member=interaction.user):
-        await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
+        await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
         return
 
     if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+
+    if not canal:
+        await interaction.response.send_message("❌ Canal inválido!", ephemeral=True)
+        return
+
+    bot_perms = canal.permissions_for(interaction.guild.me)
+    if not bot_perms.send_messages or not bot_perms.manage_messages:
         await interaction.response.send_message(
-            "⛔ **Servidor não registrado!**\n\n"
-            "Este servidor precisa estar registrado para usar o Bot Zeus.",
+            f"❌ Preciso de permissões em {canal.mention}:\n✅ Enviar mensagens\n✅ Gerenciar mensagens",
             ephemeral=True
         )
         return
 
-    try:
-        # Validar se canal existe
-        if not canal:
-            await interaction.response.send_message("❌ Canal não encontrado!", ephemeral=True)
-            return
-
-        # Validar permissões do bot
-        bot_perms = canal.permissions_for(interaction.guild.me)
-        if not bot_perms.create_private_threads or not bot_perms.send_messages:
-            await interaction.response.send_message(
-                f"❌ **Sem permissões!**\n\n"
-                f"Preciso das seguintes permissões em {canal.mention}:\n"
-                f"{'✅' if bot_perms.create_private_threads else '❌'} Criar threads privadas\n"
-                f"{'✅' if bot_perms.send_messages else '❌'} Enviar mensagens\n\n"
-                f"Configure minhas permissões e tente novamente.",
-                ephemeral=True
-            )
-            return
-
-        # Validar se é um canal de texto válido
-        if canal.category and not isinstance(canal, discord.TextChannel):
-            await interaction.response.send_message("❌ Selecione um canal de texto válido!", ephemeral=True)
-            return
-
-        # Salvar configuração
-        db_set_config("canal_partidas_id", str(canal.id))
-        db_set_config("usar_threads", "true")
-
-        embed = discord.Embed(
-            title="✅ Canal de Tópicos Definido!",
-            description=f"Partidas serão criadas como **threads privadas** em {canal.mention}",
-            color=0x00ff00
-        )
-        embed.add_field(
-            name="📋 Informações",
-            value="• Cada partida = 1 thread privada\n• Apenas jogadores e mediador veem\n• Threads expiram após 24 horas sem atividade",
-            inline=False
-        )
-        embed.add_field(
-            name="⚙️ Configuração Completa?",
-            value="Use `/manual` para ver todos os comandos necessários",
-            inline=False
-        )
-
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    except discord.Forbidden:
-        await interaction.response.send_message(
-            "❌ **Erro de permissões!**\n\n"
-            "Não tenho permissão para acessar este canal.\n"
-            "Verifique minhas permissões no servidor.",
-            ephemeral=True
-        )
-    except Exception as e:
-        print(f"[ERRO /topico] {e}")
-        await interaction.response.send_message(
-            f"❌ **Erro ao configurar canal!**\n\n"
-            f"Detalhes: {str(e)}\n\n"
-            f"Entre em contato com o owner do bot se o problema persistir.",
-            ephemeral=True
-        )
+    db_set_config("canal_partidas_id", str(canal.id))
+    
+    embed = discord.Embed(
+        title="✅ Canal de Partidas Definido!",
+        description=f"Partidas serão criadas em {canal.mention}",
+        color=0x00ff00
+    )
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @tree.command(name="configurar", description="📢 Define quais cargos devem ser mencionados ao criar partidas")
 @app_commands.describe(cargos="Digite os IDs dos cargos separados por vírgula (exemplo: 123456 789012)")
