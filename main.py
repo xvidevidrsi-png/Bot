@@ -1373,55 +1373,14 @@ class ConfirmarPartidaView(View):
                 else:
                     print(f"✅ Jogadores removidos da fila {tipo_fila}")
 
-            # Renomeia o tópico/canal para MOBILE-X
+            # Renomeia o tópico/canal para MOBILE
             try:
-                conn = sqlite3.connect(DB_FILE)
-                cur = conn.cursor()
-                cur.execute("SELECT canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
-                partida_row = cur.fetchone()
-                conn.close()
-
-                if partida_row:
-                    canal_id, thread_id = partida_row
-
-                    # Extrai número do nome atual (aguardando-X ou MOBILE-X)
-                    numero_topico = None
-                    if thread_id and thread_id > 0:
-                        thread = interaction.guild.get_thread(thread_id)
-                        if thread and thread.name:
-                            partes = thread.name.split("-")
-                            if len(partes) > 1:
-                                try:
-                                    numero_topico = int(partes[-1])
-                                except:
-                                    numero_topico = thread_id
-                    else:
-                        canal = interaction.guild.get_channel(int(canal_id))
-                        if canal and canal.name:
-                            partes = canal.name.split("-")
-                            if len(partes) > 1:
-                                try:
-                                    numero_topico = int(partes[-1])
-                                except:
-                                    numero_topico = canal_id
-
-                    if numero_topico:
-                        novo_nome = f"MOBILE-{numero_topico}"
-                        print(f"[RENOMEAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome}")
-
-                        try:
-                            if thread_id and thread_id > 0:
-                                thread = interaction.guild.get_thread(thread_id)
-                                if thread:
-                                    await thread.edit(name=novo_nome)
-                                    print(f"✅ Thread renomeada para: {novo_nome}")
-                            else:
-                                await interaction.channel.edit(name=novo_nome)
-                                print(f"✅ Canal renomeado para: {novo_nome}")
-                        except Exception as e:
-                            print(f"❌ Erro ao renomear: {e}")
+                novo_nome = f"MOBILE-{self.partida_id[-4:]}"
+                print(f"[RENOMEAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome}")
+                await interaction.channel.edit(name=novo_nome)
+                print(f"✅ Canal renomeado com sucesso para: {novo_nome}")
             except Exception as e:
-                print(f"❌ Erro geral na renomeação: {e}")
+                print(f"❌ Erro ao renomear canal: {e}")
 
             # Envia menu do mediador automaticamente (ANTES do PIX) com mais informações
             try:
