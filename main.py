@@ -216,6 +216,51 @@ def init_db():
         data_definicao TEXT
     )""")
     
+    # NOVOS SISTEMAS - Daily Quests, Badges, Duels
+    cur.execute("""CREATE TABLE IF NOT EXISTS daily_quests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id INTEGER,
+        user_id INTEGER,
+        quest_tipo TEXT,
+        progresso INTEGER DEFAULT 0,
+        meta INTEGER DEFAULT 1,
+        recompensa REAL DEFAULT 100,
+        data TEXT,
+        concluido INTEGER DEFAULT 0,
+        UNIQUE(guild_id, user_id, quest_tipo, data)
+    )""")
+    
+    cur.execute("""CREATE TABLE IF NOT EXISTS badges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id INTEGER,
+        user_id INTEGER,
+        badge_nome TEXT,
+        badge_emoji TEXT,
+        desbloqueado_em TEXT,
+        UNIQUE(guild_id, user_id, badge_nome)
+    )""")
+    
+    cur.execute("""CREATE TABLE IF NOT EXISTS duels (
+        id TEXT PRIMARY KEY,
+        guild_id INTEGER,
+        desafiante_id INTEGER,
+        desafiado_id INTEGER,
+        valor REAL,
+        status TEXT,
+        vencedor INTEGER,
+        criado_em TEXT,
+        finalizado_em TEXT
+    )""")
+    
+    cur.execute("""CREATE TABLE IF NOT EXISTS webhooks_notificacoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id INTEGER,
+        webhook_url TEXT,
+        tipo TEXT,
+        ativo INTEGER DEFAULT 1,
+        UNIQUE(guild_id, tipo)
+    )""")
+    
     # Additions for thread handling and topic number
     try:
         cur.execute("""ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0""")
@@ -3703,6 +3748,119 @@ async def historico_command(interaction: discord.Interaction):
     embed.description = texto
     await interaction.followup.send(embed=embed, ephemeral=True)
 
+@tree.command(name="daily-quest", description="🎯 Completa quest diária e recebe recompensa")
+async def daily_quest_command(interaction: discord.Interaction):
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+    
+    guild_id = interaction.guild.id
+    user_id = interaction.user.id
+    hoje = datetime.datetime.utcnow().date().isoformat()
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    
+    # Buscar quest de hoje
+    cur.execute("SELECT quest_tipo, progresso, meta, recompensa, concluido FROM daily_quests WHERE guild_id = ? AND user_id = ? AND data = ?",
+                (guild_id, user_id, hoje))
+    quest = cur.fetchone()
+    
+    if not quest:
+        quests = ["Vencer 3 partidas", "Jogar 5 partidas", "Ganhar 500 coins"]
+        quest_tipo = quests[user_id % 3]
+        meta = int(quest_tipo.split()[1])
+        recompensa = 250 if "Vencer" in quest_tipo else 200
+        cur.execute("INSERT INTO daily_quests (guild_id, user_id, quest_tipo, meta, recompensa, data) VALUES (?, ?, ?, ?, ?, ?)",
+                    (guild_id, user_id, quest_tipo, meta, recompensa, hoje))
+        conn.commit()
+        embed = discord.Embed(title="🎯 Nova Quest Diária!", description=f"**{quest_tipo}**\nRecompensa: {recompensa}💵", color=0x00FF00)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        conn.close()
+        return
+    
+    quest_tipo, prog, meta, recompensa, concluido = quest
+    
+    if concluido:
+        embed = discord.Embed(title="✅ Quest Concluída!", description=f"Volte amanhã para nova quest!", color=0x00FF00)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        conn.close()
+        return
+    
+    embed = discord.Embed(title="🎯 Sua Quest Diária", description=f"**{quest_tipo}**\nProgresso: {prog}/{meta}\nRecompensa: {recompensa}💵", color=0x0080FF)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+    conn.close()
+
+@tree.command(name="badges", description="🎖️ Ver seus badges e achievements desbloqueados")
+async def badges_command(interaction: discord.Interaction):
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+    
+    guild_id = interaction.guild.id
+    user_id = interaction.user.id
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    
+    # Buscar usuário stats
+    cur.execute("SELECT coins, vitorias, derrotas FROM usuarios WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
+    stats = cur.fetchone()
+    
+    if not stats:
+        await interaction.response.send_message("Sem dados ainda!", ephemeral=True)
+        conn.close()
+        return
+    
+    coins, vit, der = stats
+    badges_list = []
+    
+    # Gerar badges automaticamente
+    if vit >= 1: badges_list.append("🎮 Iniciante")
+    if vit >= 10: badges_list.append("🥇 Veterano")
+    if vit >= 50: badges_list.append("👑 Lenda")
+    if (vit/(vit+der)*100) >= 70: badges_list.append("🔥 Imbatível")
+    if coins >= 1000: badges_list.append("💰 Milionário")
+    if coins >= 5000: badges_list.append("💎 Bilionário")
+    
+    embed = discord.Embed(title=f"🎖️ Badges de {interaction.user.display_name}", color=0xFFD700)
+    if badges_list:
+        embed.description = " | ".join(badges_list)
+    else:
+        embed.description = "Nenhum badge desbloqueado ainda! Jogue mais para desbloquear!"
+    embed.set_footer(text=f"Vitórias: {vit} | Coins: {coins:.0f}")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+    conn.close()
+
+@tree.command(name="duel", description="⚔️ Desafie alguém para um duel 1v1 com aposta")
+async def duel_command(interaction: discord.Interaction, usuario: discord.User, valor: float):
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+    
+    if valor <= 0 or valor > 1000:
+        await interaction.response.send_message("Valor deve ser entre 1 e 1000!", ephemeral=True)
+        return
+    
+    guild_id = interaction.guild.id
+    desafiante_id = interaction.user.id
+    desafiado_id = usuario.id
+    
+    duel_id = f"duel_{guild_id}_{desafiante_id}_{int(datetime.datetime.utcnow().timestamp())}"
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    
+    cur.execute("INSERT INTO duels (id, guild_id, desafiante_id, desafiado_id, valor, status, criado_em) VALUES (?, ?, ?, ?, ?, 'pendente', ?)",
+                (duel_id, guild_id, desafiante_id, desafiado_id, valor, datetime.datetime.utcnow().isoformat()))
+    conn.commit()
+    conn.close()
+    
+    embed = discord.Embed(title="⚔️ DUEL!", description=f"{interaction.user.mention} desafia {usuario.mention} para um duel!", color=0xFF0000)
+    embed.add_field(name="Aposta", value=f"{valor}💵", inline=True)
+    embed.set_footer(text="Aguardando resposta...")
+    await interaction.response.send_message(embed=embed)
+
 async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
     """Mostra o perfil detalhado de um usuário"""
     conn = sqlite3.connect(DB_FILE)
@@ -6289,6 +6447,33 @@ async def start_web_server():
     app.router.add_get('/bot_stats', bot_stats_handler)
     app.router.add_get('/server_stats/{guild_id}', server_stats_handler)
     
+    async def quests_handler(request):
+        """DAILY QUESTS - Sistema de quests diárias"""
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*), SUM(CASE WHEN concluido=1 THEN 1 ELSE 0 END) FROM daily_quests WHERE data = date('now')")
+            total, concluidas = cur.fetchone()
+            conn.close()
+            return web.Response(text=f"🎯 Daily Quests Ativas: {total}\n✅ Concluídas Hoje: {concluidas or 0}", status=200)
+        except:
+            return web.Response(text="Erro ao buscar quests", status=500)
+    
+    async def duels_handler(request):
+        """DUELS - Sistema de desafios 1v1"""
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*), SUM(valor) FROM duels WHERE status = 'pendente'")
+            total, coins = cur.fetchone()
+            conn.close()
+            return web.Response(text=f"⚔️ Duels Pendentes: {total}\n💵 Coins em Jogo: {coins or 0}", status=200)
+        except:
+            return web.Response(text="Erro ao buscar duels", status=500)
+    
+    app.router.add_get('/quests', quests_handler)
+    app.router.add_get('/duels', duels_handler)
+    
     # 🌟 PING 1MS ULTIMATE - 50 ENDPOINTS - 1000 PINGS/SEGUNDO 🌟
     handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
                 ultra6_handler, ultra7_handler, ultra8_handler, ultra9_handler, ultra10_handler,
@@ -6333,9 +6518,12 @@ async def start_web_server():
             print(f'  ESTATÍSTICAS & RANKINGS (6 ENDPOINTS):')
             print(f'    ├─ 📊 /supremo_final | 📈 /dashboard | 🌍 /bot_stats | 🎯 /advanced_stats')
             print(f'    ├─ ⏱️ /uptime | 📍 /server_stats/{"{guild_id}"}')
+            print(f'  NOVOS SISTEMAS (2 ENDPOINTS):')
+            print(f'    ├─ 🎯 /quests (Daily Quest System)')
+            print(f'    ├─ ⚔️ /duels (Duel 1v1 System)')
             print(f'  ULTRA REDUNDÂNCIA:')
             print(f'    ├─ /ultra até /ultra50 (50 endpoints)')
-            print(f'  └─ 73+ ENDPOINTS | 20+ TASKS | 4 NOVOS COMANDOS DISCORD!!!')
+            print(f'  └─ 75+ ENDPOINTS | 20+ TASKS | 7 NOVOS COMANDOS DISCORD!!!')
             print(f'')
             print(f'📋 Configuração recomendada para Cron-Job.org:')
             print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
