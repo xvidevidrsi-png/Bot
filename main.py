@@ -1317,17 +1317,18 @@ class ConfirmarPartidaView(View):
                 await interaction.channel.send(f"✅ <@{self.jogador2_id}> confirmou a partida! Aguardando <@{self.jogador1_id}> confirmar...")
 
         if conf_j1 == 1 and conf_j2 == 1:
+            # Desabilita todos os botões
             for item in self.children:
                 item.disabled = True
 
+            # Tenta editar ou deletar a mensagem original
             try:
-                # Pegar a mensagem original que contém o botão
-                messages = [msg async for msg in interaction.channel.history(limit=1)]
-                if messages:
-                    msg_com_botao = messages[0]
-                    await msg_com_botao.edit(view=self)
+                await interaction.message.edit(view=self)
             except:
                 pass
+
+            # Envia mensagem visual de confirmação completa
+            await interaction.channel.send("🎮 **PARTIDA CONFIRMADA POR AMBOS OS JOGADORES!**\n✅ Processando pagamento e criando sala...")
 
             # LIMPAR OS JOGADORES DA FILA
             conn = sqlite3.connect(DB_FILE)
