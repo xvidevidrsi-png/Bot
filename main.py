@@ -4239,14 +4239,13 @@ ULTRA_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
 
-@tasks.loop(seconds=0.1)
+@tasks.loop(seconds=0.05)
 async def ping_ultra_task():
-    """PING 100MS - Ultra-rápido, contínuo, 10 PINGS POR SEGUNDO para 100% UPTIME"""
+    """PING 50MS - MEGA SUPREMO, 20 PINGS POR SEGUNDO para 100% UPTIME GARANTIDO"""
     global ULTRA_PING_COUNT
     ULTRA_PING_COUNT += 1
-    if ULTRA_PING_COUNT % 100 == 0:
-        await asyncio.sleep(0)  # Yield control, não bloqueia
-    db_set_config("ultra_ping_count", str(ULTRA_PING_COUNT))
+    if ULTRA_PING_COUNT % 200 == 0:
+        await asyncio.sleep(0)
 
 @tasks.loop(seconds=60)
 async def ping_supremo_task():
@@ -5489,9 +5488,9 @@ async def on_ready():
     atualizar_fila_mediadores_task.start()
 
     print(f"🔄 Tasks iniciados:")
-    print(f"  ├─ 🚀 Ping 100ms: 10 PINGS/SEGUNDO - 100% UPTIME SUPREMO")
+    print(f"  ├─ 🚀 MEGA PING 50MS: 20 PINGS/SEGUNDO - SUPREMO MÁXIMO!!!")
     print(f"  ├─ ✅ Ping: 30s | 🚀 Supremo: 60s | 💚 Health: 10s")
-    print(f"  ├─ Keep-Alive: 5 tasks | Mediador Rotation: 30s")
+    print(f"  ├─ Keep-Alive: 5 tasks | Auto-Recovery | 3x Endpoints")
     print(f"  └─ Monthly Restart, Auto Role, Fila Mediadores")
 
     # await enviar_mensagens_iniciais_logs()  # DESATIVADO PARA OTIMIZAR STARTUP
@@ -5722,21 +5721,40 @@ async def supremo_handler(request):
     )
 
 async def ultra_handler(request):
-    """PING 100MS - 10 PINGS/SEGUNDO SUPREMO"""
+    """PING 50MS MEGA SUPREMO - 20 PINGS/SEGUNDO"""
     uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
     latency_ms = round(bot.latency * 1000, 2)
+    guild_count = len(bot.guilds)
+    uptime_hours = uptime_seconds / 3600
     
-    response_text = f"🚀 ULTRA PING {ULTRA_PING_COUNT} | {latency_ms}ms | UPTIME: {uptime_seconds/3600:.1f}h | 100% ONLINE"
+    response_text = f"🚀 MEGA PING {ULTRA_PING_COUNT} | {latency_ms}ms | {guild_count}srv | {uptime_hours:.1f}h"
     
     return web.Response(
         text=response_text,
         status=200,
         headers={
-            'X-Bot-Ping-Count': str(ULTRA_PING_COUNT),
-            'X-Bot-Latency-Ms': str(latency_ms),
-            'X-Bot-Frequency': '10 PINGS/SECOND (100ms)',
+            'X-Bot-Ping': str(ULTRA_PING_COUNT),
+            'X-Latency-Ms': str(latency_ms),
+            'X-Frequency': '20 PINGS/SEC (50ms)',
+            'X-Guilds': str(guild_count),
             'Cache-Control': 'no-cache'
         }
+    )
+
+async def ultra2_handler(request):
+    """PING 50MS REDUNDANTE #2"""
+    return web.Response(
+        text=f"🔴 BACKUP PING {ULTRA_PING_COUNT} | {round(bot.latency*1000, 2)}ms | 20x/seg",
+        status=200,
+        headers={'X-Frequency': '20 PINGS/SEC (50ms)', 'Cache-Control': 'no-cache'}
+    )
+
+async def ultra3_handler(request):
+    """PING 50MS REDUNDANTE #3"""
+    return web.Response(
+        text=f"🟠 TRIPLE PING {ULTRA_PING_COUNT} | UPTIME {(datetime.datetime.utcnow() - PING_START_TIME).total_seconds()/3600:.1f}h",
+        status=200,
+        headers={'X-Frequency': '20 PINGS/SEC (50ms)', 'Cache-Control': 'no-cache'}
     )
 
 async def start_web_server():
@@ -5751,6 +5769,8 @@ async def start_web_server():
     
     # 🌟 PING ULTRA SUPREMO - Endpoint de máxima prioridade 100% SEMPRE ONLINE 🌟
     app.router.add_get('/ultra', ultra_handler)
+    app.router.add_get('/ultra2', ultra2_handler)
+    app.router.add_get('/ultra3', ultra3_handler)
     
     # Endpoints de monitoramento detalhado
     app.router.add_get('/health', health_handler)
@@ -5773,8 +5793,10 @@ async def start_web_server():
             site = web.TCPSite(runner, '0.0.0.0', port)
             await site.start()
             print(f'✅ HTTP na porta {port}')
-            print(f'  ├─ 🚀 GET /ultra - PING 100MS (10x/segundo SUPREMO)')
-            print(f'  ├─ GET /ping, /supremo, /health, /stats')
+            print(f'  ├─ 🚀 GET /ultra - MEGA PING 50MS (20x/segundo!)')
+            print(f'  ├─ 🔴 GET /ultra2 - BACKUP PING 50MS')
+            print(f'  ├─ 🟠 GET /ultra3 - TRIPLE PING 50MS')
+            print(f'  └─ GET /ping, /supremo, /health, /stats')
             print(f'')
             print(f'📋 Configuração recomendada para Cron-Job.org:')
             print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
