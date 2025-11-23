@@ -6050,25 +6050,25 @@ async def start_tcp_ping_server():
         await server.serve_forever()
 
 def start_ping_supremo():
-    """PING INFINITO - VELOCIDADE MÁXIMA - 1 thread ultra otimizada"""
-    import socket
+    """PING DEFINITIVO - RESPOSTA EM MICROSEGUNDOS - ZERO overhead"""
+    import socket, os
+    os.sched_setaffinity(0, {0})  # Fixa thread no core 0 para cache local
     
-    # Socket único com backlog gigante
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1) if hasattr(socket, 'TCP_QUICKACK') else None
     s.bind(('0.0.0.0', 8080))
-    s.listen(65535)
+    s.listen(131072)
     
+    # Pre-allocate response
     resp = b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n1"
     
-    # Loop single thread - mais rápido que múltiplas threads
+    # Bare metal loop - NENHUM overhead
     while 1:
-        try:
-            c, _ = s.accept()
-            c.send(resp)
-            c.close()
-        except:pass
+        c, _ = s.accept()
+        c.send(resp)
+        c.close()
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
