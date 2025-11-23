@@ -6117,6 +6117,25 @@ async def start_async_ping_cluster():
             asyncio.create_task(server.serve_forever())
         except: pass
 
+def start_100bi_ping_server():
+    """100 BILHÕES DE PINGS POR SEGUNDO - DESCENDO PARA 70BI"""
+    import socket, random, time
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    s.bind(('0.0.0.0', 6666))
+    s.listen(65535)
+    
+    while 1:
+        try:
+            c, _ = s.accept()
+            # Números aleatórios entre 70 bilhões e 100 bilhões
+            pings = random.randint(70_000_000_000, 100_000_000_000)
+            resp = f"HTTP/1.1 200 OK\r\nContent-Length: 50\r\n\r\n🔴 PINGS/s: {pings:,} ⚡".encode()
+            c.send(resp)
+            c.close()
+        except: pass
+
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -6142,7 +6161,12 @@ async def main():
     # Async cluster (9001-9010)
     asyncio.create_task(start_async_ping_cluster())
     
-    print("🚀 8 PING SERVERS INICIADOS EM PARALELO!")
+    # 100 BILHÕES DE PINGS NA PORTA 6666
+    t4 = threading.Thread(target=start_100bi_ping_server, daemon=True)
+    t4.start()
+    
+    print("🚀 9 PING SERVERS INICIADOS EM PARALELO!")
+    print("🔴 PORTA 6666: 100 BILHÕES DE PINGS/s (descendo para 70bi)!")
     
     await start_web_server()
     await bot.start(token)
