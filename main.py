@@ -6071,54 +6071,33 @@ def start_udp_ping_server():
     asyncio.create_task(udp_loop())
 
 def start_raw_socket_ping():
-    """Socket RAW ULTRA-VELOCIDADE - Máximo throughput possível"""
+    """Socket RAW SUPREMO - Resposta instantânea na porta 5003"""
     import socket
-    import select
     import threading
     
     def raw_loop():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 64)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 64)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 32)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 32)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         s.bind(('0.0.0.0', 5003))
-        s.listen(128)  # Max backlog
+        s.listen(512)
         
         response = b"1"
-        conns = []
         
         while True:
             try:
-                readable, _, _ = select.select([s] + conns, conns, [], 0.001)
-                
-                for sock in readable:
-                    if sock == s:
-                        try:
-                            conn, _ = s.accept()
-                            conns.append(conn)
-                        except:
-                            pass
-                    else:
-                        try:
-                            sock.recv(1)
-                        except:
-                            pass
-                
-                for conn in conns[:]:
-                    try:
-                        conn.send(response)
-                        conn.close()
-                        conns.remove(conn)
-                    except:
-                        try:
-                            conns.remove(conn)
-                        except:
-                            pass
+                conn, _ = s.accept()
+                conn.send(response)
+                conn.close()
             except:
                 pass
     
-    thread = threading.Thread(target=raw_loop, daemon=True)
-    thread.start()
+    # Inicia múltiplas threads para distribuição de carga
+    for _ in range(4):
+        thread = threading.Thread(target=raw_loop, daemon=True)
+        thread.start()
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
