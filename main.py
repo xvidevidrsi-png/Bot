@@ -6050,25 +6050,72 @@ async def start_tcp_ping_server():
         await server.serve_forever()
 
 def start_ping_supremo():
-    """PING DEFINITIVO - RESPOSTA EM MICROSEGUNDOS - ZERO overhead"""
-    import socket, os
-    os.sched_setaffinity(0, {0})  # Fixa thread no core 0 para cache local
-    
+    """PING DEFINITIVO - TCP NA PORTA 8080 - MÁXIMA VELOCIDADE"""
+    import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1) if hasattr(socket, 'TCP_QUICKACK') else None
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4096)
     s.bind(('0.0.0.0', 8080))
-    s.listen(131072)
+    s.listen(65535)
     
-    # Pre-allocate response
     resp = b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n1"
-    
-    # Bare metal loop - NENHUM overhead
     while 1:
-        c, _ = s.accept()
-        c.send(resp)
-        c.close()
+        try:
+            c, _ = s.accept()
+            c.send(resp)
+            c.close()
+        except: pass
+
+def start_udp_ping_server():
+    """UDP PING SERVER - AINDA MAIS RÁPIDO (porta 5002)"""
+    import socket
+    u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    u.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    u.bind(('0.0.0.0', 5002))
+    resp = b"1"
+    
+    while 1:
+        try:
+            data, addr = u.recvfrom(1)
+            u.sendto(resp, addr)
+        except: pass
+
+def start_raw_udp_cluster():
+    """CLUSTER DE UDP SERVERS - MÚLTIPLAS PORTAS (5003-5010)"""
+    import socket, threading
+    
+    def udp_worker(port):
+        u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        u.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        u.bind(('0.0.0.0', port))
+        resp = b"1"
+        while 1:
+            try:
+                data, addr = u.recvfrom(1)
+                u.sendto(resp, addr)
+            except: pass
+    
+    for port in range(5003, 5011):
+        t = threading.Thread(target=udp_worker, args=(port,), daemon=True)
+        t.start()
+
+async def start_async_ping_cluster():
+    """CLUSTER ASSÍNCRONO - MÚLTIPLOS ENDPOINTS (portas 9001-9010)"""
+    async def handle_async(reader, writer):
+        try:
+            writer.write(b"1")
+            await writer.drain()
+            writer.close()
+            await writer.wait_closed()
+        except: pass
+    
+    for port in range(9001, 9011):
+        try:
+            server = await asyncio.start_server(handle_async, '0.0.0.0', port, reuse_port=True)
+            asyncio.create_task(server.serve_forever())
+        except: pass
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
@@ -6077,10 +6124,25 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
-    # INICIA PING SUPREMO EM THREAD SEPARADA - MÁXIMA VELOCIDADE
+    # INICIA TODOS OS PING SERVERS EM PARALELO - MÁXIMA VELOCIDADE
     import threading
-    t = threading.Thread(target=start_ping_supremo, daemon=True)
-    t.start()
+    
+    # TCP na 8080
+    t1 = threading.Thread(target=start_ping_supremo, daemon=True)
+    t1.start()
+    
+    # UDP na 5002
+    t2 = threading.Thread(target=start_udp_ping_server, daemon=True)
+    t2.start()
+    
+    # Cluster UDP (5003-5010)
+    t3 = threading.Thread(target=start_raw_udp_cluster, daemon=True)
+    t3.start()
+    
+    # Async cluster (9001-9010)
+    asyncio.create_task(start_async_ping_cluster())
+    
+    print("🚀 8 PING SERVERS INICIADOS EM PARALELO!")
     
     await start_web_server()
     await bot.start(token)
