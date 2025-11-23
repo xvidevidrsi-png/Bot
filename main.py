@@ -6116,10 +6116,12 @@ async def start_web_server():
         raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
 
 # 🔥 FORÇA MÁXIMA - 4:50 RODANDO + 10s PAUSA (Ciclo de 5 minutos)
-@tasks.loop(seconds=1)
+FORCE_MAX_LAST_PING = None
+
+@tasks.loop(seconds=0.5)
 async def force_max_cycle():
     """Controla Força Máxima: 4:50 rodando + 10s pausa por UptimeRobot"""
-    global PING_START_TIME
+    global PING_START_TIME, FORCE_MAX_LAST_PING
     
     if not PING_START_TIME:
         PING_START_TIME = datetime.datetime.utcnow()
@@ -6129,19 +6131,20 @@ async def force_max_cycle():
         uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
         pos_no_ciclo = uptime_seconds % 300  # Ciclo de 5 minutos (300s)
         
-        # 0-290s: Força Máxima rodando (4:50)
+        # 0-290s: Força Máxima rodando (4:50) - Pings 5-8s
         if pos_no_ciclo < 290:
-            delay = random.uniform(5, 8)
-            await asyncio.sleep(delay)
-            try:
-                async with aiohttp.ClientSession() as s:
-                    await s.get('http://localhost:5000/best-ping', 
-                               timeout=aiohttp.ClientTimeout(total=2))
-            except:
-                pass
+            agora = datetime.datetime.utcnow()
+            if FORCE_MAX_LAST_PING is None or (agora - FORCE_MAX_LAST_PING).total_seconds() >= random.uniform(5, 8):
+                FORCE_MAX_LAST_PING = agora
+                try:
+                    async with aiohttp.ClientSession() as s:
+                        await s.get('http://localhost:5000/best-ping', 
+                                   timeout=aiohttp.ClientTimeout(total=2))
+                except:
+                    pass
         # 290-300s: PAUSA (10 segundos - UptimeRobot pinga aos 5:00)
         else:
-            await asyncio.sleep(0.5)  # Aguarda pausa passar
+            FORCE_MAX_LAST_PING = None  # Reset para próximo ciclo
             
     except Exception as e:
         print(f"[FORCE_MAX_CYCLE] {e}")
