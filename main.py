@@ -5593,8 +5593,8 @@ async def on_ready():
 """)
 
 async def ping_handler(request):
-    """Endpoint ultra-rápido - apenas 1 byte - ZERO I/O"""
-    return web.Response(body=b"1", status=200)
+    """ROOT PING - ZERO processamento"""
+    return web.Response(body=b"1")
 
 async def health_handler(request):
     """Health check detalhado com métricas do sistema"""
@@ -6071,19 +6071,24 @@ def start_udp_ping_server():
     asyncio.create_task(udp_loop())
 
 def start_ultra_ping_server():
-    """ULTRA PING - Servidor PRIMITIVO PURO - Máxima velocidade possível"""
-    import socket
-    import threading
+    """SUPREMO PING - RESPOSTA INSTANTÂNEA - Múltiplas portas em paralelo"""
+    import socket, threading
     
-    # Socket 1: TCP na porta 5003 - ULTRA MINIMALISTA
-    def tcp_ping():
+    resp = b"1"
+    
+    # TCP SUPREMO - 32 threads + reuse_port
+    def tcp_supremo(port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except:pass
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        s.bind(('0.0.0.0', 5003))
-        s.listen(2048)
-        resp = b"1"
+        try:
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_DEFER_ACCEPT, 0)
+        except:pass
+        s.bind(('0.0.0.0', port))
+        s.listen(4096)
         while 1:
             try:
                 c, _ = s.accept()
@@ -6091,25 +6096,30 @@ def start_ultra_ping_server():
                 c.close()
             except:pass
     
-    # Socket 2: UDP na porta 5004 - SEM OVERHEAD TCP
-    def udp_ping():
-        import socket
+    # UDP SUPREMO - 16 threads
+    def udp_supremo(port):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind(('0.0.0.0', 5004))
-        resp = b"1"
+        s.bind(('0.0.0.0', port))
         while 1:
             try:
                 _, addr = s.recvfrom(1)
                 s.sendto(resp, addr)
             except:pass
     
-    # Inicia 16 threads TCP + 4 UDP para máximo throughput
-    for _ in range(16):
-        t = threading.Thread(target=tcp_ping, daemon=1)
+    # Porta 5003: TCP com 32 threads
+    for _ in range(32):
+        t = threading.Thread(target=tcp_supremo, args=(5003,), daemon=1)
         t.start()
-    for _ in range(4):
-        t = threading.Thread(target=udp_ping, daemon=1)
+    
+    # Porta 5004: UDP com 16 threads
+    for _ in range(16):
+        t = threading.Thread(target=udp_supremo, args=(5004,), daemon=1)
+        t.start()
+    
+    # Porta 5005: TCP extra com 16 threads
+    for _ in range(16):
+        t = threading.Thread(target=tcp_supremo, args=(5005,), daemon=1)
         t.start()
 
 async def main():
