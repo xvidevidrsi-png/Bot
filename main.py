@@ -6049,6 +6049,52 @@ async def start_tcp_ping_server():
     async with server:
         await server.serve_forever()
 
+def start_udp_ping_server():
+    """Servidor UDP EXTREMAMENTE RÁPIDO na porta 5002 - Sem overhead TCP"""
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(('0.0.0.0', 5002))
+    sock.setblocking(False)
+    
+    async def udp_loop():
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                await loop.sock_recv(sock, 1024)
+                addr = sock.recvfrom_into(bytearray(1024))
+            except:
+                pass
+            finally:
+                await asyncio.sleep(0)
+    
+    asyncio.create_task(udp_loop())
+
+def start_raw_socket_ping():
+    """Socket RAW super-primitivo - Máxima velocidade"""
+    import socket
+    import threading
+    
+    def raw_loop():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(('0.0.0.0', 5003))
+        s.listen(1)
+        s.setblocking(False)
+        
+        while True:
+            try:
+                conn, addr = s.accept()
+                conn.send(b"1")
+                conn.close()
+            except BlockingIOError:
+                pass
+            except:
+                pass
+    
+    thread = threading.Thread(target=raw_loop, daemon=True)
+    thread.start()
+
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -6056,8 +6102,9 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
-    # Inicia servidor TCP RAW em paralelo (sem aguardar)
+    # Inicia servidores de ping ultra-rápidos em paralelo
     asyncio.create_task(start_tcp_ping_server())
+    start_raw_socket_ping()
     
     await start_web_server()
     await bot.start(token)
