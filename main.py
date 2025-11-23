@@ -4239,7 +4239,7 @@ ULTRA_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
 
-@tasks.loop(milliseconds=100)
+@tasks.loop(seconds=0.1)
 async def ping_ultra_task():
     """PING 100MS - Ultra-rápido, contínuo, 10 PINGS POR SEGUNDO para 100% UPTIME"""
     global ULTRA_PING_COUNT
