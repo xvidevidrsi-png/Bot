@@ -5292,6 +5292,20 @@ class RevancheModal(Modal):
 @bot.command(name="pixmed")
 async def cmd_pixmed(ctx):
     """Configurar PIX do mediador - Painel completo"""
+    if not ctx.guild:
+        await ctx.send("⛔ Este comando só funciona em servidores!")
+        return
+    
+    # ✅ APENAS DONO PODE USAR
+    is_owner = ctx.guild.owner_id == ctx.author.id
+    is_admin = ctx.author.guild_permissions.administrator
+    server_owner_role_id = get_server_owner_role(ctx.guild.id)
+    has_owner_role = server_owner_role_id and (server_owner_role_id in [r.id for r in ctx.author.roles])
+    
+    if not (is_owner or is_admin or has_owner_role):
+        await ctx.send("❌ **Apenas o DONO do servidor pode usar este comando!**")
+        return
+    
     if not verificar_separador_servidor(ctx.guild.id):
         await ctx.send("⛔ **Servidor não registrado!**")
         return
