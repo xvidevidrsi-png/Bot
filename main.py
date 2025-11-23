@@ -1360,8 +1360,7 @@ class ConfirmarPartidaView(View):
 
             if partida_row:
                 numero_topico, canal_id, thread_id, valor = partida_row
-                valor_dobrado = valor * 2
-                novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
+                novo_nome = f"MOBILE-{numero_topico}"
 
                 print(f"[CONFIRMAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
 
