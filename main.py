@@ -1377,37 +1377,49 @@ class ConfirmarPartidaView(View):
             try:
                 conn = sqlite3.connect(DB_FILE)
                 cur = conn.cursor()
-                cur.execute("SELECT numero_topico, canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
+                cur.execute("SELECT canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
                 partida_row = cur.fetchone()
                 conn.close()
 
                 if partida_row:
-                    numero_topico, canal_id, thread_id = partida_row
-                    novo_nome = f"MOBILE-{numero_topico}"
+                    canal_id, thread_id = partida_row
 
-                    print(f"[RENOMEAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread: {thread_id} | Canal: {canal_id}")
-
+                    # Extrai número do nome atual (aguardando-X ou MOBILE-X)
+                    numero_topico = None
                     if thread_id and thread_id > 0:
-                        # É um thread
                         thread = interaction.guild.get_thread(thread_id)
-                        if thread:
-                            await thread.edit(name=novo_nome)
-                            print(f"✅ Thread renomeada para: {novo_nome}")
-                        else:
-                            print(f"❌ Thread {thread_id} não encontrada!")
+                        if thread and thread.name:
+                            partes = thread.name.split("-")
+                            if len(partes) > 1:
+                                try:
+                                    numero_topico = int(partes[-1])
+                                except:
+                                    numero_topico = thread_id
                     else:
-                        # É um canal direto
+                        canal = interaction.guild.get_channel(int(canal_id))
+                        if canal and canal.name:
+                            partes = canal.name.split("-")
+                            if len(partes) > 1:
+                                try:
+                                    numero_topico = int(partes[-1])
+                                except:
+                                    numero_topico = canal_id
+
+                    if numero_topico:
+                        novo_nome = f"MOBILE-{numero_topico}"
+                        print(f"[RENOMEAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome}")
+
                         try:
-                            canal = interaction.guild.get_channel(int(canal_id))
-                            if canal:
-                                await canal.edit(name=novo_nome)
-                                print(f"✅ Canal renomeado para: {novo_nome}")
+                            if thread_id and thread_id > 0:
+                                thread = interaction.guild.get_thread(thread_id)
+                                if thread:
+                                    await thread.edit(name=novo_nome)
+                                    print(f"✅ Thread renomeada para: {novo_nome}")
                             else:
-                                print(f"❌ Canal {canal_id} não encontrado! Tentando interaction.channel...")
                                 await interaction.channel.edit(name=novo_nome)
-                                print(f"✅ Canal (via interaction) renomeado para: {novo_nome}")
-                        except Exception as e2:
-                            print(f"❌ Erro ao renomear canal: {e2}")
+                                print(f"✅ Canal renomeado para: {novo_nome}")
+                        except Exception as e:
+                            print(f"❌ Erro ao renomear: {e}")
             except Exception as e:
                 print(f"❌ Erro geral na renomeação: {e}")
 
