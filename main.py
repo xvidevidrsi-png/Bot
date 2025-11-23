@@ -6159,3 +6159,35 @@ async def turbo_ping(i):
                 await asyncio.sleep(0.001)
         except:
             pass
+
+# 🌐 SISTEMA DE ROTAÇÃO DE 100 HTTPS - A CADA 5MIN
+HTTPS_URLS = [
+    f"https://ping-bot-{i}.replit.dev:5000/best-ping" for i in range(1, 51)
+] + [
+    f"https://api-{i}.replit.dev/ping" for i in range(1, 51)
+]
+
+CURRENT_HTTPS_INDEX = 0
+HTTPS_ROTATION_TIME = 300  # 5 minutos
+
+@tasks.loop(seconds=5)
+async def rotate_https_pinger():
+    """Rotaciona entre 100 HTTPS diferentes a cada 5 minutos"""
+    global CURRENT_HTTPS_INDEX
+    
+    current_time = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
+    
+    # Mudar URL a cada 5 minutos
+    CURRENT_HTTPS_INDEX = int(current_time // HTTPS_ROTATION_TIME) % len(HTTPS_URLS)
+    current_url = HTTPS_URLS[CURRENT_HTTPS_INDEX]
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            await session.get(current_url, timeout=aiohttp.ClientTimeout(total=2), ssl=False)
+    except:
+        pass  # Ignora erros de HTTPS
+    
+    # Log a cada mudança de URL
+    if current_time > 0 and current_time % HTTPS_ROTATION_TIME < 5:
+        print(f"🌐 URL ROTACIONADA #{CURRENT_HTTPS_INDEX + 1}: {current_url}")
+
