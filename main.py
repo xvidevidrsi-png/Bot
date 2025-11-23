@@ -4239,9 +4239,9 @@ ULTRA_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
 
-@tasks.loop(seconds=0.01)
+@tasks.loop(seconds=0.005)
 async def ping_ultra_task():
-    """PING 10MS - HYPERDRIVE SUPREMO, 100 PINGS POR SEGUNDO!!!"""
+    """PING 5MS - LIGHTNING SUPREMO, 200 PINGS POR SEGUNDO!!!"""
     global ULTRA_PING_COUNT
     ULTRA_PING_COUNT += 1
 
@@ -5486,8 +5486,8 @@ async def on_ready():
     atualizar_fila_mediadores_task.start()
 
     print(f"🔄 Tasks iniciados:")
-    print(f"  ├─ 🚀 HYPERDRIVE PING 10MS: 100 PINGS/SEGUNDO - MÁXIMO ABSOLUTO!!!")
-    print(f"  ├─ ✅ 10 Endpoints Redundantes | Keep-Alive 5x | Auto-Recovery")
+    print(f"  ├─ ⚡ LIGHTNING PING 5MS: 200 PINGS/SEGUNDO - MÁXIMO SUPREMO!!!")
+    print(f"  ├─ ✅ 20 Endpoints Redundantes | Keep-Alive 5x | Auto-Recovery")
     print(f"  └─ Monthly Restart, Auto Role, Mediador Rotation")
 
     # await enviar_mensagens_iniciais_logs()  # DESATIVADO PARA OTIMIZAR STARTUP
@@ -5718,65 +5718,48 @@ async def supremo_handler(request):
     )
 
 async def ultra_handler(request):
-    """PING 10MS HYPERDRIVE - 100 PINGS/SEGUNDO SUPREMO"""
-    uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
-    latency_ms = round(bot.latency * 1000, 2)
-    guild_count = len(bot.guilds)
-    uptime_hours = uptime_seconds / 3600
-    
-    response_text = f"🚀 HYPERDRIVE {ULTRA_PING_COUNT} | {latency_ms}ms | {guild_count}srv | {uptime_hours:.1f}h"
-    
-    return web.Response(
-        text=response_text,
-        status=200,
-        headers={
-            'X-Frequency': '100 PINGS/SEC (10ms)',
-            'Cache-Control': 'no-cache'
-        }
-    )
+    """PING 5MS - LIGHTNING - 200 PINGS/SEGUNDO"""
+    return web.Response(text=f"⚡ ULTRA {ULTRA_PING_COUNT}", status=200, headers={'X-Frequency': '200 PINGS/SEC (5ms)', 'Cache-Control': 'no-cache'})
 
 async def ultra2_handler(request):
-    """PING 10MS BACKUP"""
-    return web.Response(text=f"🔴 BACKUP {ULTRA_PING_COUNT} | 100x/seg", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"🔴 P2 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra3_handler(request):
-    """PING 10MS TRIPLE"""
-    return web.Response(text=f"🟠 TRIPLE {ULTRA_PING_COUNT} | {round((datetime.datetime.utcnow() - PING_START_TIME).total_seconds()/3600, 1)}h", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"🟠 P3 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra4_handler(request):
-    """PING 10MS QUAD"""
-    return web.Response(text=f"🔵 QUAD {ULTRA_PING_COUNT} | {round(bot.latency*1000, 2)}ms", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"🔵 P4 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra5_handler(request):
-    """PING 10MS REDUNDANTE #5 - PENTA PING"""
-    guilds = len(bot.guilds)
-    return web.Response(
-        text=f"💜 PENTA PING {ULTRA_PING_COUNT} | {guilds} srv | 100x/seg HYPER",
-        status=200,
-        headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'}
-    )
-
+    return web.Response(text=f"💜 P5 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra6_handler(request):
-    """PING 10MS REDUNDANTE #6 - HEXA PING"""
-    latency = round(bot.latency * 1000, 2)
-    return web.Response(text=f"🔶 HEXA PING {ULTRA_PING_COUNT} | {latency}ms | 100x HYPERDRIVE", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"🔶 P6 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra7_handler(request):
-    """PING 10MS REDUNDANTE #7 - HEPTA PING"""
-    return web.Response(text=f"📱 HEPTA PING {ULTRA_PING_COUNT} | 100x/seg INFINITO", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"📱 P7 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra8_handler(request):
-    """PING 10MS REDUNDANTE #8 - OCTA PING"""
-    uptime = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()/3600 if PING_START_TIME else 0
-    return web.Response(text=f"⚡ OCTA PING {ULTRA_PING_COUNT} | {uptime:.1f}h | SUPREMO", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"⚡ P8 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra9_handler(request):
-    """PING 10MS REDUNDANTE #9 - NONA PING"""
-    return web.Response(text=f"🌟 NONA PING {ULTRA_PING_COUNT} | 100x/seg MÁXIMO", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
-
+    return web.Response(text=f"🌟 P9 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 async def ultra10_handler(request):
-    """PING 10MS REDUNDANTE #10 - DECA PING"""
-    return web.Response(text=f"💥 DECA PING {ULTRA_PING_COUNT} | ULTIMATE 100x/seg", status=200, headers={'X-Frequency': '100 PINGS/SEC (10ms)', 'Cache-Control': 'no-cache'})
+    return web.Response(text=f"💥 P10 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+
+async def ultra11_handler(request):
+    return web.Response(text=f"✨ P11 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra12_handler(request):
+    return web.Response(text=f"🎯 P12 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra13_handler(request):
+    return web.Response(text=f"🚀 P13 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra14_handler(request):
+    return web.Response(text=f"🔥 P14 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra15_handler(request):
+    return web.Response(text=f"💎 P15 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra16_handler(request):
+    return web.Response(text=f"👑 P16 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra17_handler(request):
+    return web.Response(text=f"⭐ P17 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra18_handler(request):
+    return web.Response(text=f"🌈 P18 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra19_handler(request):
+    return web.Response(text=f"💫 P19 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
+async def ultra20_handler(request):
+    return web.Response(text=f"🎆 P20 {ULTRA_PING_COUNT}", status=200, headers={'X-F': '200/s', 'Cache-Control': 'no-cache'})
 
 async def start_web_server():
     app = web.Application()
@@ -5788,29 +5771,14 @@ async def start_web_server():
     # PING SUPREMO - Endpoint ultra-agressivo para manter bot SEMPRE ONLINE
     app.router.add_get('/supremo', supremo_handler)
     
-    # 🌟 PING 10MS HYPERDRIVE - 10 ENDPOINTS REDUNDANTES - 100 PINGS/SEGUNDO 🌟
-    for i in range(1, 11):
+    # 🌟 PING 5MS LIGHTNING - 20 ENDPOINTS REDUNDANTES - 200 PINGS/SEGUNDO 🌟
+    handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
+                ultra6_handler, ultra7_handler, ultra8_handler, ultra9_handler, ultra10_handler,
+                ultra11_handler, ultra12_handler, ultra13_handler, ultra14_handler, ultra15_handler,
+                ultra16_handler, ultra17_handler, ultra18_handler, ultra19_handler, ultra20_handler]
+    for i, handler in enumerate(handlers, 1):
         endpoint = '/ultra' if i == 1 else f'/ultra{i}'
-        if i == 1:
-            app.router.add_get(endpoint, ultra_handler)
-        elif i == 2:
-            app.router.add_get(endpoint, ultra2_handler)
-        elif i == 3:
-            app.router.add_get(endpoint, ultra3_handler)
-        elif i == 4:
-            app.router.add_get(endpoint, ultra4_handler)
-        elif i == 5:
-            app.router.add_get(endpoint, ultra5_handler)
-        elif i == 6:
-            app.router.add_get(endpoint, ultra6_handler)
-        elif i == 7:
-            app.router.add_get(endpoint, ultra7_handler)
-        elif i == 8:
-            app.router.add_get(endpoint, ultra8_handler)
-        elif i == 9:
-            app.router.add_get(endpoint, ultra9_handler)
-        elif i == 10:
-            app.router.add_get(endpoint, ultra10_handler)
+        app.router.add_get(endpoint, handler)
     
     # Endpoints de monitoramento detalhado
     app.router.add_get('/health', health_handler)
@@ -5833,8 +5801,8 @@ async def start_web_server():
             site = web.TCPSite(runner, '0.0.0.0', port)
             await site.start()
             print(f'✅ HTTP na porta {port}')
-            print(f'  ├─ 🚀 GET /ultra até /ultra10 - HYPERDRIVE 10MS (100x/segundo!!!)')
-            print(f'  ├─ 10 ENDPOINTS REDUNDANTES para máximo uptime')
+            print(f'  ├─ ⚡ GET /ultra até /ultra20 - LIGHTNING 5MS (200x/segundo!!!)')
+            print(f'  ├─ 20 ENDPOINTS REDUNDANTES para máximo uptime')
             print(f'  └─ GET /ping, /supremo, /health, /stats')
             print(f'')
             print(f'📋 Configuração recomendada para Cron-Job.org:')
