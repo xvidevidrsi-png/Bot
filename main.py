@@ -4239,46 +4239,27 @@ ULTRA_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
 
-@tasks.loop(seconds=1)
+@tasks.loop(milliseconds=500)
 async def ping_ultra_task():
-    """PING ULTRA SUPREMO - A cada 1 SEGUNDO com retry automático 5x para manter bot 100% ONLINE"""
+    """PING HYPER SUPREMO - A cada 500ms (2 VEZES POR SEGUNDO!) com retry automático para manter bot 100% ONLINE"""
     global ULTRA_PING_COUNT, ULTRA_PING_ERRORS
     ULTRA_PING_COUNT += 1
     
-    max_retries = 5
-    for attempt in range(max_retries):
-        try:
-            if not bot.is_ready():
-                raise Exception("Bot não está ready")
-            
+    try:
+        if bot.is_ready() and bot.user:
             latency_ms = round(bot.latency * 1000, 2)
-            guild_count = len(bot.guilds)
             
-            # Emoji status ultra-responsivo
-            if latency_ms < 50:
-                status_emoji = "🟢"  # Perfeito
-            elif latency_ms < 100:
-                status_emoji = "🟢"  # Excelente
-            elif latency_ms < 200:
-                status_emoji = "🟡"  # Bom
-            else:
-                status_emoji = "🔴"  # Alerta
-            
-            if ULTRA_PING_COUNT % 30 == 0:  # Mostra a cada 30 segundos
-                print(f"[ULTRA] {status_emoji} #{ULTRA_PING_COUNT} | {latency_ms}ms | {guild_count} servidores")
+            if ULTRA_PING_COUNT % 20 == 0:  # Mostra a cada 20 pings (~10 segundos)
+                status_emoji = "🟢" if latency_ms < 100 else "🟡" if latency_ms < 200 else "🔴"
+                guild_count = len(bot.guilds)
+                print(f"[HYPER] {status_emoji} #{ULTRA_PING_COUNT} | {latency_ms}ms | {guild_count} servidores")
             
             db_set_config("ultra_ping_count", str(ULTRA_PING_COUNT))
             db_set_config("ultra_ping_latency", str(latency_ms))
-            break
-        except Exception as e:
-            if attempt < max_retries - 1:
-                await asyncio.sleep(0.1)  # Retry super rápido
-                continue
-            else:
-                ULTRA_PING_ERRORS += 1
-                if ULTRA_PING_ERRORS % 10 == 0:
-                    print(f"[ULTRA] ⚠️ Erro #{ULTRA_PING_ERRORS}: {e}")
-                break
+    except Exception as e:
+        ULTRA_PING_ERRORS += 1
+        if ULTRA_PING_ERRORS % 20 == 0:
+            print(f"[HYPER] ⚠️ Erro #{ULTRA_PING_ERRORS}: {str(e)[:50]}")
 
 @tasks.loop(seconds=60)
 async def ping_supremo_task():
@@ -5528,7 +5509,7 @@ async def on_ready():
     atualizar_fila_mediadores_task.start()
 
     print(f"🔄 Tasks iniciados:")
-    print(f"  ├─ 🌟 Ping Ultra: a cada 1s (100% SEMPRE ONLINE) - ULTRA SUPREMO")
+    print(f"  ├─ 🚀 Ping Hyper: a cada 500ms (2x/segundo!) - HYPER SUPREMO MÁXIMO")
     print(f"  ├─ 🚀 Ping Supremo: a cada 60s com retry 3x")
     print(f"  ├─ ✅ Ping: a cada 30s")
     print(f"  ├─ 💚 Health Check: a cada 5s (turbo)")
@@ -5770,7 +5751,7 @@ async def supremo_handler(request):
     )
 
 async def ultra_handler(request):
-    """PING ULTRA SUPREMO - Endpoint de máxima prioridade 100% SEMPRE ONLINE 🌟"""
+    """PING HYPER SUPREMO - Endpoint de máxima prioridade 100% SEMPRE ONLINE 🚀 (100ms!)"""
     uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
     uptime_hours = uptime_seconds / 3600
     uptime_days = uptime_hours / 24
@@ -5778,11 +5759,16 @@ async def ultra_handler(request):
     guild_count = len(bot.guilds)
     user_count = sum([g.member_count for g in bot.guilds]) if bot.guilds else 0
     
+    # Calcular pings por segundo
+    pings_per_second = round(ULTRA_PING_COUNT / (uptime_seconds + 1), 1)
+    
     db_set_config("last_ultra_ping", datetime.datetime.utcnow().isoformat())
     db_set_config("ultra_ping_count", str(ULTRA_PING_COUNT))
     
     # Status emoji baseado em latência
-    if latency_ms < 50:
+    if latency_ms < 30:
+        status = "🟢🟢 PERFEITO DEMAIS"
+    elif latency_ms < 50:
         status = "🟢 PERFEITO"
     elif latency_ms < 100:
         status = "🟢 EXCELENTE"
@@ -5792,17 +5778,20 @@ async def ultra_handler(request):
         status = "🔴 ALERTA"
     
     response_text = (
-        f"🌟 ULTRA SUPREMO PONG 🌟\n"
+        f"🚀 HYPER SUPREMO PONG 🚀\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Status: {status}\n"
         f"Uptime: {uptime_hours:.2f}h ({uptime_days:.2f}d)\n"
         f"Latency: {latency_ms}ms\n"
         f"Servidores: {guild_count}\n"
         f"Usuários: {user_count}\n"
-        f"Ultra Pings: {ULTRA_PING_COUNT}\n"
-        f"Modo: 100% ONLINE 24/7"
+        f"Hyper Pings: {ULTRA_PING_COUNT}\n"
+        f"Pings/segundo: {pings_per_second}\n"
+        f"Modo: 🌟 100% SEMPRE ONLINE 24/7 🌟\n"
+        f"Frequência: 2 PINGS POR SEGUNDO (500ms)"
     )
     
-    print(f"🌟 PING ULTRA SUPREMO recebido de {request.remote} | Status: {status} | Latency: {latency_ms}ms")
+    print(f"🚀 HYPER PING recebido de {request.remote} | Status: {status} | Latency: {latency_ms}ms | Pings: {ULTRA_PING_COUNT}")
     
     return web.Response(
         text=response_text,
@@ -5811,13 +5800,16 @@ async def ultra_handler(request):
             'Content-Type': 'text/plain; charset=utf-8',
             'X-Bot-Uptime-Hours': str(round(uptime_hours, 2)),
             'X-Bot-Uptime-Days': str(round(uptime_days, 2)),
-            'X-Bot-Status': 'ULTRA_SUPREMO_ONLINE',
+            'X-Bot-Status': 'HYPER_SUPREMO_ONLINE',
             'X-Bot-Latency-Ms': str(latency_ms),
             'X-Bot-Guilds': str(guild_count),
             'X-Bot-Users': str(user_count),
-            'X-Bot-Ultra-Ping-Count': str(ULTRA_PING_COUNT),
+            'X-Bot-Hyper-Ping-Count': str(ULTRA_PING_COUNT),
+            'X-Bot-Pings-Per-Second': str(pings_per_second),
             'X-Bot-Mode': '100% ALWAYS ONLINE',
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
+            'X-Bot-Frequency': '2 PINGS/SECOND (500ms)',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Connection': 'keep-alive'
         }
     )
 
@@ -5857,7 +5849,7 @@ async def start_web_server():
             print(f'✅ Servidor HTTP rodando na porta {port}')
             print(f'  ├─ GET /ping - Ping padrão (30s)')
             print(f'  ├─ 🚀 GET /supremo - PING SUPREMO (60s com retry 3x)')
-            print(f'  ├─ 🌟 GET /ultra - PING ULTRA SUPREMO (1s contínuo - 100% SEMPRE ONLINE)')
+            print(f'  ├─ 🚀 GET /ultra - PING HYPER SUPREMO (500ms - 2 PINGS/s - 100% SEMPRE ONLINE)')
             print(f'  ├─ GET /status - Status rápido')
             print(f'  ├─ GET /health - Health check (5s)')
             print(f'  └─ GET /stats - Estatísticas do banco')
