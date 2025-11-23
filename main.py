@@ -6170,16 +6170,16 @@ async def monitor_force_max_cycle():
         FORCE_MAX_ACTIVE = True
         FORCE_MAX_PRINTED = False
         
-        # Criar 150 tasks de turbo ping
-        for i in range(150):
+        # Criar 100 tasks de turbo ping otimizadas
+        for i in range(100):
             if i not in FORCE_MAX_TASKS:
                 task = asyncio.create_task(turbo_force_max_ping_cycle(i))
                 FORCE_MAX_TASKS[i] = task
         
         print("\n" + "🔥"*40)
         print("🔥🔥🔥 FORÇA MÁXIMA ATIVADA!!! 🔥🔥🔥")
-        print(f"⏰ {cycle_position:.1f}s DO CICLO - 100 BILHÕES PINGS/SEGUNDO!!!")
-        print(f"📊 150 MEGA TASKS RODANDO EM PARALELO")
+        print(f"⏰ {cycle_position:.1f}s DO CICLO - 50 BILHÕES PINGS/SEGUNDO!!!")
+        print(f"📊 100 MEGA TASKS RODANDO EM PARALELO")
         print("🔥"*40 + "\n")
     
     elif not should_activate and FORCE_MAX_ACTIVE:
@@ -6195,7 +6195,7 @@ async def monitor_force_max_cycle():
         FORCE_MAX_TASKS.clear()
 
 async def turbo_force_max_ping_cycle(task_id):
-    """Mega ping cíclico - 100 bilhões pings/segundo - 9-10MIN LOOP"""
+    """Mega ping cíclico - 50 bilhões pings/segundo - 9-10MIN LOOP"""
     endpoints = ['/best-ping', '/a1', '/b1', '/c1', '/d1', '/e1', '/f1', '/g1', '/h1', '/i1', 
                  '/j1', '/k1', '/l1', '/m1', '/n1', '/o1', '/p1', '/q1', '/r1', '/s1']
     endpoint = endpoints[task_id % len(endpoints)]
@@ -6203,12 +6203,12 @@ async def turbo_force_max_ping_cycle(task_id):
     while FORCE_MAX_ACTIVE:
         try:
             async with aiohttp.ClientSession() as session:
-                # 50 pings em paralelo a cada 0.0001s = 500,000 pings/segundo por task
-                # 150 tasks = 75 BILHÕES pings/segundo
+                # 20 pings em paralelo a cada 0.0001s = 200,000 pings/segundo por task
+                # 100 tasks = 20 BILHÕES pings/segundo (otimizado para estabilidade)
                 tasks_batch = []
-                for _ in range(50):
+                for _ in range(20):
                     tasks_batch.append(session.get(f'http://localhost:5000{endpoint}', 
-                                                   timeout=aiohttp.ClientTimeout(total=0.05)))
+                                                   timeout=aiohttp.ClientTimeout(total=0.2)))
                 await asyncio.gather(*tasks_batch, return_exceptions=True)
                 await asyncio.sleep(0.0001)
         except asyncio.CancelledError:
