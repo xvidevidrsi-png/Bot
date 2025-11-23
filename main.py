@@ -1567,88 +1567,138 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
     await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, modo)
 
 async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
+    canal_id = db_get_config("canal_partidas_id")
+    if not canal_id:
+        return
+
+    canal = guild.get_channel(int(canal_id))
+    if not canal:
+        return
+
+    partida_id = str(random.randint(100000, 9999999))
+    usar_threads = db_get_config("usar_threads")
+
+    # Contador de tópicos criados
+    contador_topicos = db_get_config("contador_topicos")
+    if not contador_topicos:
+        contador_topicos = "1"
+    numero_topico = int(contador_topicos)
+    db_set_config("contador_topicos", str(numero_topico + 1))
+
+    if usar_threads == "true":
+        thread_name = f"aguardando-{numero_topico}"
+        thread = await canal.create_thread(
+            name=thread_name,
+            type=discord.ChannelType.private_thread,
+            invitable=False
+        )
+
+        jogador1 = guild.get_member(j1_id)
+        jogador2 = guild.get_member(j2_id)
+        if jogador1:
+            await thread.add_user(jogador1)
+        if jogador2:
+            await thread.add_user(jogador2)
+
+        canal_ou_thread_id = thread.id
+        thread_id = thread.id
+        canal_partida = thread
+    else:
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            guild.get_member(j1_id): discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            guild.get_member(j2_id): discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+
+        canal_partida = await guild.create_text_channel(
+            f"aguardando-{numero_topico}",
+            category=canal.category,
+            overwrites=overwrites
+        )
+        canal_ou_thread_id = canal_partida.id
+        thread_id = 0
+
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+
+    # Adiciona coluna numero_topico se não existir
     try:
-        canal_id = db_get_config("canal_partidas_id")
-        if not canal_id:
-            return
+        cur.execute("ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
 
-        canal = guild.get_channel(int(canal_id))
-        if not canal:
-            return
+    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, criado_em)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, "confirmacao", numero_topico, datetime.datetime.utcnow().isoformat()))
+    conn.commit()
+    conn.close()
 
-        partida_id = str(random.randint(100000, 9999999))
+    mediador_id = mediador_get_next(guild.id)
+    if mediador_id:
+        mediador_rotacionar(guild.id, mediador_id)
 
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
+        mediador = guild.get_member(mediador_id)
+        if mediador:
+            if usar_threads == "true":
+                await canal_partida.add_user(mediador)
+            else:
+                await canal_partida.set_permissions(mediador, read_messages=True, send_messages=True)
 
-        cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, criado_em)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (partida_id, guild.id, canal.id, 0, valor, j1_id, j2_id, "confirmacao", datetime.datetime.utcnow().isoformat()))
-        conn.commit()
-        conn.close()
-
-        mediador_id = mediador_get_next(guild.id)
-        if mediador_id:
-            mediador_rotacionar(guild.id, mediador_id)
-            
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("UPDATE partidas SET mediador = ? WHERE id = ?", (mediador_id, partida_id))
             conn.commit()
             conn.close()
 
-        cargos_str = db_get_config("cargos_mencionar")
-        mencoes = f"<@{j1_id}> <@{j2_id}>"
-        if cargos_str:
-            cargos_ids = cargos_str.split(",")
-            for cargo_id in cargos_ids:
-                if cargo_id.strip():
-                    mencoes += f" <@&{cargo_id.strip()}>"
-        if mediador_id:
-            mencoes += f" <@{mediador_id}>"
+    cargos_str = db_get_config("cargos_mencionar")
+    mencoes = f"<@{j1_id}> <@{j2_id}>"
+    if cargos_str:
+        cargos_ids = cargos_str.split(",")
+        for cargo_id in cargos_ids:
+            mencoes += f" <@&{cargo_id}>"
+    if mediador_id:
+        mencoes += f" <@{mediador_id}>"
 
-        valor_dobrado = valor * 2
+    valor_dobrado = valor * 2
 
-        embed = discord.Embed(
-            title="🎮 Partida Encontrada!",
-            color=0x5865F2
-        )
+    embed = discord.Embed(
+        title="🎮 Partida Encontrada!",
+        color=0x5865F2
+    )
 
-        embed.add_field(
-            name="🎯 Modo",
-            value=f"{tipo_fila.upper()} Mobile",
-            inline=False
-        )
+    embed.add_field(
+        name="🎯 Modo de Jogo",
+        value=f"{tipo_fila.upper()} Mobile",
+        inline=False
+    )
 
-        embed.add_field(
-            name="💰 Valor",
-            value=f"**Entrada:** {fmt_valor(valor)}\n**PAGAR:** {fmt_valor(valor_dobrado)}",
-            inline=False
-        )
+    embed.add_field(
+        name="💰 Valor da Partida",
+        value=f"**Entrada:** {fmt_valor(valor)}\n**PAGAR:** {fmt_valor(valor_dobrado)}",
+        inline=False
+    )
 
-        embed.add_field(
-            name="👥 Jogadores",
-            value=f"<@{j1_id}>\n<@{j2_id}>",
-            inline=False
-        )
+    embed.add_field(
+        name="👥 Jogadores",
+        value=f"<@{j1_id}>\n<@{j2_id}>",
+        inline=False
+    )
 
-        if mediador_id:
-            embed.add_field(name="👨‍⚖️ Mediador", value=f"<@{mediador_id}>", inline=False)
+    if mediador_id:
+        embed.add_field(name="👨‍⚖️ Mediador", value=f"<@{mediador_id}>", inline=False)
 
-        embed.add_field(
-            name="⚠️ Confirmação",
-            value="Ambos devem confirmar com ✅",
-            inline=False
-        )
+    embed.add_field(
+        name="⚠️ Confirmação Necessária",
+        value="Ambos os jogadores devem confirmar clicando em ✅ Confirmar",
+        inline=False
+    )
 
-        view = ConfirmarPartidaView(partida_id, j1_id, j2_id)
-        await canal.send(mencoes, embed=embed, view=view)
+    view = ConfirmarPartidaView(partida_id, j1_id, j2_id)
+    await canal_partida.send(mencoes, embed=embed, view=view)
 
-        registrar_log_partida(partida_id, guild.id, "partida_criada", j1_id, j2_id, mediador_id, valor, f"1x1-{tipo_fila}")
-        await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, tipo_fila)
-
-    except Exception as e:
-        print(f"[ERRO criar_partida_mob] {e}")
+    registrar_log_partida(partida_id, guild.id, "partida_criada", j1_id, j2_id, mediador_id, valor, f"1x1-{tipo_fila}")
+    await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, tipo_fila)
 
 class CopiarChavePIXView(View):
     def __init__(self, chave_pix):
@@ -2157,37 +2207,15 @@ async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     db_set_config("aux_role_id", str(cargo.id))
     await interaction.response.send_message(f"✅ Cargo aux definido: {cargo.mention}\n\nApenas membros com este cargo poderão usar !aux e acessar o menu mediador!", ephemeral=True)
 
-@tree.command(name="topico", description="📌 Define o canal onde as partidas serão criadas")
-@app_commands.describe(canal="Selecione o canal para partidas")
+@tree.command(name="topico", description="📌 Define o canal de tópicos onde as partidas serão criadas como threads")
+@app_commands.describe(canal="Selecione o canal onde os tópicos de partida aparecerão")
 async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel):
     if not is_admin(interaction.user.id, member=interaction.user):
-        await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
-        return
-
-    if not verificar_separador_servidor(interaction.guild.id):
-        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
-        return
-
-    if not canal:
-        await interaction.response.send_message("❌ Canal inválido!", ephemeral=True)
-        return
-
-    bot_perms = canal.permissions_for(interaction.guild.me)
-    if not bot_perms.send_messages or not bot_perms.manage_messages:
-        await interaction.response.send_message(
-            f"❌ Preciso de permissões em {canal.mention}:\n✅ Enviar mensagens\n✅ Gerenciar mensagens",
-            ephemeral=True
-        )
         return
 
     db_set_config("canal_partidas_id", str(canal.id))
-    
-    embed = discord.Embed(
-        title="✅ Canal de Partidas Definido!",
-        description=f"Partidas serão criadas em {canal.mention}",
-        color=0x00ff00
-    )
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    db_set_config("usar_threads", "true")
+    await interaction.response.send_message(f"✅ Canal de threads de partidas definido: {canal.mention}\n\n💡 As partidas agora serão criadas como threads (tópicos) neste canal!", ephemeral=True)
 
 @tree.command(name="configurar", description="📢 Define quais cargos devem ser mencionados ao criar partidas")
 @app_commands.describe(cargos="Digite os IDs dos cargos separados por vírgula (exemplo: 123456 789012)")
@@ -6099,256 +6127,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-# 🔥 FORÇA MÁXIMA CÍCLICA 9-10MIN
-FORCE_CYCLE = 600
-FORCE_ACTIVE = False
-FORCE_TASKS = []
-
-@tasks.loop(seconds=1)
-async def force_max_monitor():
-    global FORCE_ACTIVE
-    up = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
-    pos = up % FORCE_CYCLE
-    if 540 <= pos < 600 and not FORCE_ACTIVE:
-        FORCE_ACTIVE = True
-        print("\n🔥 FORÇA MÁXIMA: 50 BILHÕES PINGS/SEGUNDO 🔥\n")
-        for i in range(50):
-            FORCE_TASKS.append(asyncio.create_task(turbo_ping(i)))
-    elif not (540 <= pos < 600) and FORCE_ACTIVE:
-        FORCE_ACTIVE = False
-        for t in FORCE_TASKS:
-            t.cancel()
-        FORCE_TASKS.clear()
-
-async def turbo_ping(i):
-    while FORCE_ACTIVE:
-        try:
-            async with aiohttp.ClientSession() as s:
-                await asyncio.gather(*[
-                    s.get(f'http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=0.5))
-                    for _ in range(10)
-                ], return_exceptions=True)
-                await asyncio.sleep(0.001)
-        except:
-            pass
-
-# 🌐 SISTEMA DE ROTAÇÃO DE 100 HTTPS - A CADA 5MIN
-HTTPS_URLS = [
-    f"https://ping-bot-{i}.replit.dev:5000/best-ping" for i in range(1, 51)
-] + [
-    f"https://api-{i}.replit.dev/ping" for i in range(1, 51)
-]
-
-CURRENT_HTTPS_INDEX = 0
-HTTPS_ROTATION_TIME = 300  # 5 minutos
-
-@tasks.loop(seconds=5)
-async def rotate_https_pinger():
-    """Rotaciona entre 100 HTTPS diferentes a cada 5 minutos"""
-    global CURRENT_HTTPS_INDEX
-    
-    current_time = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
-    
-    # Mudar URL a cada 5 minutos
-    CURRENT_HTTPS_INDEX = int(current_time // HTTPS_ROTATION_TIME) % len(HTTPS_URLS)
-    current_url = HTTPS_URLS[CURRENT_HTTPS_INDEX]
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get(current_url, timeout=aiohttp.ClientTimeout(total=2), ssl=False)
-    except:
-        pass  # Ignora erros de HTTPS
-    
-    # Log a cada mudança de URL
-    if current_time > 0 and current_time % HTTPS_ROTATION_TIME < 5:
-        print(f"🌐 URL ROTACIONADA #{CURRENT_HTTPS_INDEX + 1}: {current_url}")
-
-
-async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
-    """Mostra o perfil detalhado de um usuário"""
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-
-    cur.execute("""SELECT coins, vitorias, derrotas FROM usuarios 
-                   WHERE guild_id = ? AND user_id = ?""", (guild_id, usuario.id))
-    row = cur.fetchone()
-
-    cur.execute("""SELECT COUNT(*) + 1 FROM usuarios 
-                   WHERE guild_id = ? AND vitorias > (
-                       SELECT COALESCE(vitorias, 0) FROM usuarios 
-                       WHERE guild_id = ? AND user_id = ?
-                   )""", (guild_id, guild_id, usuario.id))
-    posicao = cur.fetchone()[0]
-
-    cur.execute("""SELECT COUNT(*) FROM usuarios 
-                   WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0)""", (guild_id,))
-    total_jogadores = cur.fetchone()[0]
-
-    conn.close()
-
-    if not row or (row[1] == 0 and row[2] == 0):
-        embed = discord.Embed(
-            title=f"📊 Perfil de {usuario.display_name}",
-            description="Este jogador ainda não participou de nenhuma partida.",
-            color=0x2f3136
-        )
-        embed.set_thumbnail(url=usuario.avatar.url if usuario.avatar else usuario.default_avatar.url)
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
-        return
-
-    coins, vitorias, derrotas = row
-    total_partidas = vitorias + derrotas
-    winrate = (vitorias / total_partidas * 100) if total_partidas > 0 else 0
-
-    if winrate >= 70:
-        cor = 0x00FF00
-    elif winrate >= 50:
-        cor = 0xFFAA00
-    else:
-        cor = 0xFF0000
-
-    if posicao == 1:
-        medal = "🥇"
-    elif posicao == 2:
-        medal = "🥈"
-    elif posicao == 3:
-        medal = "🥉"
-    else:
-        medal = "🏅"
-
-    embed = discord.Embed(
-        title=f"📊 Perfil de {usuario.display_name}",
-        description=f"{medal} **Posição #{posicao}** de {total_jogadores} jogadores",
-        color=cor
-    )
-
-    embed.set_thumbnail(url=usuario.avatar.url if usuario.avatar else usuario.default_avatar.url)
-
-    embed.add_field(
-        name="💰 Coins",
-        value=f"**{coins}**",
-        inline=True
-    )
-    embed.add_field(
-        name="🏆 Vitórias",
-        value=f"**{vitorias}**",
-        inline=True
-    )
-    embed.add_field(
-        name="💔 Derrotas",
-        value=f"**{derrotas}**",
-        inline=True
-    )
-
-    barra_size = 20
-    barra_cheia = int((winrate / 100) * barra_size)
-    barra_vazia = barra_size - barra_cheia
-    barra_visual = "█" * barra_cheia + "░" * barra_vazia
-
-    embed.add_field(
-        name="📈 Taxa de Vitória",
-        value=f"**{winrate:.1f}%**\n`{barra_visual}`",
-        inline=False
-    )
-
-    embed.add_field(
-        name="🎮 Total de Partidas",
-        value=f"**{total_partidas}**",
-        inline=True
-    )
-
-    embed.add_field(
-        name="📊 K/D Ratio",
-        value=f"**{(vitorias / derrotas):.2f}**" if derrotas > 0 else "**∞**",
-        inline=True
-    )
-
-    embed.add_field(
-        name="⭐ Status",
-        value=f"**{'Elite' if winrate >= 70 else 'Veterano' if winrate >= 50 else 'Aprendiz'}**",
-        inline=True
-    )
-
-    embed.set_footer(text=f"Solicitado por {interaction.user.display_name} • ID: {usuario.id}")
-
-    await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
-
-async def mostrar_ranking(interaction: discord.Interaction, guild_id: int, ephemeral: bool = True):
-    """Mostra o ranking completo do servidor"""
-    await interaction.response.defer(ephemeral=ephemeral)
-
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-
-    cur.execute("""SELECT user_id, coins, vitorias, derrotas 
-                   FROM usuarios 
-                   WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0)
-                   ORDER BY vitorias DESC, coins DESC
-                   LIMIT 10""", (guild_id,))
-    top_jogadores = cur.fetchall()
-
-    conn.close()
-
-    if not top_jogadores:
-        embed = discord.Embed(
-            title="🏆 Ranking do Servidor",
-            description="Nenhuma partida foi jogada ainda neste servidor!",
-            color=0x2f3136
-        )
-        await interaction.followup.send(embed=embed, ephemeral=ephemeral)
-        return
-
-    embed = discord.Embed(
-        title=f"🏆 Ranking - {interaction.guild.name}",
-        description="**Top 10 Melhores Jogadores**\nClassificação por número de vitórias",
-        color=0xFFD700
-    )
-
-    if interaction.guild.icon:
-        embed.set_thumbnail(url=interaction.guild.icon.url)
-
-    ranking_text = ""
-    for i, (user_id, coins, vitorias, derrotas) in enumerate(top_jogadores, 1):
-        usuario = interaction.guild.get_member(user_id)
-        nome = usuario.display_name if usuario else f"Usuário {user_id}"
-
-        total_partidas = vitorias + derrotas
-        winrate = (vitorias / total_partidas * 100) if total_partidas > 0 else 0
-
-        if i == 1:
-            medal = "🥇"
-        elif i == 2:
-            medal = "🥈"
-        elif i == 3:
-            medal = "🥉"
-        else:
-            medal = f"**{i}º**"
-
-        ranking_text += (
-            f"{medal} **{nome}**\n"
-            f"└ 🏆 **{vitorias}V** - 💔 **{derrotas}D** | 📈 **{winrate:.1f}%** | 💰 **{coins}** coins\n\n"
-        )
-
-    embed.add_field(
-        name="👑 Hall da Fama",
-        value=ranking_text,
-        inline=False
-    )
-
-    embed.set_footer(text=f"Solicitado por {interaction.user.display_name} • Use /rank tipo:Meu Perfil para ver seu perfil")
-
-    await interaction.followup.send(embed=embed, ephemeral=ephemeral)
-
-@tree.command(name="rank", description="🏆 Ver seu perfil ou o ranking do servidor")
-@app_commands.describe(tipo="Escolha entre 'Meu Perfil' ou 'Ranking'")
-@app_commands.choices(tipo=[
-    app_commands.Choice(name="Meu Perfil", value="perfil"),
-    app_commands.Choice(name="Ranking", value="ranking"),
-])
-async def rank_command(interaction: discord.Interaction, tipo: str = "perfil"):
-    guild_id = interaction.guild.id
-    
-    if tipo == "perfil":
-        await mostrar_perfil(interaction, interaction.user, guild_id, ephemeral=False)
-    elif tipo == "ranking":
-        await mostrar_ranking(interaction, guild_id, ephemeral=False)
