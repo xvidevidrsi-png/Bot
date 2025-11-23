@@ -850,8 +850,6 @@ class FilaView(View):
 
         await interaction.response.defer()
 
-        await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
-
         if len(jogadores) >= 2:
             print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores[:2]}")
             fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
@@ -883,15 +881,14 @@ class FilaView(View):
 
         await interaction.response.defer()
 
-        await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
-
         if len(jogadores) >= 2:
             print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores[:2]}")
             fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
             fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
             print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
-            await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+        
+        await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
         if not verificar_separador_servidor(interaction.guild.id):
@@ -1363,7 +1360,8 @@ class ConfirmarPartidaView(View):
 
             if partida_row:
                 numero_topico, canal_id, thread_id, valor = partida_row
-                novo_nome = f"mobile-{numero_topico}"
+                valor_dobrado = valor * 2
+                novo_nome = f"PAGAR-{fmt_valor(valor_dobrado)}-{numero_topico}"
 
                 print(f"[CONFIRMAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
 
