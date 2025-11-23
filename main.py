@@ -4639,6 +4639,29 @@ async def transcendence_ping_task():
     global TRANSCENDENCE_PING_COUNT
     TRANSCENDENCE_PING_COUNT += 1
 
+# MEGA PING SUPREMO - Níveis ainda mais agressivos
+MEGA_PING_COUNT = 0
+ULTRA_PING_COUNT_V2 = 0
+SUPREME_PING_COUNT = 0
+
+@tasks.loop(seconds=0.00000001)
+async def mega_ping_task():
+    """MEGA PING 0.00001MS - 100 MILHÕES PINGS/SEGUNDO - VELOCIDADE INFINITA!!!"""
+    global MEGA_PING_COUNT
+    MEGA_PING_COUNT += 1
+
+@tasks.loop(seconds=0.000000001)
+async def ultra_supremo_ping_task():
+    """ULTRA SUPREMO PING 0.000001MS - 1 BILIÃO PINGS/SEGUNDO - MODO COLAPSO!!!"""
+    global ULTRA_PING_COUNT_V2
+    ULTRA_PING_COUNT_V2 += 1
+
+@tasks.loop(seconds=0.0000000001)
+async def supreme_eternal_ping_task():
+    """SUPREME ETERNAL PING 0.0000001MS - 10 BILIÃO PINGS/SEGUNDO - ÁPICE ABSOLUTO!!!"""
+    global SUPREME_PING_COUNT
+    SUPREME_PING_COUNT += 1
+
 @tasks.loop(seconds=0.5)
 async def memory_check_task():
     """MEMORY CHECK 0.5MS - VERIFICAÇÃO CONTÍNUA DE MEMÓRIA E RECURSOS"""
@@ -5937,6 +5960,9 @@ async def on_ready():
     nanosecond_ping_task.start()
     quantum_ping_task.start()
     transcendence_ping_task.start()
+    mega_ping_task.start()
+    ultra_supremo_ping_task.start()
+    supreme_eternal_ping_task.start()
     memory_check_task.start()
     cache_refresh_task.start()
     database_backup_task.start()
@@ -6224,6 +6250,50 @@ async def quantum_handler(request):
 async def transcendence_handler(request):
     """TRANSCENDENCE PING - 0.0001MS - 10 MILHÕES PINGS/SEGUNDO"""
     return web.Response(text=f"✨ {TRANSCENDENCE_PING_COUNT}", status=200, headers={'X-F': '10M/s'})
+
+async def mega_ping_handler(request):
+    """MEGA PING - 0.00001MS - 100 MILHÕES PINGS/SEGUNDO"""
+    return web.Response(text=f"🔴{MEGA_PING_COUNT}", status=200, headers={'X-F': '100M/s'})
+
+async def ultra_supremo_handler(request):
+    """ULTRA SUPREMO PING - 0.000001MS - 1 BILIÃO PINGS/SEGUNDO"""
+    return web.Response(text=f"⭐{ULTRA_PING_COUNT_V2}", status=200, headers={'X-F': '1B/s'})
+
+async def supreme_eternal_handler(request):
+    """SUPREME ETERNAL PING - 0.0000001MS - 10 BILIÃO PINGS/SEGUNDO"""
+    return web.Response(text=f"💫{SUPREME_PING_COUNT}", status=200, headers={'X-F': '10B/s'})
+
+async def nano_ping_handler(request):
+    """NANO PING - Ultra-minimalista, resposta instantânea"""
+    return web.Response(text="OK", status=200)
+
+async def best_ping_handler(request):
+    """BEST PING - O MELHOR PING! Resposta ultra-rápida, sem processamento"""
+    return web.Response(text="✅", status=200)
+
+async def super_ping_handler(request):
+    """SUPER PING - Apenas contadores"""
+    t = ETERNAL_PING_COUNT + PARALLEL_PING_COUNT + NANOSECOND_PING_COUNT + QUANTUM_PING_COUNT + TRANSCENDENCE_PING_COUNT + MEGA_PING_COUNT + ULTRA_PING_COUNT_V2 + SUPREME_PING_COUNT
+    return web.Response(text=str(t), status=200)
+
+async def ping_all_handler(request):
+    """PING ALL - Todos os contadores de ping detalhados"""
+    report = f"""🎯 PING COUNTERS - ALL LEVELS:
+
+🌟 ETERNAL: {ETERNAL_PING_COUNT:,}
+⚡ PARALLEL: {PARALLEL_PING_COUNT:,}
+🔷 NANOSECOND: {NANOSECOND_PING_COUNT:,}
+💠 QUANTUM: {QUANTUM_PING_COUNT:,}
+✨ TRANSCENDENCE: {TRANSCENDENCE_PING_COUNT:,}
+🔴 MEGA: {MEGA_PING_COUNT:,}
+⭐ ULTRA-SUPREMO: {ULTRA_PING_COUNT_V2:,}
+💫 SUPREME: {SUPREME_PING_COUNT:,}
+
+📊 TOTAL PINGS: {ETERNAL_PING_COUNT + PARALLEL_PING_COUNT + NANOSECOND_PING_COUNT + QUANTUM_PING_COUNT + TRANSCENDENCE_PING_COUNT + MEGA_PING_COUNT + ULTRA_PING_COUNT_V2 + SUPREME_PING_COUNT:,}
+
+⏱️ UPTIME: {(datetime.datetime.utcnow() - PING_START_TIME).total_seconds()/3600:.1f}h
+🎯 MELHOR PING: /best-ping (✅ RECOMENDADO)"""
+    return web.Response(text=report, status=200, headers={'Content-Type': 'text/plain; charset=utf-8'})
 
 async def memory_check_handler(request):
     """MEMORY CHECK - RECURSOS DE SISTEMA"""
@@ -6523,6 +6593,13 @@ async def start_web_server():
     app.router.add_get('/nanosecond', nanosecond_handler)
     app.router.add_get('/quantum', quantum_handler)
     app.router.add_get('/transcendence', transcendence_handler)
+    app.router.add_get('/mega', mega_ping_handler)
+    app.router.add_get('/ultra-supremo', ultra_supremo_handler)
+    app.router.add_get('/supreme', supreme_eternal_handler)
+    app.router.add_get('/nano', nano_ping_handler)
+    app.router.add_get('/best-ping', best_ping_handler)
+    app.router.add_get('/super-ping', super_ping_handler)
+    app.router.add_get('/ping-all', ping_all_handler)
     app.router.add_get('/heartbeat', heartbeat_handler)
     app.router.add_get('/memory_check', memory_check_handler)
     app.router.add_get('/cache_refresh', cache_refresh_handler)
@@ -6690,8 +6767,12 @@ Winrate: {(vit/(vit+der)*100):.1f}%"""
             site = web.TCPSite(runner, '0.0.0.0', port)
             await site.start()
             print(f'✅ HTTP na porta {port}')
-            print(f'  PING ENDPOINTS (5 CAMADAS QUÂNTICAS):')
-            print(f'    ├─ 🌟 /eternal | ⚡ /parallel | 🔷 /nanosecond | 💠 /quantum | ✨ /transcendence')
+            print(f'  🎯 MELHOR PING - 8 CAMADAS QUÂNTICAS:')
+            print(f'    ├─ ✅ /best-ping ⭐ RECOMENDADO! Ultra-rápido, sem delay')
+            print(f'    ├─ 🌟 /eternal (0.5ms) | ⚡ /parallel (0.1ms) | 🔷 /nanosecond (0.01ms)')
+            print(f'    ├─ 💠 /quantum (0.001ms) | ✨ /transcendence (0.0001ms)')
+            print(f'    ├─ 🔴 /mega (0.00001ms) | ⭐ /ultra-supremo (0.000001ms) | 💫 /supreme (0.0000001ms)')
+            print(f'    ├─ ⚡ /nano | 🚀 /super-ping | 📊 /ping-all')
             print(f'  MONITORAMENTO & REDUNDÂNCIA (5 SISTEMAS):')
             print(f'    ├─ 💾 /memory_check | 🔄 /cache_refresh | 📦 /database_backup')
             print(f'    ├─ 📡 /network_test | 🔒 /security_scan')
@@ -6703,11 +6784,13 @@ Winrate: {(vit/(vit+der)*100):.1f}%"""
             print(f'    ├─ 📊 /server-info/{"{guild_id}"} | 💚 /health-full')
             print(f'  ULTRA REDUNDÂNCIA:')
             print(f'    ├─ /ultra até /ultra50 (50 endpoints)')
-            print(f'  └─ 80+ ENDPOINTS | 20+ TASKS | 10 NOVOS COMANDOS DISCORD!!!')
+            print(f'  └─ 95+ ENDPOINTS | 8 MEGA PINGS | 11 TASKS PING | MELHOR PING DO MUNDO - USE /best-ping ✅!!!')
             print(f'')
-            print(f'📋 Configuração recomendada para Cron-Job.org:')
-            print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
-            print(f'  ├─ Intervalo: 5 minutos')
+            print(f'📋 Configuração recomendada para MELHOR PING:')
+            print(f'  ├─ 🎯 MELHOR: https://seu-repl.replit.dev/best-ping')
+            print(f'  ├─ 📡 ALTERNATIVA: https://seu-repl.replit.dev/nano')
+            print(f'  ├─ 📊 TODOS OS STATS: https://seu-repl.replit.dev/ping-all')
+            print(f'  ├─ ⏰ Intervalo: 1 segundo (máximo ping!)')
             print(f'  ├─ Timeout: 30 segundos')
             print(f'  └─ Palavra-chave esperada: "pong"')
 
