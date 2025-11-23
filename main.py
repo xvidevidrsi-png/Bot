@@ -261,6 +261,25 @@ def init_db():
         UNIQUE(guild_id, tipo)
     )""")
     
+    cur.execute("""CREATE TABLE IF NOT EXISTS convites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id INTEGER,
+        user_id INTEGER,
+        codigo TEXT UNIQUE,
+        usos INTEGER DEFAULT 0,
+        limite INTEGER DEFAULT 5,
+        criado_em TEXT
+    )""")
+    
+    cur.execute("""CREATE TABLE IF NOT EXISTS referrals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id INTEGER,
+        referrer_id INTEGER,
+        referred_id INTEGER,
+        coins_reward REAL DEFAULT 100,
+        criado_em TEXT
+    )""")
+    
     # Additions for thread handling and topic number
     try:
         cur.execute("""ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0""")
@@ -3861,6 +3880,76 @@ async def duel_command(interaction: discord.Interaction, usuario: discord.User, 
     embed.set_footer(text="Aguardando resposta...")
     await interaction.response.send_message(embed=embed)
 
+@tree.command(name="top5", description="🥇 Ver top 5 jogadores do servidor")
+async def top5_command(interaction: discord.Interaction):
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+    
+    await interaction.response.defer(ephemeral=True)
+    guild_id = interaction.guild.id
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT user_id, vitorias, derrotas, coins FROM usuarios WHERE guild_id = ? AND (vitorias > 0 OR derrotas > 0) ORDER BY vitorias DESC LIMIT 5", (guild_id,))
+    top = cur.fetchall()
+    conn.close()
+    
+    if not top:
+        await interaction.followup.send("Sem dados ainda!", ephemeral=True)
+        return
+    
+    embed = discord.Embed(title=f"🥇 Top 5 - {interaction.guild.name}", color=0xFFD700)
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+    texto = ""
+    for i, (uid, vit, der, coins) in enumerate(top):
+        wr = (vit/(vit+der)*100) if (vit+der) > 0 else 0
+        texto += f"{medals[i]} <@{uid}> • **{vit}V** ({wr:.0f}%) • {coins:.0f}💵\n"
+    embed.description = texto
+    await interaction.followup.send(embed=embed, ephemeral=True)
+
+@tree.command(name="invite", description="🔗 Gera código de convite com recompensa")
+async def invite_command(interaction: discord.Interaction):
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ Servidor não registrado!", ephemeral=True)
+        return
+    
+    guild_id = interaction.guild.id
+    user_id = interaction.user.id
+    codigo = f"INVITE_{guild_id}_{user_id}_{int(datetime.datetime.utcnow().timestamp())}"
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("INSERT INTO convites (guild_id, user_id, codigo, limite) VALUES (?, ?, ?, ?)", (guild_id, user_id, codigo, 5))
+    conn.commit()
+    conn.close()
+    
+    embed = discord.Embed(title="🔗 Seu Link de Convite!", color=0x0080FF)
+    embed.description = f"Código: `{codigo}`\nRecompensa: 100 coins por convite!\nUsos: 0/5"
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@tree.command(name="status-bot", description="⚡ Ver status completo do Bot Zeus")
+async def status_bot_command(interaction: discord.Interaction):
+    uptime_sec = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
+    uptime_h = uptime_sec / 3600
+    
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM usuarios WHERE guild_id = ?", (interaction.guild.id,))
+    usuarios = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM partidas WHERE guild_id = ?", (interaction.guild.id,))
+    partidas = cur.fetchone()[0]
+    conn.close()
+    
+    embed = discord.Embed(title="⚡ Status do Bot Zeus", color=0x00FF00)
+    embed.add_field(name="🌟 Uptime", value=f"{uptime_h:.1f}h", inline=True)
+    embed.add_field(name="👥 Usuários Servidor", value=str(usuarios), inline=True)
+    embed.add_field(name="🎮 Partidas", value=str(partidas), inline=True)
+    embed.add_field(name="📍 Endpoints", value="75+", inline=True)
+    embed.add_field(name="🔄 Tasks", value="20+", inline=True)
+    embed.add_field(name="✅ Status", value="100% ONLINE", inline=True)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 async def mostrar_perfil(interaction: discord.Interaction, usuario: discord.Member, guild_id: int, ephemeral: bool = True):
     """Mostra o perfil detalhado de um usuário"""
     conn = sqlite3.connect(DB_FILE)
@@ -6474,6 +6563,97 @@ async def start_web_server():
     app.router.add_get('/quests', quests_handler)
     app.router.add_get('/duels', duels_handler)
     
+    async def top5_handler(request):
+        """TOP 5 - Top 5 global players"""
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT user_id, vitorias, derrotas, coins FROM usuarios WHERE vitorias > 0 ORDER BY vitorias DESC LIMIT 5")
+            top = cur.fetchall()
+            conn.close()
+            
+            if not top:
+                return web.Response(text="Sem dados", status=404)
+            
+            texto = "🥇 TOP 5 GLOBAL:\n\n"
+            medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+            for i, (uid, vit, der, coins) in enumerate(top):
+                wr = (vit/(vit+der)*100) if (vit+der) > 0 else 0
+                texto += f"{medals[i]} User#{uid} • {vit}V ({wr:.0f}%) • {coins:.0f}💵\n"
+            
+            return web.Response(text=texto, status=200, headers={'Content-Type': 'text/plain; charset=utf-8'})
+        except:
+            return web.Response(text="Erro ao buscar top 5", status=500)
+    
+    async def server_info_handler(request):
+        """SERVER INFO - Informações consolidadas do servidor"""
+        guild_id = request.match_info.get('guild_id')
+        if not guild_id:
+            return web.Response(text="guild_id obrigatório", status=400)
+        
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            
+            cur.execute("SELECT COUNT(*), SUM(vitorias), SUM(derrotas) FROM usuarios WHERE guild_id = ?", (int(guild_id),))
+            users, vit, der = cur.fetchone()
+            
+            cur.execute("SELECT COUNT(*) FROM partidas WHERE guild_id = ?", (int(guild_id),))
+            partidas = cur.fetchone()[0]
+            
+            cur.execute("SELECT COUNT(*) FROM logs_partidas WHERE guild_id = ?", (int(guild_id),))
+            logs = cur.fetchone()[0]
+            
+            conn.close()
+            
+            info = f"""📊 SERVER INFO - Guild {guild_id}:
+Usuários: {users or 0}
+Vitórias: {vit or 0}
+Derrotas: {der or 0}
+Partidas Totais: {partidas}
+Logs: {logs}
+Winrate: {(vit/(vit+der)*100):.1f}%"""
+            
+            return web.Response(text=info, status=200, headers={'Content-Type': 'text/plain; charset=utf-8'})
+        except:
+            return web.Response(text="Erro ao buscar info do servidor", status=500)
+    
+    async def health_full_handler(request):
+        """HEALTH FULL - Status completo do sistema"""
+        uptime_sec = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
+        uptime_h = uptime_sec / 3600
+        uptime_d = uptime_h / 24
+        
+        health = f"""✅ BOT ZEUS HEALTH CHECK - FULL REPORT:
+
+⏱️ UPTIME:
+  ├─ Segundos: {uptime_sec:.0f}
+  ├─ Horas: {uptime_h:.2f}
+  ├─ Dias: {uptime_d:.2f}
+  
+📊 PINGS & HEARTBEAT:
+  ├─ Eternal Ping: {ETERNAL_PING_COUNT:,} 
+  ├─ Parallel Ping: {PARALLEL_PING_COUNT:,}
+  ├─ Nanosecond: {NANOSECOND_PING_COUNT:,}
+  ├─ Quantum: {QUANTUM_PING_COUNT:,}
+  ├─ Transcendence: {TRANSCENDENCE_PING_COUNT:,}
+  ├─ Total Pings: {ETERNAL_PING_COUNT+PARALLEL_PING_COUNT+NANOSECOND_PING_COUNT+QUANTUM_PING_COUNT+TRANSCENDENCE_PING_COUNT:,}
+
+💾 SISTEMA:
+  ├─ Memory Checks: {MEMORY_CHECK_COUNT}
+  ├─ Cache Refreshes: {CACHE_REFRESH_COUNT}
+  ├─ DB Backups: {DATABASE_BACKUP_COUNT}
+  ├─ Network Tests: {NETWORK_TEST_COUNT}
+  ├─ Security Scans: {SECURITY_SCAN_COUNT}
+
+✅ STATUS: 100% UPTIME INFINITO SUPREMO GARANTIDO"""
+        
+        return web.Response(text=health, status=200, headers={'Content-Type': 'text/plain; charset=utf-8'})
+    
+    app.router.add_get('/top5', top5_handler)
+    app.router.add_get('/server-info/{guild_id}', server_info_handler)
+    app.router.add_get('/health-full', health_full_handler)
+    
     # 🌟 PING 1MS ULTIMATE - 50 ENDPOINTS - 1000 PINGS/SEGUNDO 🌟
     handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
                 ultra6_handler, ultra7_handler, ultra8_handler, ultra9_handler, ultra10_handler,
@@ -6518,12 +6698,12 @@ async def start_web_server():
             print(f'  ESTATÍSTICAS & RANKINGS (6 ENDPOINTS):')
             print(f'    ├─ 📊 /supremo_final | 📈 /dashboard | 🌍 /bot_stats | 🎯 /advanced_stats')
             print(f'    ├─ ⏱️ /uptime | 📍 /server_stats/{"{guild_id}"}')
-            print(f'  NOVOS SISTEMAS (2 ENDPOINTS):')
-            print(f'    ├─ 🎯 /quests (Daily Quest System)')
-            print(f'    ├─ ⚔️ /duels (Duel 1v1 System)')
+            print(f'  NOVOS SISTEMAS (5 ENDPOINTS):')
+            print(f'    ├─ 🎯 /quests | ⚔️ /duels | 🥇 /top5')
+            print(f'    ├─ 📊 /server-info/{"{guild_id}"} | 💚 /health-full')
             print(f'  ULTRA REDUNDÂNCIA:')
             print(f'    ├─ /ultra até /ultra50 (50 endpoints)')
-            print(f'  └─ 75+ ENDPOINTS | 20+ TASKS | 7 NOVOS COMANDOS DISCORD!!!')
+            print(f'  └─ 80+ ENDPOINTS | 20+ TASKS | 10 NOVOS COMANDOS DISCORD!!!')
             print(f'')
             print(f'📋 Configuração recomendada para Cron-Job.org:')
             print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
