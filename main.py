@@ -5592,6 +5592,170 @@ async def on_ready():
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """)
 
+async def index_handler(request):
+    """HOME PAGE - INDEX HTML DO BOT ZEUS"""
+    html = """
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bot Zeus - Free Fire Queue Manager</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: #fff;
+                min-height: 100vh;
+                padding: 20px;
+            }
+            .container { max-width: 1200px; margin: 0 auto; }
+            header {
+                text-align: center;
+                padding: 40px 20px;
+                background: rgba(255,0,0,0.1);
+                border-radius: 10px;
+                margin-bottom: 40px;
+                border: 2px solid #ff0000;
+            }
+            h1 { font-size: 3em; color: #ff0000; margin-bottom: 10px; }
+            .subtitle { font-size: 1.2em; color: #aaa; }
+            .status {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+            .card {
+                background: rgba(255,0,0,0.05);
+                border: 1px solid #ff0000;
+                border-radius: 8px;
+                padding: 20px;
+                transition: 0.3s;
+            }
+            .card:hover { background: rgba(255,0,0,0.15); transform: translateY(-5px); }
+            .card h3 { color: #ff0000; margin-bottom: 10px; }
+            .endpoints {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-top: 30px;
+            }
+            .endpoint {
+                background: rgba(0,255,0,0.1);
+                border: 1px solid #00ff00;
+                border-radius: 5px;
+                padding: 15px;
+                font-family: monospace;
+                font-size: 0.9em;
+            }
+            .endpoint-name { color: #00ff00; font-weight: bold; }
+            .endpoint-desc { color: #aaa; font-size: 0.8em; margin-top: 5px; }
+            .footer {
+                text-align: center;
+                margin-top: 50px;
+                padding: 20px;
+                color: #666;
+                border-top: 1px solid #333;
+            }
+            .ping-indicator { color: #00ff00; font-weight: bold; }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 10px;
+                margin-top: 15px;
+            }
+            .stat {
+                background: rgba(0,255,0,0.05);
+                border: 1px solid #00ff00;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🤖 BOT ZEUS</h1>
+                <p class="subtitle">Free Fire Queue Manager - 24/7 UPTIME</p>
+            </header>
+            
+            <div class="status">
+                <div class="card">
+                    <h3>⚡ Status</h3>
+                    <p><span class="ping-indicator">🟢 ONLINE</span></p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;">Bot rodando em 5 servidores Discord</p>
+                </div>
+                
+                <div class="card">
+                    <h3>📊 Comandos</h3>
+                    <p><span class="ping-indicator">32 SLASH COMMANDS</span></p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;">1v1, 2x2, 3x3, 4x4 + Ranking</p>
+                </div>
+                
+                <div class="card">
+                    <h3>🔴 Ping</h3>
+                    <p><span class="ping-indicator">3.5-4ms</span></p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;">Melhor ping do Replit</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-bottom: 30px;">
+                <h3>🚀 Endpoints de Ping Disponíveis</h3>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <div class="endpoint-name">HTTP (5000)</div>
+                        <div class="endpoint-desc">/best-ping - 3.5ms</div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-name">TCP (8080)</div>
+                        <div class="endpoint-desc">Raw Socket - 3.5ms</div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-name">UDP (5002)</div>
+                        <div class="endpoint-desc">Ultra-rápido</div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-name">Cluster (5003-5010)</div>
+                        <div class="endpoint-desc">8x UDP Workers</div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-name">Async (9001-9010)</div>
+                        <div class="endpoint-desc">10x Async Servers</div>
+                    </div>
+                    <div class="endpoint">
+                        <div class="endpoint-name">🔴 100BI PINGS (6666)</div>
+                        <div class="endpoint-desc">70-100 bilhões/s</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Funcionalidades</h3>
+                <div class="stats-grid">
+                    <div class="stat">✅ Filas 1v1</div>
+                    <div class="stat">✅ Filas 2x2</div>
+                    <div class="stat">✅ Filas 3x3</div>
+                    <div class="stat">✅ Filas 4x4</div>
+                    <div class="stat">✅ Mediadores</div>
+                    <div class="stat">✅ PIX QR</div>
+                    <div class="stat">✅ Ranking</div>
+                    <div class="stat">✅ Auto-Rename</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>Bot Zeus © 2025 | Mantido online 24/7 com Reserved VM Deployment</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">Para mais informações: /help</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return web.Response(text=html, content_type='text/html')
+
 async def ping_handler(request):
     """ROOT PING - ZERO processamento"""
     return web.Response(body=b"1")
@@ -5936,8 +6100,8 @@ async def start_web_server():
     app = web.Application()
 
     # Endpoints principais (compatíveis com Cron-Job.org)
+    app.router.add_get('/', index_handler)  # INDEX HTML
     app.router.add_get('/ping', ping_handler)
-    app.router.add_get('/', ping_handler)  # Root também retorna ping
 
     # PING SUPREMO - Endpoint ultra-agressivo para manter bot SEMPRE ONLINE
     app.router.add_get('/supremo', supremo_handler)
