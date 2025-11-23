@@ -6115,6 +6115,37 @@ async def start_web_server():
     if site is None:
         raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
 
+# 🔥 FORÇA MÁXIMA - 4:50 RODANDO + 10s PAUSA (Ciclo de 5 minutos)
+@tasks.loop(seconds=1)
+async def force_max_cycle():
+    """Controla Força Máxima: 4:50 rodando + 10s pausa por UptimeRobot"""
+    global PING_START_TIME
+    
+    if not PING_START_TIME:
+        PING_START_TIME = datetime.datetime.utcnow()
+        return
+    
+    try:
+        uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
+        pos_no_ciclo = uptime_seconds % 300  # Ciclo de 5 minutos (300s)
+        
+        # 0-290s: Força Máxima rodando (4:50)
+        if pos_no_ciclo < 290:
+            delay = random.uniform(5, 8)
+            await asyncio.sleep(delay)
+            try:
+                async with aiohttp.ClientSession() as s:
+                    await s.get('http://localhost:5000/best-ping', 
+                               timeout=aiohttp.ClientTimeout(total=2))
+            except:
+                pass
+        # 290-300s: PAUSA (10 segundos - UptimeRobot pinga aos 5:00)
+        else:
+            await asyncio.sleep(0.5)  # Aguarda pausa passar
+            
+    except Exception as e:
+        print(f"[FORCE_MAX_CYCLE] {e}")
+
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -6127,34 +6158,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-# 🔥 AJUSTE DINÂMICO FORÇA MÁXIMA - PINGS COM DELAY 5-8 SEGUNDOS
-async def force_max_adjusted_ping():
-    """Durante Força Máxima (9-10min), todos os pings com intervalo 5-8 segundos"""
-    if PING_START_TIME:
-        uptime = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
-        pos = uptime % 600  # Ciclo de 10 minutos
-        
-        if 540 <= pos < 600:  # Durante Força Máxima (9-10 minutos)
-            delay = random.uniform(5, 8)  # Intervalo aleatório 5-8 segundos
-            await asyncio.sleep(delay)
-            
-            try:
-                async with aiohttp.ClientSession() as s:
-                    await s.get('http://localhost:5000/best-ping', 
-                               timeout=aiohttp.ClientTimeout(total=2))
-            except:
-                pass
-
-# Monitora e executa pings durante Força Máxima com delay 5-8s
-@tasks.loop(seconds=1)
-async def force_max_ping_handler():
-    """Handler que executa durante Força Máxima com pings 5-8 segundos"""
-    try:
-        if PING_START_TIME:
-            uptime = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
-            pos = uptime % 600
-            
-            if 540 <= pos < 600:  # Força Máxima ativa
-                await force_max_adjusted_ping()
-    except:
-        pass
