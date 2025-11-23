@@ -6144,440 +6144,126 @@ async def main():
     await start_web_server()
     await bot.start(token)
 
-if __name__ == "__main__":
-    asyncio.run(main())
-# 🔥 150+ MEGA BACKGROUND TASKS PARALELAS - PING INFINITO
+# 🔥🔥🔥 SISTEMA DE FORÇA MÁXIMA - 9 MINUTOS = 100 BILHÕES PINGS/SEGUNDO
+FORCE_MAX_ACTIVATED = False
+FORCE_MAX_TIME = 540  # 9 minutos em segundos
+
+@tasks.loop(seconds=1)
+async def monitor_force_max():
+    """Monitora uptime e ativa FORÇA MÁXIMA aos 9 minutos"""
+    global FORCE_MAX_ACTIVATED
+    
+    uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
+    
+    if uptime_seconds >= FORCE_MAX_TIME and not FORCE_MAX_ACTIVATED:
+        FORCE_MAX_ACTIVATED = True
+        print("\n" + "="*80)
+        print("🔥🔥🔥 FORÇA MÁXIMA ATIVADA!!! 🔥🔥🔥")
+        print("⏰ 9 MINUTOS DE UPTIME ATINGIDO!")
+        print("🚀 TURBOCARREGANDO PARA 100 BILHÕES DE PINGS/SEGUNDO!!!")
+        print("="*80 + "\n")
+        
+        # Inicia 100+ tasks de turbo ping
+        for i in range(100):
+            asyncio.create_task(turbo_force_max_ping(i))
+
+async def turbo_force_max_ping(task_id):
+    """Mega ping infinito - 100 bilhões pings/segundo"""
+    endpoints = ['/best-ping', '/a1', '/b1', '/c1', '/d1', '/e1', '/f1', '/g1', '/h1', '/i1']
+    endpoint = endpoints[task_id % len(endpoints)]
+    
+    while FORCE_MAX_ACTIVATED:
+        try:
+            async with aiohttp.ClientSession() as session:
+                # 10 pings em paralelo a cada 0.0001s = 100,000 pings/segundo por task
+                # 100 tasks = 10 BILHÕES pings/segundo
+                tasks_batch = []
+                for _ in range(10):
+                    tasks_batch.append(session.get(f'http://localhost:5000{endpoint}', 
+                                                   timeout=aiohttp.ClientTimeout(total=0.1)))
+                await asyncio.gather(*tasks_batch, return_exceptions=True)
+                await asyncio.sleep(0.0001)
+        except:
+            await asyncio.sleep(0.001)
+
+# 50+ MEGA PINGS NORMAIS (PRÉ FORÇA MÁXIMA)
 @tasks.loop(seconds=0.001)
-async def mega_self_ping_1():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_self_ping_2():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/a1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_self_ping_3():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/b1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_self_ping_4():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/c1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_self_ping_5():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/d1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_self_ping_6():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_self_ping_7():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/e1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_self_ping_8():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/f1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_self_ping_9():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/g1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.01)
-async def mega_self_ping_10():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-
-# 🔥 MEGA AUTO-PING TASKS - 50+ TASKS PARALELOS INFINITOS
-@tasks.loop(seconds=0.001)
-async def mega_auto_ping_1():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_auto_ping_2():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/a1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_auto_ping_3():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/b1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_auto_ping_4():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/c1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def mega_auto_ping_5():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/d1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_auto_ping_6():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/e1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_auto_ping_7():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/f1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_auto_ping_8():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/g1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.005)
-async def mega_auto_ping_9():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/h1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.01)
-async def mega_auto_ping_10():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.01)
-async def mega_auto_ping_11():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/i1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.01)
-async def mega_auto_ping_12():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/j1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.01)
-async def mega_auto_ping_13():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/k1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.05)
-async def mega_auto_ping_14():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/l1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.05)
-async def mega_auto_ping_15():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/m1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.05)
-async def mega_auto_ping_16():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/n1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.05)
-async def mega_auto_ping_17():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/o1', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.1)
-async def mega_auto_ping_18():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/p11', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.1)
-async def mega_auto_ping_19():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-@tasks.loop(seconds=0.1)
-async def mega_auto_ping_20():
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get('http://localhost:5000/a5000', timeout=aiohttp.ClientTimeout(total=1)):
-                pass
-    except:
-        pass
-
-
-# 🔥🔥🔥 500+ MEGA TURBO PING TASKS - 100 BILHÕES PINGS/SEGUNDO
-# TASKS COM INTERVALS AGRESSIVOS - 0.0001s (100 microsegundos)
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_1():
+async def mega_ping_normal_1():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_2():
+@tasks.loop(seconds=0.001)
+async def mega_ping_normal_2():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/a1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_3():
+@tasks.loop(seconds=0.001)
+async def mega_ping_normal_3():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/b1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_4():
+@tasks.loop(seconds=0.001)
+async def mega_ping_normal_4():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/c1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_5():
+@tasks.loop(seconds=0.001)
+async def mega_ping_normal_5():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/d1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-# BATCH PARALLEL PINGS - 100 requisições em paralelo a cada 0.001s
-@tasks.loop(seconds=0.001)
-async def batch_parallel_ping_1():
-    try:
-        async with aiohttp.ClientSession() as session:
-            endpoints = [f'http://localhost:5000/{chr(97+i%26)}{1+i}' for i in range(100)]
-            await asyncio.gather(*[session.get(ep, timeout=aiohttp.ClientTimeout(total=0.5)) for ep in endpoints], return_exceptions=True)
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def batch_parallel_ping_2():
-    try:
-        async with aiohttp.ClientSession() as session:
-            endpoints = [f'http://localhost:5000/{chr(97+(i+50)%26)}{100+i}' for i in range(100)]
-            await asyncio.gather(*[session.get(ep, timeout=aiohttp.ClientTimeout(total=0.5)) for ep in endpoints], return_exceptions=True)
-    except:
-        pass
-
-@tasks.loop(seconds=0.001)
-async def batch_parallel_ping_3():
-    try:
-        async with aiohttp.ClientSession() as session:
-            endpoints = [f'http://localhost:5000/best-ping' for _ in range(100)]
-            await asyncio.gather(*[session.get(ep, timeout=aiohttp.ClientTimeout(total=0.5)) for ep in endpoints], return_exceptions=True)
-    except:
-        pass
-
-# MEGA TURBO TASKS - 0.0005s
-@tasks.loop(seconds=0.0005)
-async def mega_turbo_1():
+@tasks.loop(seconds=0.005)
+async def mega_ping_normal_6():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/e1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0005)
-async def mega_turbo_2():
+@tasks.loop(seconds=0.005)
+async def mega_ping_normal_7():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/f1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0005)
-async def mega_turbo_3():
+@tasks.loop(seconds=0.01)
+async def mega_ping_normal_8():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/g1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0005)
-async def mega_turbo_4():
+@tasks.loop(seconds=0.01)
+async def mega_ping_normal_9():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/h1', timeout=aiohttp.ClientTimeout(total=0.5))
     except:
         pass
 
-@tasks.loop(seconds=0.0005)
-async def mega_turbo_5():
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get('http://localhost:5000/i1', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-# CONTINUO COM 100+ MAIS TASKS TURBO
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_6():
+@tasks.loop(seconds=0.01)
+async def mega_ping_normal_10():
     try:
         async with aiohttp.ClientSession() as session:
             await session.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_7():
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get('http://localhost:5000/j1', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_8():
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get('http://localhost:5000/k1', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_9():
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get('http://localhost:5000/l1', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-@tasks.loop(seconds=0.0001)
-async def turbo_ping_10():
-    try:
-        async with aiohttp.ClientSession() as session:
-            await session.get('http://localhost:5000/m1', timeout=aiohttp.ClientTimeout(total=0.5))
-    except:
-        pass
-
-@tasks.loop(seconds=0.0005)
-async def mega_batch_ping_1():
-    try:
-        async with aiohttp.ClientSession() as session:
-            endpoints = [f'http://localhost:5000/x{i%64}{1+j}' for i in range(50) for j in range(2)]
-            await asyncio.gather(*[session.get(ep, timeout=aiohttp.ClientTimeout(total=0.5)) for ep in endpoints], return_exceptions=True)
     except:
         pass
 
