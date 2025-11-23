@@ -5794,6 +5794,8 @@ async def nano_ping_handler(request):
 
 async def best_ping_handler(request):
     """BEST PING - O MELHOR PING! Resposta ultra-rápida, sem processamento - 204 NO CONTENT (ZERO LATÊNCIA)"""
+    if request.method == 'HEAD':
+        return web.Response(status=204)
     return web.Response(status=204)
 
 async def super_ping_handler(request):
@@ -5977,13 +5979,19 @@ async def start_web_server():
     app.router.add_get('/super-ping', super_ping_handler)
     app.router.add_get('/ping-all', ping_all_handler)
     app.router.add_get('/heartbeat', heartbeat_handler)
-    # 1000+ ENDPOINTS ULTRA-OTIMIZADOS - RESPOSTA EM 1 BYTE PURO
+    # 1000+ ENDPOINTS ULTRA-OTIMIZADOS - RESPOSTA VAZIA = ZERO LATÊNCIA
     for i in range(1, 1001):
-        app.router.add_get(f'/a{i}', lambda r: web.Response(body=b"1", status=200))
-        app.router.add_get(f'/b{i}', lambda r: web.Response(body=b"1", status=200))
-        app.router.add_get(f'/c{i}', lambda r: web.Response(body=b"1", status=200))
-        app.router.add_get(f'/d{i}', lambda r: web.Response(body=b"1", status=200))
-        app.router.add_get(f'/e{i}', lambda r: web.Response(body=b"1", status=200))
+        app.router.add_get(f'/a{i}', lambda r: web.Response(status=204))
+        app.router.add_get(f'/b{i}', lambda r: web.Response(status=204))
+        app.router.add_get(f'/c{i}', lambda r: web.Response(status=204))
+        app.router.add_get(f'/d{i}', lambda r: web.Response(status=204))
+        app.router.add_get(f'/e{i}', lambda r: web.Response(status=204))
+        # Também adiciona HEAD para cada um (mais rápido ainda)
+        app.router.add_head(f'/a{i}', lambda r: web.Response(status=204))
+        app.router.add_head(f'/b{i}', lambda r: web.Response(status=204))
+        app.router.add_head(f'/c{i}', lambda r: web.Response(status=204))
+        app.router.add_head(f'/d{i}', lambda r: web.Response(status=204))
+        app.router.add_head(f'/e{i}', lambda r: web.Response(status=204))
     
     # 🌟 PING 1MS ULTIMATE - 50 ENDPOINTS - 1000 PINGS/SEGUNDO 🌟
     handlers = [ultra_handler, ultra2_handler, ultra3_handler, ultra4_handler, ultra5_handler,
