@@ -5593,29 +5593,11 @@ async def on_ready():
 """)
 
 async def ping_handler(request):
-    """Endpoint otimizado para Cron-Job.org e serviços de uptime"""
-    # Registra timestamp do ping externo
+    """Endpoint ultra-rápido - apenas 1 byte"""
     db_set_config("last_external_ping", datetime.datetime.utcnow().isoformat())
-
-    # Informações úteis para debugging
-    uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds() if PING_START_TIME else 0
-    uptime_hours = uptime_seconds / 3600
-
-    # Resposta simples e rápida para compatibilidade máxima
-    response_text = f"pong | uptime: {uptime_hours:.2f}h | status: ok"
-
     print(f"🏓 PONG!")
-    print(f"[PING EXTERNO] ✅ Recebido de {request.remote} | Uptime: {uptime_hours:.2f}h")
-
-    return web.Response(
-        text=response_text,
-        status=200,
-        headers={
-            'Content-Type': 'text/plain',
-            'X-Bot-Uptime-Hours': str(round(uptime_hours, 2)),
-            'X-Bot-Status': 'healthy'
-        }
-    )
+    # Resposta ultra-mínima: 1 byte
+    return web.Response(body=b"1", status=200, headers={'Connection': 'keep-alive'})
 
 async def health_handler(request):
     """Health check detalhado com métricas do sistema"""
@@ -5793,8 +5775,8 @@ async def nano_ping_handler(request):
     return web.Response(body=b"1", status=200)
 
 async def best_ping_handler(request):
-    """BEST PING - ZERO LATÊNCIA - Resposta vazia pura"""
-    return web.Response(status=204)
+    """BEST PING - RESPOSTA ULTRA-RÁPIDA - 1 byte puro"""
+    return web.Response(body=b"1", status=200, headers={'Connection': 'keep-alive', 'Cache-Control': 'max-age=0'})
 
 async def super_ping_handler(request):
     """SUPER PING - Apenas contadores"""
@@ -6057,6 +6039,26 @@ async def start_web_server():
     if site is None:
         raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
 
+async def start_tcp_ping_server():
+    """Servidor TCP RAW ultra-rápido na porta 5001 - ZERO overhead HTTP"""
+    async def handle_connection(reader, writer):
+        try:
+            # Lê dados da conexão
+            data = await asyncio.wait_for(reader.read(1024), timeout=0.1)
+            # Responde com 1 byte ultra-rápido
+            writer.write(b"1")
+            await writer.drain()
+        except:
+            pass
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    server = await asyncio.start_server(handle_connection, '0.0.0.0', 5001)
+    async with server:
+        print(f'✅ SERVIDOR TCP RAW na porta 5001 - PING SUPREMO 🚀')
+        await server.serve_forever()
+
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -6064,6 +6066,9 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
+    # Inicia servidor TCP RAW em paralelo (sem aguardar)
+    asyncio.create_task(start_tcp_ping_server())
+    
     await start_web_server()
     await bot.start(token)
 
