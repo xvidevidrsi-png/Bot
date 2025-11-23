@@ -14,8 +14,19 @@ pythonProcess.on('error', (error) => {
 });
 
 pythonProcess.on('exit', (code) => {
-  console.log(`🔄 Bot Python finalizou com código ${code}`);
-  process.exit(code || 0);
+  console.log(`⚠️ Bot Python saiu com código ${code}`);
+  console.log('🔄 Reiniciando Python...');
+  
+  // Reiniciar Python infinitamente
+  setTimeout(() => {
+    const newProcess = spawn('python', ['main.py'], {
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    newProcess.on('exit', () => {
+      console.log('🔄 Reiniciando novamente...');
+    });
+  }, 1000);
 });
 
 // Handle termination signals

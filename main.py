@@ -6048,3 +6048,18 @@ async def keep_alive():
             await s.get('http://localhost:5000/best-ping', timeout=aiohttp.ClientTimeout(total=1))
     except:
         pass
+
+# Garantir que o bot NUNCA sai
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n⏹️  Encerrando...")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+        import time
+        time.sleep(2)
+    finally:
+        print("🔄 Bot reiniciando...")
+        import time
+        time.sleep(1)
