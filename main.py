@@ -1290,149 +1290,163 @@ class ConfirmarPartidaView(View):
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
 
-        # Verifica se já confirmou ANTES de atualizar
-        cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
-        confirmacao = cur.fetchone()
-
-        if not confirmacao:
-            await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
-            conn.close()
-            return
-
-        conf_j1_antes, conf_j2_antes = confirmacao
-
-        # Se é jogador 1, verifica se já confirmou
         if user_id == self.jogador1_id:
-            if conf_j1_antes == 1:
-                await interaction.response.send_message("❌ Você já confirmou esta partida!", ephemeral=True)
-                conn.close()
-                return
             cur.execute("UPDATE partidas SET confirmacao_j1 = 1 WHERE id = ?", (self.partida_id,))
         else:
-            if conf_j2_antes == 1:
-                await interaction.response.send_message("❌ Você já confirmou esta partida!", ephemeral=True)
-                conn.close()
-                return
             cur.execute("UPDATE partidas SET confirmacao_j2 = 1 WHERE id = ?", (self.partida_id,))
 
         conn.commit()
 
-        # Busca dados atualizados
         cur.execute("SELECT confirmacao_j1, confirmacao_j2, mediador, valor FROM partidas WHERE id = ?", (self.partida_id,))
         row = cur.fetchone()
         conn.close()
 
         if not row:
-            await interaction.response.send_message("❌ Erro ao processar confirmação!", ephemeral=True)
+            await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
             return
 
         conf_j1, conf_j2, mediador_id, valor = row
 
         await interaction.response.send_message("✅ Confirmação registrada!", ephemeral=True)
 
-        # Verifica se ambos confirmaram
+        if user_id == self.jogador1_id:
+            if conf_j2 == 0:
+                await interaction.channel.send(f"✅ <@{self.jogador1_id}> confirmou a partida! Aguardando <@{self.jogador2_id}> confirmar...")
+        else:
+            if conf_j1 == 0:
+                await interaction.channel.send(f"✅ <@{self.jogador2_id}> confirmou a partida! Aguardando <@{self.jogador1_id}> confirmar...")
+
         if conf_j1 == 1 and conf_j2 == 1:
-            print(f"[CONFIRMAÇÃO COMPLETA] Ambos jogadores confirmaram!")
-            
-            # Desabilita botões
             for item in self.children:
                 item.disabled = True
+
             try:
-                await interaction.message.edit(view=self)
+                # Pegar a mensagem original que contém o botão
+                messages = [msg async for msg in interaction.channel.history(limit=1)]
+                if messages:
+                    msg_com_botao = messages[0]
+                    await msg_com_botao.edit(view=self)
             except:
                 pass
 
-            # Mensagem inicial
-            await interaction.channel.send("🎮 **PARTIDA CONFIRMADA POR AMBOS OS JOGADORES!**")
+            # LIMPAR OS JOGADORES DA FILA
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT guild_id, valor, tipo_fila, tipo_jogo FROM partidas WHERE id = ?", (self.partida_id,))
+            fila_info = cur.fetchone()
+            conn.close()
+            
+            if fila_info:
+                guild_id, valor, tipo_fila, tipo_jogo = fila_info
+                print(f"[CONFIRMAÇÃO COMPLETA] Limpando fila: {tipo_fila} | Jogadores: {self.jogador1_id}, {self.jogador2_id}")
+                fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador1_id, tipo_jogo)
+                fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador2_id, tipo_jogo)
+                
+                # Se for modo normal/infinito (1x1), limpa o outro também
+                if tipo_fila in ["normal", "infinito"]:
+                    outro_tipo = "infinito" if tipo_fila == "normal" else "normal"
+                    fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador1_id, tipo_jogo)
+                    fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador2_id, tipo_jogo)
+                    print(f"✅ Jogadores removidos de AMBOS os modos (Normal e Infinito)")
+                else:
+                    print(f"✅ Jogadores removidos da fila {tipo_fila}")
 
-            # Renomeia canal
-            try:
-                novo_nome = f"MOBILE-{self.partida_id[-4:]}"
-                await interaction.channel.edit(name=novo_nome)
-                print(f"✅ Canal renomeado para: {novo_nome}")
-            except Exception as e:
-                print(f"❌ Erro ao renomear: {e}")
+            # Renomeia o tópico/canal para PAGAR-X.XX-Y
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT numero_topico, canal_id, thread_id, valor FROM partidas WHERE id = ?", (self.partida_id,))
+            partida_row = cur.fetchone()
+            conn.close()
 
-            # Menu do mediador
+            if partida_row:
+                numero_topico, canal_id, thread_id, valor = partida_row
+                novo_nome = f"MOBILE-{numero_topico}"
+
+                print(f"[CONFIRMAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
+
+                try:
+                    if thread_id and thread_id > 0:
+                        # É um thread
+                        thread = interaction.guild.get_thread(thread_id)
+                        if thread:
+                            await thread.edit(name=novo_nome)
+                            print(f"✅ Thread renomeada para: {novo_nome}")
+                        else:
+                            print(f"❌ Thread {thread_id} não encontrada!")
+                    else:
+                        # É um canal
+                        canal = interaction.guild.get_channel(canal_id)
+                        if canal:
+                            await canal.edit(name=novo_nome)
+                            print(f"✅ Canal renomeado para: {novo_nome}")
+                        else:
+                            print(f"❌ Canal {canal_id} não encontrado!")
+                except Exception as e:
+                    print(f"❌ Erro ao renomear: {e}")
+
+            # Envia menu do mediador automaticamente (ANTES do PIX) com mais informações
             try:
+                print(f"[ENVIANDO MENU] Partida {self.partida_id}")
                 conn = sqlite3.connect(DB_FILE)
                 cur = conn.cursor()
-                cur.execute("SELECT valor, tipo_fila FROM partidas WHERE id = ?", (self.partida_id,))
+                cur.execute("SELECT valor, tipo_fila FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, interaction.guild.id))
                 partida_info = cur.fetchone()
                 conn.close()
                 
-                if partida_info:
-                    valor_partida, tipo_fila = partida_info
-                    embed_menu = discord.Embed(
-                        title="📊 Menu do Mediador",
-                        description=f"**Partida:** `{self.partida_id}`\n**Valor:** R$ {fmt_valor(valor_partida)}\n**Tipo:** {tipo_fila.upper()}",
-                        color=0x2f3136
-                    )
-                    embed_menu.add_field(name="🎮 Jogadores", value=f"<@{self.jogador1_id}> vs <@{self.jogador2_id}>", inline=False)
-                    view_menu = MenuMediadorView(self.partida_id, self.jogador1_id, self.jogador2_id, valor_partida, tipo_fila)
-                    await interaction.channel.send(embed=embed_menu, view=view_menu)
-                    print(f"✅ Menu enviado!")
+                valor_partida = partida_info[0] if partida_info else 0
+                tipo_fila = partida_info[1] if partida_info else "unknown"
+                
+                embed_menu = discord.Embed(
+                    title="📊 Menu do Mediador",
+                    description=f"**Partida:** `{self.partida_id}`\n**Valor:** R$ {fmt_valor(valor_partida)}\n**Tipo:** {tipo_fila.upper()}",
+                    color=0x2f3136
+                )
+                embed_menu.add_field(name="🎮 Jogadores", value=f"<@{self.jogador1_id}> vs <@{self.jogador2_id}>", inline=False)
+                embed_menu.add_field(name="⚙️ Opções", value="Clique em um botão abaixo para gerenciar a partida", inline=False)
+                embed_menu.set_footer(text="⏱️ Menu ativo até o final da partida")
+                
+                view_menu = MenuMediadorView(self.partida_id, self.jogador1_id, self.jogador2_id, valor_partida, tipo_fila)
+                msg_menu = await interaction.channel.send(embed=embed_menu, view=view_menu)
+                print(f"✅ Menu enviado com sucesso! ID: {msg_menu.id}")
             except Exception as e:
-                print(f"❌ Erro menu: {e}")
+                print(f"❌ ERRO ao enviar menu: {e}")
 
-            # PIX do mediador
+            # Envia PIX depois do Menu Mediador
             if mediador_id:
                 try:
+                    print(f"[ENVIANDO PIX] Partida {self.partida_id}")
                     guild_id = interaction.guild.id
                     conn = sqlite3.connect(DB_FILE)
                     cur = conn.cursor()
-                    cur.execute("SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?", (guild_id, mediador_id))
+                    cur.execute(
+                        "SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?",
+                        (guild_id, mediador_id)
+                    )
                     pix_row = cur.fetchone()
                     conn.close()
 
                     if pix_row:
                         taxa = get_taxa()
-                        valor_com_taxa = valor + taxa
+                        valor_com_taxa = valor_partida + taxa
                         pix_embed = discord.Embed(
                             title="💰 Informações de Pagamento",
                             description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
                             color=0x00ff00
                         )
-                        pix_embed.add_field(name="📋 Nome", value=pix_row[0], inline=False)
-                        pix_embed.add_field(name="🔑 PIX", value=pix_row[1], inline=False)
+                        pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
+                        pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
 
                         qr_buffer, codigo_pix = gerar_qr_code_pix(pix_row[1], pix_row[0], valor_com_taxa)
                         qr_file = discord.File(qr_buffer, filename="qrcode_pix.png")
                         pix_embed.set_image(url="attachment://qrcode_pix.png")
 
                         view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
-                        await interaction.channel.send(embed=pix_embed, file=qr_file, view=view_pix)
-                        print(f"✅ PIX enviado!")
+                        msg_pix = await interaction.channel.send(embed=pix_embed, file=qr_file, view=view_pix)
+                        print(f"✅ PIX enviado com sucesso! ID: {msg_pix.id}")
+                    else:
+                        print(f"⚠️ PIX do mediador {mediador_id} não encontrado no banco!")
                 except Exception as e:
-                    print(f"❌ Erro PIX: {e}")
-
-            # Limpa fila
-            try:
-                conn = sqlite3.connect(DB_FILE)
-                cur = conn.cursor()
-                cur.execute("SELECT guild_id, tipo_fila, tipo_jogo FROM partidas WHERE id = ?", (self.partida_id,))
-                fila_info = cur.fetchone()
-                conn.close()
-                
-                if fila_info:
-                    guild_id, tipo_fila, tipo_jogo = fila_info
-                    fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador1_id, tipo_jogo)
-                    fila_remove_jogador(guild_id, valor, tipo_fila, self.jogador2_id, tipo_jogo)
-                    if tipo_fila in ["normal", "infinito"]:
-                        outro_tipo = "infinito" if tipo_fila == "normal" else "normal"
-                        fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador1_id, tipo_jogo)
-                        fila_remove_jogador(guild_id, valor, outro_tipo, self.jogador2_id, tipo_jogo)
-                    print(f"✅ Fila limpa!")
-            except Exception as e:
-                print(f"❌ Erro fila: {e}")
-        else:
-            # Ainda aguardando o outro jogador
-            if user_id == self.jogador1_id:
-                if conf_j2 == 0:
-                    await interaction.channel.send(f"✅ <@{self.jogador1_id}> confirmou! Aguardando <@{self.jogador2_id}>...")
-            else:
-                if conf_j1 == 0:
-                    await interaction.channel.send(f"✅ <@{self.jogador2_id}> confirmou! Aguardando <@{self.jogador1_id}>...")
+                    print(f"❌ ERRO ao enviar PIX: {e}")
 
     @discord.ui.button(label="Recusar", style=discord.ButtonStyle.danger, emoji="❌")
     async def recusar(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -6100,40 +6114,6 @@ async def start_web_server():
 
     if site is None:
         raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
-
-# 🔥 FORÇA MÁXIMA - 4:50 RODANDO + 10s PAUSA (Ciclo de 5 minutos)
-FORCE_MAX_LAST_PING = None
-
-@tasks.loop(seconds=0.5)
-async def force_max_cycle():
-    """Controla Força Máxima: 4:50 rodando + 10s pausa por UptimeRobot"""
-    global PING_START_TIME, FORCE_MAX_LAST_PING
-    
-    if not PING_START_TIME:
-        PING_START_TIME = datetime.datetime.utcnow()
-        return
-    
-    try:
-        uptime_seconds = (datetime.datetime.utcnow() - PING_START_TIME).total_seconds()
-        pos_no_ciclo = uptime_seconds % 300  # Ciclo de 5 minutos (300s)
-        
-        # 0-290s: Força Máxima rodando (4:50) - Pings 5-8s
-        if pos_no_ciclo < 290:
-            agora = datetime.datetime.utcnow()
-            if FORCE_MAX_LAST_PING is None or (agora - FORCE_MAX_LAST_PING).total_seconds() >= random.uniform(5, 8):
-                FORCE_MAX_LAST_PING = agora
-                try:
-                    async with aiohttp.ClientSession() as s:
-                        await s.get('http://localhost:5000/best-ping', 
-                                   timeout=aiohttp.ClientTimeout(total=2))
-                except:
-                    pass
-        # 290-300s: PAUSA (10 segundos - UptimeRobot pinga aos 5:00)
-        else:
-            FORCE_MAX_LAST_PING = None  # Reset para próximo ciclo
-            
-    except Exception as e:
-        print(f"[FORCE_MAX_CYCLE] {e}")
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
