@@ -1290,19 +1290,40 @@ class ConfirmarPartidaView(View):
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
 
+        # Verifica se já confirmou ANTES de atualizar
+        cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
+        confirmacao = cur.fetchone()
+
+        if not confirmacao:
+            await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
+            conn.close()
+            return
+
+        conf_j1_antes, conf_j2_antes = confirmacao
+
+        # Se é jogador 1, verifica se já confirmou
         if user_id == self.jogador1_id:
+            if conf_j1_antes == 1:
+                await interaction.response.send_message("❌ Você já confirmou esta partida!", ephemeral=True)
+                conn.close()
+                return
             cur.execute("UPDATE partidas SET confirmacao_j1 = 1 WHERE id = ?", (self.partida_id,))
         else:
+            if conf_j2_antes == 1:
+                await interaction.response.send_message("❌ Você já confirmou esta partida!", ephemeral=True)
+                conn.close()
+                return
             cur.execute("UPDATE partidas SET confirmacao_j2 = 1 WHERE id = ?", (self.partida_id,))
 
         conn.commit()
 
+        # Busca dados atualizados
         cur.execute("SELECT confirmacao_j1, confirmacao_j2, mediador, valor FROM partidas WHERE id = ?", (self.partida_id,))
         row = cur.fetchone()
         conn.close()
 
         if not row:
-            await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
+            await interaction.response.send_message("❌ Erro ao processar confirmação!", ephemeral=True)
             return
 
         conf_j1, conf_j2, mediador_id, valor = row
@@ -1352,20 +1373,20 @@ class ConfirmarPartidaView(View):
                 else:
                     print(f"✅ Jogadores removidos da fila {tipo_fila}")
 
-            # Renomeia o tópico/canal para PAGAR-X.XX-Y
-            conn = sqlite3.connect(DB_FILE)
-            cur = conn.cursor()
-            cur.execute("SELECT numero_topico, canal_id, thread_id, valor FROM partidas WHERE id = ?", (self.partida_id,))
-            partida_row = cur.fetchone()
-            conn.close()
+            # Renomeia o tópico/canal para MOBILE-X
+            try:
+                conn = sqlite3.connect(DB_FILE)
+                cur = conn.cursor()
+                cur.execute("SELECT numero_topico, canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
+                partida_row = cur.fetchone()
+                conn.close()
 
-            if partida_row:
-                numero_topico, canal_id, thread_id, valor = partida_row
-                novo_nome = f"MOBILE-{numero_topico}"
+                if partida_row:
+                    numero_topico, canal_id, thread_id = partida_row
+                    novo_nome = f"MOBILE-{numero_topico}"
 
-                print(f"[CONFIRMAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread ID: {thread_id} | Canal ID: {canal_id}")
+                    print(f"[RENOMEAÇÃO] Partida: {self.partida_id} | Novo nome: {novo_nome} | Thread: {thread_id} | Canal: {canal_id}")
 
-                try:
                     if thread_id and thread_id > 0:
                         # É um thread
                         thread = interaction.guild.get_thread(thread_id)
@@ -1375,15 +1396,20 @@ class ConfirmarPartidaView(View):
                         else:
                             print(f"❌ Thread {thread_id} não encontrada!")
                     else:
-                        # É um canal
-                        canal = interaction.guild.get_channel(canal_id)
-                        if canal:
-                            await canal.edit(name=novo_nome)
-                            print(f"✅ Canal renomeado para: {novo_nome}")
-                        else:
-                            print(f"❌ Canal {canal_id} não encontrado!")
-                except Exception as e:
-                    print(f"❌ Erro ao renomear: {e}")
+                        # É um canal direto
+                        try:
+                            canal = interaction.guild.get_channel(int(canal_id))
+                            if canal:
+                                await canal.edit(name=novo_nome)
+                                print(f"✅ Canal renomeado para: {novo_nome}")
+                            else:
+                                print(f"❌ Canal {canal_id} não encontrado! Tentando interaction.channel...")
+                                await interaction.channel.edit(name=novo_nome)
+                                print(f"✅ Canal (via interaction) renomeado para: {novo_nome}")
+                        except Exception as e2:
+                            print(f"❌ Erro ao renomear canal: {e2}")
+            except Exception as e:
+                print(f"❌ Erro geral na renomeação: {e}")
 
             # Envia menu do mediador automaticamente (ANTES do PIX) com mais informações
             try:
