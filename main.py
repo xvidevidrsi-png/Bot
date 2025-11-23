@@ -2211,11 +2211,78 @@ async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
 @app_commands.describe(canal="Selecione o canal onde os tópicos de partida aparecerão")
 async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel):
     if not is_admin(interaction.user.id, member=interaction.user):
+        await interaction.response.send_message("❌ Você não tem permissão para usar este comando!", ephemeral=True)
         return
 
-    db_set_config("canal_partidas_id", str(canal.id))
-    db_set_config("usar_threads", "true")
-    await interaction.response.send_message(f"✅ Canal de threads de partidas definido: {canal.mention}\n\n💡 As partidas agora serão criadas como threads (tópicos) neste canal!", ephemeral=True)
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message(
+            "⛔ **Servidor não registrado!**\n\n"
+            "Este servidor precisa estar registrado para usar o Bot Zeus.",
+            ephemeral=True
+        )
+        return
+
+    try:
+        # Validar se canal existe
+        if not canal:
+            await interaction.response.send_message("❌ Canal não encontrado!", ephemeral=True)
+            return
+
+        # Validar permissões do bot
+        bot_perms = canal.permissions_for(interaction.guild.me)
+        if not bot_perms.create_private_threads or not bot_perms.send_messages:
+            await interaction.response.send_message(
+                f"❌ **Sem permissões!**\n\n"
+                f"Preciso das seguintes permissões em {canal.mention}:\n"
+                f"{'✅' if bot_perms.create_private_threads else '❌'} Criar threads privadas\n"
+                f"{'✅' if bot_perms.send_messages else '❌'} Enviar mensagens\n\n"
+                f"Configure minhas permissões e tente novamente.",
+                ephemeral=True
+            )
+            return
+
+        # Validar se é um canal de texto válido
+        if canal.category and not isinstance(canal, discord.TextChannel):
+            await interaction.response.send_message("❌ Selecione um canal de texto válido!", ephemeral=True)
+            return
+
+        # Salvar configuração
+        db_set_config("canal_partidas_id", str(canal.id))
+        db_set_config("usar_threads", "true")
+
+        embed = discord.Embed(
+            title="✅ Canal de Tópicos Definido!",
+            description=f"Partidas serão criadas como **threads privadas** em {canal.mention}",
+            color=0x00ff00
+        )
+        embed.add_field(
+            name="📋 Informações",
+            value="• Cada partida = 1 thread privada\n• Apenas jogadores e mediador veem\n• Threads expiram após 24 horas sem atividade",
+            inline=False
+        )
+        embed.add_field(
+            name="⚙️ Configuração Completa?",
+            value="Use `/manual` para ver todos os comandos necessários",
+            inline=False
+        )
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "❌ **Erro de permissões!**\n\n"
+            "Não tenho permissão para acessar este canal.\n"
+            "Verifique minhas permissões no servidor.",
+            ephemeral=True
+        )
+    except Exception as e:
+        print(f"[ERRO /topico] {e}")
+        await interaction.response.send_message(
+            f"❌ **Erro ao configurar canal!**\n\n"
+            f"Detalhes: {str(e)}\n\n"
+            f"Entre em contato com o owner do bot se o problema persistir.",
+            ephemeral=True
+        )
 
 @tree.command(name="configurar", description="📢 Define quais cargos devem ser mencionados ao criar partidas")
 @app_commands.describe(cargos="Digite os IDs dos cargos separados por vírgula (exemplo: 123456 789012)")
