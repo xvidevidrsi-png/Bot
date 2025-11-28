@@ -5187,7 +5187,7 @@ async def on_message(message):
         return
 
     # Validações iniciais
-    if not message.guild or not verificar_separador_servidor(message.guild.id) or not is_admin(message.author.id, member=message.author):
+    if not message.guild or not verificar_separador_servidor(message.guild.id):
         await bot.process_commands(message)
         return
 
@@ -5230,14 +5230,23 @@ async def on_message(message):
             cur = conn.cursor()
             
             if isinstance(message.channel, discord.Thread):
-                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
+                cur.execute("SELECT valor, mediador FROM partidas WHERE guild_id = ? AND thread_id = ?", 
                            (message.guild.id, message.channel.id))
             else:
-                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
+                cur.execute("SELECT valor, mediador FROM partidas WHERE guild_id = ? AND canal_id = ?", 
                            (message.guild.id, message.channel.id))
             
             row = cur.fetchone()
             conn.close()
+            
+            # 🔥 Verifica se quem mandou é o mediador listado
+            if row and row[1] and row[1] != message.author.id:
+                await message.channel.send(
+                    f"❌ **Acesso negado!** Apenas <@{row[1]}> pode enviar ID e SENHA!"
+                )
+                del ADMIN_ROOM_CREATION_STATES[user_key]
+                await message.add_reaction('❌')
+                return
             
             if row:
                 valor_partida = row[0]
