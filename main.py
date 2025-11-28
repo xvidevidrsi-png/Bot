@@ -159,6 +159,32 @@ async def restart_30_dias_task():
             print(f"  ├─ Mediadores: PRESERVADOS")
             print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
+            # Enviar aviso de 1 minuto antes
+            for guild in bot.guilds:
+                try:
+                    canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
+                    if canal_id:
+                        canal_id = int(canal_id)
+                        canal = guild.get_channel(canal_id)
+                        if canal:
+                            embed = discord.Embed(
+                                title="⏰ AVISO: Bot Reiniciando em 1 MINUTO",
+                                description="**Tudo voltará ao normal em 1 minuto!**\n\n"
+                                           "✅ Filas serão restauradas\n"
+                                           "✅ Mediadores serão preservados\n"
+                                           "✅ Dados de usuários serão preservados\n\n"
+                                           "Prepare-se! O bot estará de volta em 60 segundos...",
+                                color=0xFF6600
+                            )
+                            embed.set_footer(text="Sistemas de backup em operação")
+                            await canal.send(embed=embed)
+                            print(f"✅ [RESTART] Aviso de 1 minuto enviado no servidor {guild.name}")
+                except:
+                    pass
+            
+            # Aguardar 60 segundos
+            await asyncio.sleep(60)
+            
             # Enviar aviso de reinício em todos os servidores
             for guild in bot.guilds:
                 try:
@@ -5778,6 +5804,45 @@ async def on_ready():
     import json
 
     init_db()
+
+    # Limpar filas e mensagens de comando para atualização
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM config WHERE key = 'limpeza_feita'")
+    limpeza_feita = cur.fetchone()
+    
+    if not limpeza_feita:
+        print("🧹 [ATUALIZAÇÃO] Limpando filas e mensagens de comando...")
+        cur.execute("DELETE FROM filas")
+        filas_deletadas = cur.rowcount
+        cur.execute("DELETE FROM comando_mensagens")
+        msgs_deletadas = cur.rowcount
+        cur.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('limpeza_feita', '1')")
+        conn.commit()
+        print(f"✅ [ATUALIZAÇÃO] {filas_deletadas} filas deletadas, {msgs_deletadas} mensagens de comando deletadas")
+        
+        # Enviar aviso pro owner de cada servidor
+        for guild in bot.guilds:
+            if guild.owner:
+                try:
+                    embed = discord.Embed(
+                        title="🔄 Atualização do Bot Zeus",
+                        description="O Bot Zeus foi atualizado com novas funcionalidades!\n\n"
+                                    "**Ações necessárias:**\n"
+                                    "✅ Todas as filas foram limpas\n"
+                                    "✅ Mensagens de comando foram removidas\n\n"
+                                    "**Próximos passos:**\n"
+                                    "1️⃣ Execute `/1x1-mobile` ou o comando de fila desejado\n"
+                                    "2️⃣ As filas estarão prontas para uso\n\n"
+                                    "Obrigado por usar o Bot Zeus! 🚀",
+                        color=0xFFD700
+                    )
+                    embed.set_footer(text="Atualização concluída com sucesso")
+                    await guild.owner.send(embed=embed)
+                except:
+                    pass
+    
+    conn.close()
 
     # Restaurar TODAS as mensagens após reinício automático
     restart_pending = db_get_config("restart_pending")
