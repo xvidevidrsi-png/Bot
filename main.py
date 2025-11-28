@@ -2507,6 +2507,7 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
 
         view = FilaView(valor, guild_id, 'emu')
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_1x1_emu")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2564,6 +2565,7 @@ async def criar_filas_2x2_emu(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "2x2-emu", 'emu', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_2x2_emu")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2618,6 +2620,7 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "3x3-emu", 'emu', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_3x3_emu")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2672,6 +2675,7 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "4x4-emu", 'emu', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_4x4_emu")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2726,6 +2730,7 @@ async def criar_filas_2x2_mob(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "2x2-mob", 'mob', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_2x2_mob")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
