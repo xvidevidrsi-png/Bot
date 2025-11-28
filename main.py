@@ -2882,23 +2882,13 @@ async def on_guild_join(guild):
             pass
 
 @tree.command(name="separador_de_servidor", description="⚙️ Registra seu servidor no Bot Zeus manualmente")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(
     id_servidor="ID do servidor (use o ID numérico do servidor Discord)",
     nome_dono="Nome do dono do servidor"
 )
 async def separador_servidor(interaction: discord.Interaction, id_servidor: str, nome_dono: str):
-    """Registra servidor manualmente - Apenas para o owner do servidor"""
-    
-    # Verificar se é o owner do servidor
-    if interaction.guild and interaction.guild.owner_id != interaction.user.id:
-        await interaction.response.send_message(
-            "❌ **ACESSO NEGADO!**\n\n"
-            "Este comando é exclusivo para o **owner do servidor**.\n"
-            "Apenas o dono do Discord pode registrar servidores manualmente.",
-            ephemeral=True
-        )
-        return
-    
+    """Registra servidor manualmente - sem restrição de owner"""
     try:
         guild_id_int = int(id_servidor)
     except ValueError:
