@@ -137,11 +137,6 @@ async def restart_30_dias_task():
                 except:
                     pass
             
-            # 🗑️ LIMPAR DADOS DE USUÁRIOS (vitórias, derrotas, coins)
-            cur.execute("DELETE FROM usuarios")
-            usuarios_deletados = cur.rowcount
-            print(f"🗑️ [RESTART] Deletados dados de {usuarios_deletados} usuários (vitórias, derrotas, coins)")
-            
             # Salvar TODOS os dados para reenviar após reinício
             restart_data = {
                 "mensagens": todas_mensagens
@@ -151,7 +146,7 @@ async def restart_30_dias_task():
             print(f"✅ [RESTART] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
             print(f"  ├─ Filas: {total_filas}")
             print(f"  ├─ Mediadores: {total_mediadores}")
-            print(f"  └─ Dados de usuários: DELETADOS")
+            print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
             # Enviar aviso de reinício em todos os servidores
             for guild in bot.guilds:
@@ -165,7 +160,7 @@ async def restart_30_dias_task():
                         if canal:
                             embed = discord.Embed(
                                 title="🔄 Bot Reiniciado",
-                                description="🔄 Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n**LIMPEZA CONCLUÍDA:**\n✅ Filas deletadas\n✅ Mediadores deletados\n✅ Dados de usuários resetados (vitórias, derrotas, coins)\n\nAs filas e mediadores estão sendo restauradas automaticamente...",
+                                description="Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\nAs filas e mediadores estão sendo restaurados automaticamente...\n\n📊 Dados de usuários (vitórias, derrotas, coins) foram preservados!",
                                 color=0x2f3136
                             )
                             embed.set_footer(text="Bot Zeus - Operacional")
