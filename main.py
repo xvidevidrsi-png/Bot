@@ -2887,17 +2887,10 @@ async def on_guild_join(guild):
     nome_dono="Nome do dono do servidor"
 )
 async def separador_servidor(interaction: discord.Interaction, id_servidor: str, nome_dono: str):
-    """Registra servidor manualmente - apenas para owner do servidor"""
-    if not interaction.guild:
+    """Registra servidor manualmente - apenas para owner do bot"""
+    if interaction.user.name != BOT_OWNER_USERNAME and interaction.user.id != BOT_OWNER_ID:
         await interaction.response.send_message(
-            "❌ Este comando só pode ser usado em servidores!",
-            ephemeral=True
-        )
-        return
-    
-    if interaction.guild.owner_id != interaction.user.id:
-        await interaction.response.send_message(
-            "❌ Apenas o **dono do servidor** pode usar este comando!",
+            f"❌ Apenas **{BOT_OWNER_USERNAME}** (Owner do Bot Zeus) pode usar este comando!",
             ephemeral=True
         )
         return
