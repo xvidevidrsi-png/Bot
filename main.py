@@ -3191,11 +3191,6 @@ async def cmd_teste(interaction: discord.Interaction):
             except:
                 pass
         
-        # Buscar mediadores
-        cur.execute("SELECT COUNT(*) FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
-        total_mediadores = cur.fetchone()[0]
-        print(f"📊 [TESTE] Mediadores encontrados: {total_mediadores}")
-        
         # Se não tiver dados para restaurar, apenas reinicia normalmente
         if len(todas_mensagens) == 0:
             print(f"✅ [TESTE] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
