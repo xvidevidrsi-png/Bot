@@ -41,7 +41,8 @@ BOT_OWNER_ID = None
 bot = commands.Bot(
     command_prefix=BOT_PREFIX, 
     intents=INTENTS,
-    max_messages=100  # ⚡ OTIMIZAÇÃO 3: Limitar cache (padrão é 1000)
+    max_messages=100,  # ⚡ OTIMIZAÇÃO 3: Limitar cache (padrão é 1000)
+    shard_count=1  # ⚡ OTIMIZAÇÃO NOVA: Shard único reduz tráfego Discord
 )
 tree = bot.tree
 
