@@ -1,0 +1,14 @@
+{
+  "name": "bot-zeus-keepalive",
+  "version": "1.0.0",
+  "description": "KeepAlive para Bot Zeus - Mantém Repl acordado 24/7",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.4.0"
+  }
+}
