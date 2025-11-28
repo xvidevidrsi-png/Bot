@@ -1,0 +1,9 @@
+node_modules
+__pycache__
+.cache
+.git
+.local
+.pythonlibs
+.upm
+bot.log
+bot.pid
