@@ -3824,6 +3824,59 @@ async def mostrar_ranking(interaction: discord.Interaction, guild_id: int, ephem
 
     await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
+class RankView(View):
+    def __init__(self, interaction: discord.Interaction):
+        super().__init__(timeout=180)
+        self.interaction = interaction
+
+    @discord.ui.button(label="👤 Meu Perfil", style=discord.ButtonStyle.primary, emoji="📊")
+    async def perfil_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await mostrar_perfil(interaction, interaction.user, interaction.guild.id, ephemeral=True)
+
+    @discord.ui.button(label="🏆 Ranking", style=discord.ButtonStyle.success, emoji="🥇")
+    async def ranking_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await mostrar_ranking(interaction, interaction.guild.id, ephemeral=True)
+
+@tree.command(name="rank", description="🏆 Menu interativo: Veja seu perfil ou o ranking do servidor")
+async def cmd_rank(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message(
+            "❌ Este comando só pode ser usado em servidores!",
+            ephemeral=True
+        )
+        return
+    
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message(
+            "⛔ **Servidor não registrado!**\n\n"
+            "Este servidor precisa estar registrado para usar o Bot Zeus.",
+            ephemeral=True
+        )
+        return
+    
+    embed = discord.Embed(
+        title="🏆 Menu de Ranking",
+        description="Escolha o que deseja ver:",
+        color=0xFFD700
+    )
+    
+    embed.add_field(
+        name="👤 Meu Perfil",
+        value="Veja suas estatísticas completas",
+        inline=True
+    )
+    
+    embed.add_field(
+        name="🏆 Ranking",
+        value="Veja o Top 10 do servidor",
+        inline=True
+    )
+    
+    embed.set_footer(text=f"Solicitado por {interaction.user.display_name}")
+    
+    view = RankView(interaction)
+    await interaction.response.send_message(embed=embed, view=view)
+
 @tree.command(name="manual", description="📖 Manual COMPLETO com explicação detalhada de TODOS os comandos")
 async def config_menu(interaction: discord.Interaction):
     embed = discord.Embed(
