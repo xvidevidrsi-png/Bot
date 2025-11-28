@@ -2965,11 +2965,10 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
         return
 
     is_owner = interaction.guild.owner_id == interaction.user.id
-    is_admin = interaction.user.guild_permissions.administrator
 
-    if not (is_owner or is_admin):
+    if not is_owner:
         await interaction.response.send_message(
-            "❌ Apenas o **dono** ou **administradores** do servidor podem usar este comando!",
+            "❌ Apenas o **dono do servidor** pode usar este comando!",
             ephemeral=True
         )
         return
