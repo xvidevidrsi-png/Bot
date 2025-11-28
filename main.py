@@ -91,14 +91,16 @@ async def restart_30_dias_task():
             total_filas = cur.fetchone()[0]
             print(f"📊 [RESTART] Filas encontradas: {total_filas}")
             
-            cur.execute("SELECT 'fila', guild_id, topico_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+            cur.execute("SELECT 'fila', guild_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
             for row in cur.fetchall():
-                tipo, guild_id, canal_id, msg_id, valor, modo, tipo_jogo = row
+                tipo, guild_id, msg_id, valor, modo, tipo_jogo = row
                 try:
                     guild = bot.get_guild(guild_id)
                     if guild:
-                        canal = guild.get_channel(canal_id)
-                        if canal:
+                        canal_id = db_get_config(f"fila_mediadores_canal_id_{guild_id}")
+                        if canal_id:
+                            canal = guild.get_channel(int(canal_id))
+                        if canal_id and canal:
                             msg = await canal.fetch_message(msg_id)
                             await msg.delete()
                             todas_mensagens.append({
@@ -3165,14 +3167,16 @@ async def cmd_teste(interaction: discord.Interaction):
         total_filas = cur.fetchone()[0]
         print(f"📊 [TESTE] Filas encontradas: {total_filas}")
         
-        cur.execute("SELECT 'fila', guild_id, topico_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+        cur.execute("SELECT 'fila', guild_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
         for row in cur.fetchall():
-            tipo, guild_id, canal_id, msg_id, valor, modo, tipo_jogo = row
+            tipo, guild_id, msg_id, valor, modo, tipo_jogo = row
             try:
                 guild = bot.get_guild(guild_id)
                 if guild:
-                    canal = guild.get_channel(canal_id)
-                    if canal:
+                    canal_id = db_get_config(f"fila_mediadores_canal_id_{guild_id}")
+                    if canal_id:
+                        canal = guild.get_channel(int(canal_id))
+                    if canal_id and canal:
                         msg = await canal.fetch_message(msg_id)
                         await msg.delete()
                         todas_mensagens.append({
