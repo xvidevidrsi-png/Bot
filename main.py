@@ -4396,6 +4396,29 @@ async def config_menu(interaction: discord.Interaction):
     )
 
     embed.add_field(
+        name="🔄 Sistema Automático de Restart (60 Dias)",
+        value=(
+            "**Como funciona:**\n"
+            "O Bot Zeus reinicia automaticamente a cada **60 dias** de atividade contínua para manter performance.\n\n"
+            "**O que acontece:**\n"
+            "⏰ Aviso de 1 minuto: Todos os donos recebem DM avisando o restart\n"
+            "⏳ Aguarda 60 segundos: Bot envia confirmação nos servidores\n"
+            "🗑️ Deleta filas e mensagens de comando\n"
+            "🔄 Reinicia o bot\n\n"
+            "**O que é PRESERVADO:**\n"
+            "✅ Mediadores continuam configurados\n"
+            "✅ Dados dos jogadores (vitórias, derrotas, coins)\n"
+            "✅ Configuração de PIX dos mediadores\n"
+            "✅ Todas as configurações do servidor\n\n"
+            "**O que é DELETADO:**\n"
+            "❌ Todas as filas (voltam limpas do zero)\n"
+            "❌ Mensagens públicas de comandos\n\n"
+            "💡 Não se preocupe - é automático e preserva tudo importante!"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
         name="👑 Comandos Owner",
         value=(
             "⚠️ **APENAS emanoel7269 (Owner) PODE USAR**\n\n"
@@ -4405,6 +4428,9 @@ async def config_menu(interaction: discord.Interaction):
             "**`/resete_bot`** - Reset completo\n"
             "└ Reseta TODAS as configurações e dados do servidor\n"
             "└ ⚠️ Cuidado - não pode ser desfeito!\n\n"
+            "**`/teste`** - Testa restart de 60 dias\n"
+            "└ Executa teste rápido do sistema (sem aviso de 1 minuto)\n"
+            "└ Deleta e reinicia para validar funcionalidade\n\n"
             "**`/puxar`** - Busca dados do servidor\n"
             "└ Mostra informações completas de um servidor pelo ID"
         ),
