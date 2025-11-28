@@ -3340,6 +3340,7 @@ async def cargos_membros(interaction: discord.Interaction, cargo: discord.Role):
     await interaction.followup.send(embed=embed)
 
 @tree.command(name="clonar_emoji", description="😄 Personaliza os emojis dos botões de filas específicas")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(
     fila="Qual fila deseja customizar",
     botao="Qual botão deseja customizar",
@@ -3400,6 +3401,7 @@ async def clonar_emoji(interaction: discord.Interaction, fila: str, botao: str, 
 
 
 @tree.command(name="fila_mediadores", description="📋 Cria o painel de mediadores com menu automático de rotação")
+@app_commands.default_permissions(administrator=True)
 async def fila_mediadores_slash(interaction: discord.Interaction):
     if not verificar_separador_servidor(interaction.guild.id):
         await interaction.response.send_message(
@@ -3436,6 +3438,7 @@ async def fila_mediadores_slash(interaction: discord.Interaction):
     db_set_config(f"fila_mediadores_canal_id_{guild_id}", str(interaction.channel.id))
 
 @tree.command(name="logs", description="📊 Cria canais de log automáticos e mostra o histórico de todas as partidas")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(jogador="Jogador para filtrar logs (opcional)")
 async def logs_slash(interaction: discord.Interaction, jogador: discord.Member = None):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -3539,6 +3542,7 @@ async def logs_slash(interaction: discord.Interaction, jogador: discord.Member =
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 @tree.command(name="deletar_logs", description="🗑️ Remove todos os canais e dados de log do servidor")
+@app_commands.default_permissions(administrator=True)
 async def deletar_logs(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         await interaction.response.send_message("❌ Apenas administradores podem usar este comando!", ephemeral=True)
