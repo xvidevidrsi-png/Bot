@@ -5241,12 +5241,8 @@ async def on_message(message):
             
             # 🔥 Verifica se quem mandou é o mediador listado
             if row and row[1] and row[1] != message.author.id:
-                await message.channel.send(
-                    f"❌ **Acesso negado!** Apenas <@{row[1]}> pode enviar ID e SENHA!"
-                )
                 del ADMIN_ROOM_CREATION_STATES[user_key]
-                await message.add_reaction('❌')
-                return
+                return  # Sair silenciosamente sem fazer nada
             
             if row:
                 valor_partida = row[0]
