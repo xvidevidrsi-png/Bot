@@ -87,6 +87,10 @@ async def restart_30_dias_task():
             todas_mensagens = []
             
             # Buscar filas
+            cur.execute("SELECT COUNT(*) FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+            total_filas = cur.fetchone()[0]
+            print(f"📊 [RESTART] Filas encontradas: {total_filas}")
+            
             cur.execute("SELECT 'fila', guild_id, topico_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
             for row in cur.fetchall():
                 tipo, guild_id, canal_id, msg_id, valor, modo, tipo_jogo = row
@@ -110,6 +114,10 @@ async def restart_30_dias_task():
                     pass
             
             # Buscar mediadores
+            cur.execute("SELECT COUNT(*) FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
+            total_mediadores = cur.fetchone()[0]
+            print(f"📊 [RESTART] Mediadores encontrados: {total_mediadores}")
+            
             cur.execute("SELECT 'mediador', guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
             for row in cur.fetchall():
                 tipo, guild_id, canal_id, msg_id = row
@@ -134,6 +142,10 @@ async def restart_30_dias_task():
                 "mensagens": todas_mensagens
             }
             db_set_config("restart_pending", json.dumps(restart_data))
+            
+            print(f"✅ [RESTART] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
+            print(f"  ├─ Filas: {total_filas}")
+            print(f"  └─ Mediadores: {total_mediadores}")
             
             # Enviar aviso de reinício em todos os servidores
             for guild in bot.guilds:
@@ -5574,9 +5586,12 @@ async def on_ready():
     restart_pending = db_get_config("restart_pending")
     if restart_pending:
         try:
-            print(f"🔄 [RESTART] Restaurando mensagens deletadas...")
             restart_data = json.loads(restart_pending)
+            total_para_restaurar = len(restart_data.get("mensagens", []))
+            print(f"\n🔄 [RESTART] Encontradas {total_para_restaurar} mensagens para restaurar!")
+            print(f"📋 Iniciando restauração...")
             
+            restauradas = 0
             # Restaurar todas as mensagens
             for msg_data in restart_data.get("mensagens", []):
                 try:
@@ -5586,17 +5601,20 @@ async def on_ready():
                         canal = guild.get_channel(msg_data["canal_id"])
                         if canal:
                             if tipo == "fila":
-                                print(f"✅ [RESTART] Fila restaurada: {msg_data.get('valor')} {msg_data.get('tipo_jogo')}")
+                                restauradas += 1
+                                print(f"  ✅ Fila: {msg_data.get('valor')} {msg_data.get('tipo_jogo')} (#{restauradas})")
                             elif tipo == "mediador":
-                                print(f"✅ [RESTART] Mediadores restaurados")
+                                restauradas += 1
+                                print(f"  ✅ Mediador (#{restauradas})")
                             else:
-                                print(f"✅ [RESTART] Mensagem restaurada: {tipo}")
+                                restauradas += 1
+                                print(f"  ✅ {tipo} (#{restauradas})")
                 except Exception as e:
-                    print(f"⚠️ [RESTART] Erro ao restaurar {msg_data.get('tipo')}: {e}")
+                    print(f"  ⚠️ Erro ao restaurar {msg_data.get('tipo')}: {e}")
             
             # Limpar o registro após restaurar
             db_set_config("restart_pending", "")
-            print(f"✅ [RESTART] Restauração completa!")
+            print(f"✅ [RESTART] Restauração COMPLETA! ({restauradas}/{total_para_restaurar} mensagens restauradas)")
         except Exception as e:
             print(f"⚠️ [RESTART] Erro ao restaurar: {e}")
 
