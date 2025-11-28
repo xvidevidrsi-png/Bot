@@ -3156,6 +3156,126 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
 
     print(f"[DONO_COMANDO_SLASH] Servidor {guild_id} ({guild.name}) definiu cargo de dono: {cargo.name} (ID: {cargo.id}) por {interaction.user.name} (ID: {interaction.user.id})")
 
+@tree.command(name="teste", description="🧪 [OWNER] Testa o restart de 30 dias (deleta e restaura mensagens)")
+async def cmd_teste(interaction: discord.Interaction):
+    """Testa o sistema de restart de 30 dias"""
+    if interaction.user.name != BOT_OWNER_USERNAME and interaction.user.id != BOT_OWNER_ID:
+        await interaction.response.send_message(
+            f"❌ Apenas **{BOT_OWNER_USERNAME}** pode usar este comando!",
+            ephemeral=True
+        )
+        return
+    
+    await interaction.response.defer(ephemeral=True)
+    
+    try:
+        import json
+        print(f"\n🧪 [TESTE] Iniciando teste de restart...")
+        
+        conn = sqlite3.connect(DB_FILE)
+        cur = conn.cursor()
+        
+        todas_mensagens = []
+        
+        # Buscar filas
+        cur.execute("SELECT COUNT(*) FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+        total_filas = cur.fetchone()[0]
+        print(f"📊 [TESTE] Filas encontradas: {total_filas}")
+        
+        cur.execute("SELECT 'fila', guild_id, topico_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+        for row in cur.fetchall():
+            tipo, guild_id, canal_id, msg_id, valor, modo, tipo_jogo = row
+            try:
+                guild = bot.get_guild(guild_id)
+                if guild:
+                    canal = guild.get_channel(canal_id)
+                    if canal:
+                        msg = await canal.fetch_message(msg_id)
+                        await msg.delete()
+                        todas_mensagens.append({
+                            "tipo": tipo,
+                            "guild_id": guild_id,
+                            "canal_id": canal_id,
+                            "valor": valor,
+                            "modo": modo,
+                            "tipo_jogo": tipo_jogo
+                        })
+                        print(f"🗑️ [TESTE] Deletada fila {msg_id}")
+            except:
+                pass
+        
+        # Buscar mediadores
+        cur.execute("SELECT COUNT(*) FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
+        total_mediadores = cur.fetchone()[0]
+        print(f"📊 [TESTE] Mediadores encontrados: {total_mediadores}")
+        
+        cur.execute("SELECT 'mediador', guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
+        for row in cur.fetchall():
+            tipo, guild_id, canal_id, msg_id = row
+            try:
+                guild = bot.get_guild(guild_id)
+                if guild:
+                    canal = guild.get_channel(canal_id)
+                    if canal:
+                        msg = await canal.fetch_message(msg_id)
+                        await msg.delete()
+                        todas_mensagens.append({
+                            "tipo": tipo,
+                            "guild_id": guild_id,
+                            "canal_id": canal_id
+                        })
+                        print(f"🗑️ [TESTE] Deletado mediador {msg_id}")
+            except:
+                pass
+        
+        restart_data = {"mensagens": todas_mensagens}
+        db_set_config("restart_pending", json.dumps(restart_data))
+        
+        print(f"✅ [TESTE] Total de mensagens SALVAS: {len(todas_mensagens)}")
+        
+        # Enviar aviso nos servidores
+        for guild in bot.guilds:
+            try:
+                cur.execute("SELECT topico_id FROM config WHERE guild_id = ? LIMIT 1", (guild.id,))
+                result = cur.fetchone()
+                
+                if result:
+                    canal_id = result[0]
+                    canal = guild.get_channel(canal_id)
+                    if canal:
+                        embed = discord.Embed(
+                            title="🧪 Bot em Teste de Restart",
+                            description="Bot Zeus está sendo testado. As filas e mediadores estão sendo restaurados...",
+                            color=0xFFD700
+                        )
+                        embed.set_footer(text="Teste de Restart")
+                        await canal.send(embed=embed)
+            except:
+                pass
+        
+        conn.close()
+        
+        # Enviar resultado do teste
+        embed = discord.Embed(
+            title="✅ Teste Completo!",
+            description=f"**Mensagens deletadas e salvas para restaurar:**\n"
+                        f"• Filas: {total_filas}\n"
+                        f"• Mediadores: {total_mediadores}\n"
+                        f"• Total: {len(todas_mensagens)}",
+            color=0x00FF00
+        )
+        embed.set_footer(text="Reiniciando em 2 segundos...")
+        
+        await interaction.followup.send(embed=embed, ephemeral=True)
+        
+        print(f"🧪 [TESTE] Reiniciando bot...")
+        await asyncio.sleep(2)
+        os.execv(sys.executable, ['python3'] + sys.argv)
+        
+    except Exception as e:
+        print(f"❌ [TESTE] Erro: {e}")
+        await interaction.followup.send(f"❌ Erro no teste: {e}", ephemeral=True)
+
 @tree.command(name="servidores_registrados", description="📋 Mostra todos os servidores que o bot está conectado")
 async def servidores_registrados(interaction: discord.Interaction):
     """Lista todos os servidores registrados no Bot Zeus - Apenas para o Owner"""
