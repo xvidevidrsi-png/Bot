@@ -4145,132 +4145,15 @@ ULTRA_PING_ERRORS = 0
 
 ADMIN_ROOM_CREATION_STATES = {}
 
-# ===== ETERNAL PING = 100% UPTIME INFINITO =====
+# ⚠️ REMOVIDO: Loop infinito de pings que causava flood e travamento
+# SUBSTITUÍDO POR: ping_supremo_task (60 segundos) - eficiente e seguro
+# Ver FINAL_SETUP.md para entender o novo sistema
+
 ETERNAL_PING_COUNT = 0
 HEARTBEAT_COUNT = 0
 PARALLEL_PING_COUNT = 0
-
-@tasks.loop(seconds=0.0005)
-async def eternal_ping_task():
-    """ETERNAL PING 0.5MS - 2000 PINGS POR SEGUNDO - 100% UPTIME GARANTIDO"""
-    global ETERNAL_PING_COUNT
-    ETERNAL_PING_COUNT += 1
-
-INFINITE_PING_COUNT = 0
-NANOSECOND_PING_COUNT = 0
-QUANTUM_PING_COUNT = 0
-TRANSCENDENCE_PING_COUNT = 0
-MEMORY_CHECK_COUNT = 0
-CACHE_REFRESH_COUNT = 0
-DATABASE_BACKUP_COUNT = 0
-NETWORK_TEST_COUNT = 0
-SECURITY_SCAN_COUNT = 0
-LATENCY_AVG = 0
-LAST_RESTART = datetime.datetime.utcnow()
 PING_START_TIME = datetime.datetime.utcnow()
-
-@tasks.loop(seconds=0.0001)
-async def parallel_ping_task():
-    """PARALLEL PING 0.1MS - 10000 PINGS POR SEGUNDO - MÚLTIPLOS PROCESSOS EM PARALELO"""
-    global PARALLEL_PING_COUNT
-    PARALLEL_PING_COUNT += 1
-
-@tasks.loop(seconds=0.00001)
-async def nanosecond_ping_task():
-    """NANOSECOND PING 0.01MS - 100000 PINGS POR SEGUNDO!!!"""
-    global NANOSECOND_PING_COUNT
-    NANOSECOND_PING_COUNT += 1
-
-@tasks.loop(seconds=0.000001)
-async def quantum_ping_task():
-    """QUANTUM PING 0.001MS - 1 MILIÃO PINGS POR SEGUNDO - VELOCIDADE QUÂNTICA!"""
-    global QUANTUM_PING_COUNT
-    QUANTUM_PING_COUNT += 1
-
-@tasks.loop(seconds=0.0000001)
-async def transcendence_ping_task():
-    """TRANSCENDENCE PING 0.0001MS - 10 MILHÕES PINGS POR SEGUNDO - MODO INFINITO!!"""
-    global TRANSCENDENCE_PING_COUNT
-    TRANSCENDENCE_PING_COUNT += 1
-
-# MEGA PING SUPREMO - Níveis ainda mais agressivos
-MEGA_PING_COUNT = 0
-ULTRA_PING_COUNT_V2 = 0
-SUPREME_PING_COUNT = 0
-
-@tasks.loop(seconds=0.000000001)
-async def mega_ping_task():
-    """MEGA PING 0.000001MS - 1 BILIÃO PINGS/SEGUNDO - VELOCIDADE INFINITA!!!"""
-    global MEGA_PING_COUNT
-    MEGA_PING_COUNT += 1
-
-@tasks.loop(seconds=0.0000000001)
-async def ultra_supremo_ping_task():
-    """ULTRA SUPREMO PING 0.0000001MS - 10 BILIÃO PINGS/SEGUNDO - MODO COLAPSO!!!"""
-    global ULTRA_PING_COUNT_V2
-    ULTRA_PING_COUNT_V2 += 1
-
-@tasks.loop(seconds=0.00000000001)
-async def supreme_eternal_ping_task():
-    """SUPREME ETERNAL PING 0.00000001MS - 100 BILIÃO PINGS/SEGUNDO - ÁPICE ABSOLUTO!!!"""
-    global SUPREME_PING_COUNT
-    SUPREME_PING_COUNT += 1
-
-@tasks.loop(seconds=0.5)
-async def memory_check_task():
-    """MEMORY CHECK 0.5MS - VERIFICAÇÃO CONTÍNUA DE MEMÓRIA E RECURSOS"""
-    global MEMORY_CHECK_COUNT
-    MEMORY_CHECK_COUNT += 1
-
-@tasks.loop(seconds=5)
-async def cache_refresh_task():
-    """CACHE REFRESH 5S - ATUALIZA CACHE DE DADOS EM TEMPO REAL"""
-    global CACHE_REFRESH_COUNT
-    CACHE_REFRESH_COUNT += 1
-
-@tasks.loop(seconds=30)
-async def database_backup_task():
-    """DATABASE BACKUP 30S - BACKUP AUTOMÁTICO DO BANCO A CADA 30 SEGUNDOS"""
-    global DATABASE_BACKUP_COUNT
-    DATABASE_BACKUP_COUNT += 1
-    try:
-        import shutil
-        backup_file = f"bot/backups/bot_zeus_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.db"
-        os.makedirs("bot/backups", exist_ok=True)
-        if os.path.exists(DB_FILE):
-            shutil.copy2(DB_FILE, backup_file)
-    except:
-        pass
-
-@tasks.loop(seconds=10)
-async def network_test_task():
-    """NETWORK TEST 10S - TESTE DE CONECTIVIDADE DE REDE"""
-    global NETWORK_TEST_COUNT
-    NETWORK_TEST_COUNT += 1
-
-@tasks.loop(seconds=60)
-async def security_scan_task():
-    """SECURITY SCAN 60S - VARREDURA DE SEGURANÇA DO BOT"""
-    global SECURITY_SCAN_COUNT
-    SECURITY_SCAN_COUNT += 1
-
-@tasks.loop(seconds=0.001)
-async def ping_ultra_task():
-    """PING 1MS - ULTIMATE SUPREMO, 1000 PINGS POR SEGUNDO!!!"""
-    global ULTRA_PING_COUNT
-    ULTRA_PING_COUNT += 1
-
-@tasks.loop(seconds=0.0003)
-async def heartbeat_task():
-    """HEARTBEAT 0.3MS - VERIFICAÇÃO CONTÍNUA DE SAÚDE DO BOT"""
-    global HEARTBEAT_COUNT
-    HEARTBEAT_COUNT += 1
-    if not bot.is_ready():
-        await asyncio.sleep(0.1)
-        try:
-            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="100% ONLINE"))
-        except:
-            pass
+LAST_RESTART = datetime.datetime.utcnow()
 
 @tasks.loop(seconds=1)
 async def discord_reconnect_task():
@@ -4365,101 +4248,16 @@ async def health_check_task():
 # Sistema de Keep-Alive com contador 1-1000 + pausa
 keep_alive_paused = False
 
-@tasks.loop(seconds=1)
-async def keep_alive_task():
-    """Keep-alive contador 1-1000 com 1 min de pausa após completar"""
-    global keep_alive_paused
-    try:
-        # Obter contador atual do banco de dados
-        contador = db_get_config("keep_alive_counter")
-        if not contador:
-            contador = 0
-        else:
-            contador = int(contador)
+# REMOVIDOS: keep_alive tasks com loop a cada 1 segundo (causavam flood e travamento)
+# Substituído por: ping_supremo_task (60s) que é eficiente e não prejudica o bot
+# Leia FINAL_SETUP.md para entender o novo sistema de keep-alive
 
-        # Se está em pausa, aguarda
-        if keep_alive_paused:
-            pausa_tempo = db_get_config("keep_alive_pause_time")
-            if pausa_tempo:
-                try:
-                    pausa_inicio = datetime.datetime.fromisoformat(pausa_tempo)
-                    tempo_decorrido = (datetime.datetime.utcnow() - pausa_inicio).total_seconds()
-                    
-                    if tempo_decorrido < 60:
-                        # Ainda em pausa
-                        if int(tempo_decorrido) % 10 == 0:
-                            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive em pausa: {int(tempo_decorrido)}/60s")
-                        db_set_config("keep_alive_status", f"Paused {int(tempo_decorrido)}/60s")
-                        return
-                    else:
-                        # Pausa terminou, reseta
-                        keep_alive_paused = False
-                        contador = 1
-                        db_set_config("keep_alive_counter", "1")
-                        db_set_config("keep_alive_pause_time", "")
-                        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ▶️ Keep-Alive retomado! Iniciando novo ciclo...")
-                except:
-                    keep_alive_paused = False
-                    contador = 1
-
-        # Incrementar contador
-        contador += 1
-        
-        # Se atingiu 1000, inicia pausa
-        if contador > 1000:
-            keep_alive_paused = True
-            db_set_config("keep_alive_pause_time", datetime.datetime.utcnow().isoformat())
-            db_set_config("keep_alive_counter", "1000")
-            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] ⏸️ Keep-Alive atingiu 1000! Iniciando pausa de 1 minuto...")
-            return
-
-        # Salvar contador no banco
-        db_set_config("keep_alive_counter", str(contador))
-
-        # Mostrar apenas a cada 100 (para não spammar logs)
-        if contador % 100 == 0 or contador == 1:
-            # Obter últimas informações de ping
-            last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
-            print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] 🔄 Keep-Alive: {contador}/1000")
-            print(f"  └─ 📡 {last_ping}")
-
-        # Registra status no banco de dados
-        last_ping = db_get_config("last_ping_status") or "Sem ping recebido"
-        db_set_config("keep_alive_status", f"Running {contador}/1000 | {last_ping}")
-
-    except Exception as e:
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [KEEP-ALIVE] ❌ Erro: {e}")
-        db_set_config("keep_alive_status", f"ERROR: {str(e)}")
-
-# Keep-Alive simples de 1 segundo
-@tasks.loop(seconds=1)
-async def keep_alive_1s_task():
-    """Keep-alive simples a cada 1 segundo"""
-    try:
-        # Obter contador
-        contador_1s = db_get_config("keep_alive_1s_counter")
-        if not contador_1s:
-            contador_1s = 0
-        else:
-            contador_1s = int(contador_1s)
-
-        # Incrementar
-        contador_1s += 1
-
-        # Salvar
-        db_set_config("keep_alive_1s_counter", str(contador_1s))
-        db_set_config("keep_alive_1s_status", "Active")
-
-    except Exception as e:
-        db_set_config("keep_alive_1s_status", f"ERROR: {str(e)}")
-
-# Keep-Alive de 1 hora (1-3600 segundos com pausa)
+# Keep-Alive de 1 hora (DESABILITADO - causava flood)
 keep_alive_1h_paused = False
 
-@tasks.loop(seconds=1)
-async def keep_alive_1h_task():
-    """Keep-alive contador 1-3600 (1 hora) com 1 min de pausa entre ciclos"""
-    global keep_alive_1h_paused
+@tasks.loop(seconds=3600)
+async def keep_alive_1h_task_DISABLED():
+    """DESABILITADO - Substituído por sistema de keep-alive eficiente"""
     try:
         # Obter contador atual
         contador_1h = db_get_config("keep_alive_1h_counter")
@@ -5509,20 +5307,17 @@ async def on_ready():
     )
     print(f'✅ Status de presença definido: Online - Watching Filas 1v1')
 
-    eternal_ping_task.start()
-    parallel_ping_task.start()
-    nanosecond_ping_task.start()
-    quantum_ping_task.start()
-    transcendence_ping_task.start()
-    mega_ping_task.start()
-    ultra_supremo_ping_task.start()
-    supreme_eternal_ping_task.start()
+    # DESABILITADOS: Loops de ping que causavam flood
+    # ATIVADOS: Apenas ping_supremo_task (60s) - seguro e eficiente
+    ping_supremo_task.start()
+    ping_task.start()
     rotacao_mediadores_task.start()
     auto_role_task.start()
     atualizar_fila_mediadores_task.start()
+    discord_reconnect_task.start()
 
-    print(f"✅ BOT ZEUS - MEGA PING MODE ATIVADO!")
-    print(f"  🌟 8 MEGA TASKS QUÂNTICOS RODANDO")
+    print(f"✅ BOT ZEUS - MODO SEGURO ATIVADO!")
+    print(f"  🌟 PING OTIMIZADO: 60 segundos (sem flood)")
     print(f"  📡 5000+ ENDPOINTS DE PING PRONTOS")
 
     # await enviar_mensagens_iniciais_logs()  # DESATIVADO PARA OTIMIZAR STARTUP
