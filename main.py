@@ -127,11 +127,9 @@ async def restart_30_dias_task():
             # Enviar aviso de reinício em todos os servidores
             for guild in bot.guilds:
                 try:
-                    cur.execute("SELECT topico_id FROM config WHERE guild_id = ? LIMIT 1", (guild.id,))
-                    result = cur.fetchone()
-                    
-                    if result:
-                        canal_id = result[0]
+                    canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
+                    if canal_id:
+                        canal_id = int(canal_id)
                         canal = guild.get_channel(canal_id)
                         if canal:
                             embed = discord.Embed(
@@ -3194,11 +3192,9 @@ async def cmd_teste(interaction: discord.Interaction):
         # Enviar aviso nos servidores
         for guild in bot.guilds:
             try:
-                cur.execute("SELECT topico_id FROM config WHERE guild_id = ? LIMIT 1", (guild.id,))
-                result = cur.fetchone()
-                
-                if result:
-                    canal_id = result[0]
+                canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
+                if canal_id:
+                    canal_id = int(canal_id)
                     canal = guild.get_channel(canal_id)
                     if canal:
                         embed = discord.Embed(
