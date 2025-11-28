@@ -5861,7 +5861,7 @@ async def on_ready():
     # Limpar filas e mensagens de comando para atualização
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    cur.execute("SELECT value FROM config WHERE key = 'limpeza_feita'")
+    cur.execute("SELECT v FROM config WHERE k = 'limpeza_feita'")
     limpeza_feita = cur.fetchone()
     
     if not limpeza_feita:
@@ -5870,7 +5870,7 @@ async def on_ready():
         filas_deletadas = cur.rowcount
         cur.execute("DELETE FROM comando_mensagens")
         msgs_deletadas = cur.rowcount
-        cur.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('limpeza_feita', '1')")
+        cur.execute("INSERT OR REPLACE INTO config (k, v) VALUES ('limpeza_feita', '1')")
         conn.commit()
         print(f"✅ [ATUALIZAÇÃO] {filas_deletadas} filas deletadas, {msgs_deletadas} mensagens de comando deletadas")
         
