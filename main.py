@@ -113,7 +113,15 @@ async def restart_30_dias_task():
                 except:
                     pass
             
-            # Salvar TODOS os dados para reenviar após reinício
+            # Se não tiver dados para restaurar, apenas reinicia normalmente
+            if len(todas_mensagens) == 0:
+                print(f"✅ [RESTART] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
+                conn.close()
+                print(f"🔄 [RESTART 30 DIAS] Reiniciando bot...")
+                await asyncio.sleep(2)
+                os.execv(sys.executable, ['python3'] + sys.argv)
+            
+            # Salvar dados para reenviar após reinício (só se tiver dados)
             restart_data = {
                 "mensagens": todas_mensagens
             }
@@ -3183,6 +3191,26 @@ async def cmd_teste(interaction: discord.Interaction):
         cur.execute("SELECT COUNT(*) FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
         total_mediadores = cur.fetchone()[0]
         print(f"📊 [TESTE] Mediadores encontrados: {total_mediadores}")
+        
+        # Se não tiver dados para restaurar, apenas reinicia normalmente
+        if len(todas_mensagens) == 0:
+            print(f"✅ [TESTE] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
+            conn.close()
+            
+            embed = discord.Embed(
+                title="✅ Teste Completo!",
+                description=f"**Nenhuma mensagem para restaurar:**\n"
+                            f"• Filas: {total_filas}\n"
+                            f"• Mediadores: PRESERVADOS\n\n"
+                            f"Reiniciando bot normalmente...",
+                color=0x00FF00
+            )
+            embed.set_footer(text="Reiniciando em 2 segundos...")
+            
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            print(f"🧪 [TESTE] Reiniciando bot...")
+            await asyncio.sleep(2)
+            os.execv(sys.executable, ['python3'] + sys.argv)
         
         restart_data = {"mensagens": todas_mensagens}
         db_set_config("restart_pending", json.dumps(restart_data))
