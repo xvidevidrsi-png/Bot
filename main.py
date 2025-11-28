@@ -115,8 +115,32 @@ async def restart_30_dias_task():
                 except:
                     pass
             
+            # Buscar e deletar mensagens de comandos (exceto profile)
+            cur.execute("SELECT COUNT(*) FROM comando_mensagens")
+            total_cmd_msgs = cur.fetchone()[0]
+            print(f"📊 [RESTART] Mensagens de comandos encontradas: {total_cmd_msgs}")
+            
+            cur.execute("SELECT msg_id, guild_id, canal_id, comando_tipo FROM comando_mensagens")
+            cmd_msgs_deletadas = []
+            for msg_id, guild_id, canal_id, comando_tipo in cur.fetchall():
+                try:
+                    guild = bot.get_guild(guild_id)
+                    if guild:
+                        canal = guild.get_channel(canal_id)
+                        if canal:
+                            msg = await canal.fetch_message(msg_id)
+                            await msg.delete()
+                            cmd_msgs_deletadas.append(msg_id)
+                            print(f"🗑️ [RESTART] Deletada mensagem de comando {msg_id} ({comando_tipo})")
+                except:
+                    pass
+            
+            # Limpar registros das mensagens deletadas
+            if cmd_msgs_deletadas:
+                limpar_cmd_mensagens_deletadas(cmd_msgs_deletadas)
+            
             # Se não tiver dados para restaurar, apenas reinicia normalmente
-            if len(todas_mensagens) == 0:
+            if len(todas_mensagens) == 0 and total_cmd_msgs == 0:
                 print(f"✅ [RESTART] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
                 conn.close()
                 print(f"🔄 [RESTART 30 DIAS] Reiniciando bot...")
@@ -131,6 +155,7 @@ async def restart_30_dias_task():
             
             print(f"✅ [RESTART] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
             print(f"  ├─ Filas: {total_filas}")
+            print(f"  ├─ Mensagens de comando: {total_cmd_msgs}")
             print(f"  ├─ Mediadores: PRESERVADOS")
             print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
@@ -144,7 +169,7 @@ async def restart_30_dias_task():
                         if canal:
                             embed = discord.Embed(
                                 title="🔄 Bot Reiniciado",
-                                description="Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n✅ Filas foram deletadas e restauradas\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados!",
+                                description=f"Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n✅ Filas foram deletadas e restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados!",
                                 color=0x2f3136
                             )
                             embed.set_footer(text="Bot Zeus - Operacional")
@@ -3234,8 +3259,32 @@ async def cmd_teste(interaction: discord.Interaction):
             except:
                 pass
         
+        # Buscar mensagens de comando
+        cur.execute("SELECT COUNT(*) FROM comando_mensagens")
+        total_cmd_msgs = cur.fetchone()[0]
+        print(f"📊 [TESTE] Mensagens de comandos encontradas: {total_cmd_msgs}")
+        
+        cur.execute("SELECT msg_id, guild_id, canal_id, comando_tipo FROM comando_mensagens")
+        cmd_msgs_deletadas = []
+        for msg_id, guild_id, canal_id, comando_tipo in cur.fetchall():
+            try:
+                guild = bot.get_guild(guild_id)
+                if guild:
+                    canal = guild.get_channel(canal_id)
+                    if canal:
+                        msg = await canal.fetch_message(msg_id)
+                        await msg.delete()
+                        cmd_msgs_deletadas.append(msg_id)
+                        print(f"🗑️ [TESTE] Deletada mensagem de comando {msg_id} ({comando_tipo})")
+            except:
+                pass
+        
+        # Limpar registros das mensagens deletadas
+        if cmd_msgs_deletadas:
+            limpar_cmd_mensagens_deletadas(cmd_msgs_deletadas)
+        
         # Se não tiver dados para restaurar, apenas reinicia normalmente
-        if len(todas_mensagens) == 0:
+        if len(todas_mensagens) == 0 and total_cmd_msgs == 0:
             print(f"✅ [TESTE] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
             conn.close()
             
@@ -3243,6 +3292,7 @@ async def cmd_teste(interaction: discord.Interaction):
                 title="✅ Teste Completo!",
                 description=f"**Nenhuma mensagem para restaurar:**\n"
                             f"• Filas: {total_filas}\n"
+                            f"• Mensagens de comando: {total_cmd_msgs}\n"
                             f"• Mediadores: PRESERVADOS\n\n"
                             f"Reiniciando bot normalmente...",
                 color=0x00FF00
@@ -3258,6 +3308,7 @@ async def cmd_teste(interaction: discord.Interaction):
         db_set_config("restart_pending", json.dumps(restart_data))
         
         print(f"✅ [TESTE] Total de mensagens SALVAS: {len(todas_mensagens)}")
+        print(f"✅ [TESTE] Mensagens de comando deletadas: {total_cmd_msgs}")
         
         # Enviar aviso nos servidores
         for guild in bot.guilds:
@@ -3269,7 +3320,7 @@ async def cmd_teste(interaction: discord.Interaction):
                     if canal:
                         embed = discord.Embed(
                             title="🧪 Bot em Teste de Restart",
-                            description="Bot Zeus está sendo testado.\n✅ Filas foram deletadas e serão restauradas\n✅ Mediadores foram preservados",
+                            description=f"Bot Zeus está sendo testado.\n✅ Filas foram deletadas e serão restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados",
                             color=0xFFD700
                         )
                         embed.set_footer(text="Teste de Restart")
@@ -3284,6 +3335,7 @@ async def cmd_teste(interaction: discord.Interaction):
             title="✅ Teste Completo!",
             description=f"**Mensagens deletadas e salvas para restaurar:**\n"
                         f"• Filas: {total_filas}\n"
+                        f"• Mensagens de comando: {total_cmd_msgs}\n"
                         f"• Mediadores: PRESERVADOS\n"
                         f"• Total para restaurar: {len(todas_mensagens)}",
             color=0x00FF00
