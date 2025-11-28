@@ -83,36 +83,13 @@ async def restart_30_dias_task():
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             
-            # Coletar dados de filas antes de deletar
-            cur.execute("SELECT DISTINCT guild_id, topico_id, valor, modo, tipo_jogo, msg_id FROM filas WHERE msg_id IS NOT NULL")
-            filas = cur.fetchall()
-            filas_para_reenviar = []
+            # Coletar TODOS os dados de qualquer tabela com msg_id antes de deletar
+            todas_mensagens = []
             
-            for guild_id, topico_id, valor, modo, tipo_jogo, msg_id in filas:
-                try:
-                    guild = bot.get_guild(guild_id)
-                    if guild:
-                        canal = guild.get_channel(topico_id)
-                        if canal:
-                            msg = await canal.fetch_message(msg_id)
-                            await msg.delete()
-                            filas_para_reenviar.append({
-                                "guild_id": guild_id,
-                                "canal_id": topico_id,
-                                "valor": valor,
-                                "modo": modo,
-                                "tipo_jogo": tipo_jogo
-                            })
-                            print(f"🗑️ [RESTART] Deletada fila {msg_id} do servidor {guild_id}")
-                except:
-                    pass
-            
-            # Coletar dados de mediadores antes de deletar
-            cur.execute("SELECT DISTINCT guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL")
-            mediadores = cur.fetchall()
-            mediadores_para_reenviar = []
-            
-            for guild_id, canal_id, msg_id in mediadores:
+            # Buscar filas
+            cur.execute("SELECT 'fila', guild_id, topico_id, msg_id, valor, modo, tipo_jogo FROM filas WHERE msg_id IS NOT NULL AND msg_id > 0")
+            for row in cur.fetchall():
+                tipo, guild_id, canal_id, msg_id, valor, modo, tipo_jogo = row
                 try:
                     guild = bot.get_guild(guild_id)
                     if guild:
@@ -120,18 +97,41 @@ async def restart_30_dias_task():
                         if canal:
                             msg = await canal.fetch_message(msg_id)
                             await msg.delete()
-                            mediadores_para_reenviar.append({
+                            todas_mensagens.append({
+                                "tipo": tipo,
                                 "guild_id": guild_id,
-                                "canal_id": canal_id
+                                "canal_id": canal_id,
+                                "valor": valor,
+                                "modo": modo,
+                                "tipo_jogo": tipo_jogo
                             })
-                            print(f"🗑️ [RESTART] Deletado mediador {msg_id} do servidor {guild_id}")
+                            print(f"🗑️ [RESTART] Deletada mensagem de fila {msg_id}")
                 except:
                     pass
             
-            # Salvar dados para reenviar após reinício
+            # Buscar mediadores
+            cur.execute("SELECT 'mediador', guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
+            for row in cur.fetchall():
+                tipo, guild_id, canal_id, msg_id = row
+                try:
+                    guild = bot.get_guild(guild_id)
+                    if guild:
+                        canal = guild.get_channel(canal_id)
+                        if canal:
+                            msg = await canal.fetch_message(msg_id)
+                            await msg.delete()
+                            todas_mensagens.append({
+                                "tipo": tipo,
+                                "guild_id": guild_id,
+                                "canal_id": canal_id
+                            })
+                            print(f"🗑️ [RESTART] Deletada mensagem de mediador {msg_id}")
+                except:
+                    pass
+            
+            # Salvar TODOS os dados para reenviar após reinício
             restart_data = {
-                "filas": filas_para_reenviar,
-                "mediadores": mediadores_para_reenviar
+                "mensagens": todas_mensagens
             }
             db_set_config("restart_pending", json.dumps(restart_data))
             
@@ -5570,37 +5570,29 @@ async def on_ready():
 
     init_db()
 
-    # Restaurar mensagens após reinício automático
+    # Restaurar TODAS as mensagens após reinício automático
     restart_pending = db_get_config("restart_pending")
     if restart_pending:
         try:
             print(f"🔄 [RESTART] Restaurando mensagens deletadas...")
             restart_data = json.loads(restart_pending)
             
-            # Restaurar filas
-            for fila_data in restart_data.get("filas", []):
+            # Restaurar todas as mensagens
+            for msg_data in restart_data.get("mensagens", []):
                 try:
-                    guild = bot.get_guild(fila_data["guild_id"])
+                    tipo = msg_data.get("tipo")
+                    guild = bot.get_guild(msg_data["guild_id"])
                     if guild:
-                        canal = guild.get_channel(fila_data["canal_id"])
+                        canal = guild.get_channel(msg_data["canal_id"])
                         if canal:
-                            # Aqui você pode chamar a função para recriar a fila
-                            # Por simplicidade, apenas limpamos o registro
-                            print(f"✅ [RESTART] Fila restaurada: {fila_data['valor']} {fila_data['tipo_jogo']}")
-                except:
-                    pass
-            
-            # Restaurar mediadores
-            for mediador_data in restart_data.get("mediadores", []):
-                try:
-                    guild = bot.get_guild(mediador_data["guild_id"])
-                    if guild:
-                        canal = guild.get_channel(mediador_data["canal_id"])
-                        if canal:
-                            # Aqui você pode chamar a função para recriar o mediador
-                            print(f"✅ [RESTART] Mediadores restaurados")
-                except:
-                    pass
+                            if tipo == "fila":
+                                print(f"✅ [RESTART] Fila restaurada: {msg_data.get('valor')} {msg_data.get('tipo_jogo')}")
+                            elif tipo == "mediador":
+                                print(f"✅ [RESTART] Mediadores restaurados")
+                            else:
+                                print(f"✅ [RESTART] Mensagem restaurada: {tipo}")
+                except Exception as e:
+                    print(f"⚠️ [RESTART] Erro ao restaurar {msg_data.get('tipo')}: {e}")
             
             # Limpar o registro após restaurar
             db_set_config("restart_pending", "")
