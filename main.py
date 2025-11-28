@@ -5229,14 +5229,28 @@ async def on_message(message):
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             
+            # 🔥 VERIFICAÇÃO OBRIGATÓRIA: Mediador DEVE estar selecionado
             if isinstance(message.channel, discord.Thread):
-                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND thread_id = ?", 
+                cur.execute("SELECT valor, mediador FROM partidas WHERE guild_id = ? AND thread_id = ?", 
                            (message.guild.id, message.channel.id))
             else:
-                cur.execute("SELECT valor FROM partidas WHERE guild_id = ? AND canal_id = ?", 
+                cur.execute("SELECT valor, mediador FROM partidas WHERE guild_id = ? AND canal_id = ?", 
                            (message.guild.id, message.channel.id))
             
             row = cur.fetchone()
+            
+            # ❌ SE NÃO TEM MEDIADOR, CANCELA TUDO
+            if row and (row[1] is None or row[1] == 0):
+                conn.close()
+                await message.channel.send(
+                    "❌ **ERRO! Nenhum mediador foi selecionado!**\n\n"
+                    "Você DEVE selecionar um mediador ANTES de enviar ID e senha da sala.\n\n"
+                    "Use o comando **/mediador** para escolher um mediador e tente novamente."
+                )
+                del ADMIN_ROOM_CREATION_STATES[user_key]
+                await message.add_reaction('❌')
+                return
+            
             conn.close()
             
             if row:
