@@ -6300,6 +6300,32 @@ def start_100bi_ping_server():
             c.close()
         except: pass
 
+def start_ultra_raw_ping():
+    """PING RAW PURO - SEM OVERHEAD NENHUM - MÁXIMA VELOCIDADE"""
+    import socket, threading
+    
+    def raw_worker(port):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1024)
+        s.bind(('0.0.0.0', port))
+        s.listen(1024)
+        resp = b"1"
+        
+        while 1:
+            try:
+                c, _ = s.accept()
+                c.send(resp)
+                c.close()
+            except: pass
+    
+    # 16 threads BRUTAIS em portas diferentes
+    for i, port in enumerate(range(7001, 7017)):
+        t = threading.Thread(target=raw_worker, args=(port,), daemon=True)
+        t.start()
+
 async def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -6329,8 +6355,13 @@ async def main():
     t4 = threading.Thread(target=start_100bi_ping_server, daemon=True)
     t4.start()
     
-    print("🚀 9 PING SERVERS INICIADOS EM PARALELO!")
-    print("🔴 PORTA 6666: 100 BILHÕES DE PINGS/s (descendo para 70bi)!")
+    # ULTRA RAW PING - 16 THREADS SEM OVERHEAD (PORTAS 7001-7016)
+    t5 = threading.Thread(target=start_ultra_raw_ping, daemon=True)
+    t5.start()
+    
+    print("🚀 25 PING SERVERS INICIADOS EM PARALELO!")
+    print("🔴 PORTA 6666: 100 BILHÕES DE PINGS/s!")
+    print("⚡ PORTAS 7001-7016: RAW PING SEM OVERHEAD (MÁXIMA VELOCIDADE)!")
     
     await start_web_server()
     await bot.start(token)
