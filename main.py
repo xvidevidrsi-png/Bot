@@ -71,16 +71,83 @@ watchdog_ativo = False
 # ⚡ OTIMIZAÇÃO: Restart automático a cada 30 dias
 @tasks.loop(hours=1)
 async def restart_30_dias_task():
-    """Reinicia o bot automaticamente a cada 30 dias"""
+    """Reinicia o bot automaticamente a cada 30 dias com limpeza de mensagens"""
     try:
         tempo_decorrido = (datetime.datetime.utcnow() - BOT_START_TIME).total_seconds()
         dias_decorridos = tempo_decorrido / 86400
         
         if dias_decorridos >= 30:
-            print(f"🔄 [RESTART 30 DIAS] Bot rodando há {dias_decorridos:.1f} dias! Reiniciando...")
+            print(f"🔄 [RESTART 30 DIAS] Bot rodando há {dias_decorridos:.1f} dias! Preparando reinício...")
+            
+            # Buscar todas as mensagens de filas e mediadores do BD
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            
+            # Buscar filas com msg_id
+            cur.execute("SELECT DISTINCT guild_id, topico_id, msg_id FROM filas WHERE msg_id IS NOT NULL")
+            filas = cur.fetchall()
+            
+            # Deletar mensagens de filas
+            for guild_id, topico_id, msg_id in filas:
+                try:
+                    guild = bot.get_guild(guild_id)
+                    if guild:
+                        canal = guild.get_channel(topico_id)
+                        if canal:
+                            msg = await canal.fetch_message(msg_id)
+                            await msg.delete()
+                            print(f"🗑️ [RESTART] Deletada fila {msg_id} do servidor {guild_id}")
+                except:
+                    pass
+            
+            # Buscar mediadores com msg_id
+            cur.execute("SELECT DISTINCT guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL")
+            mediadores = cur.fetchall()
+            
+            # Deletar mensagens de mediadores
+            for guild_id, canal_id, msg_id in mediadores:
+                try:
+                    guild = bot.get_guild(guild_id)
+                    if guild:
+                        canal = guild.get_channel(canal_id)
+                        if canal:
+                            msg = await canal.fetch_message(msg_id)
+                            await msg.delete()
+                            print(f"🗑️ [RESTART] Deletado mediador {msg_id} do servidor {guild_id}")
+                except:
+                    pass
+            
+            conn.close()
+            
+            # Enviar aviso de reinício em todos os servidores
+            for guild in bot.guilds:
+                try:
+                    # Buscar canal de tópicos
+                    cur = sqlite3.connect(DB_FILE).cursor()
+                    cur.execute("SELECT topico_id FROM config WHERE guild_id = ? LIMIT 1", (guild.id,))
+                    result = cur.fetchone()
+                    cur.close()
+                    
+                    if result:
+                        canal_id = result[0]
+                        canal = guild.get_channel(canal_id)
+                        if canal:
+                            embed = discord.Embed(
+                                title="🔄 Bot Reiniciado",
+                                description="Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\nUse `/auto_fila` para recriar as filas!",
+                                color=0x2f3136
+                            )
+                            embed.set_footer(text="Bot Zeus - Operacional")
+                            await canal.send(embed=embed)
+                            print(f"✅ [RESTART] Aviso enviado no servidor {guild.name}")
+                except:
+                    pass
+            
+            print(f"🔄 [RESTART 30 DIAS] Reiniciando bot...")
+            await asyncio.sleep(2)
             os.execv(sys.executable, ['python3'] + sys.argv)
     except Exception as e:
-        pass
+        print(f"❌ [RESTART 30 DIAS] Erro: {e}")
 
 # Error handler global para comandos slash
 @tree.error
