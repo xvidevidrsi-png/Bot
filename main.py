@@ -2951,7 +2951,7 @@ async def on_guild_join(guild):
 
     conn.close()
 
-    # Verificar limite de 25 servidores
+    # Verificar limite de 100 servidores
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM servidores WHERE ativo = 1")
     total_ativos = cur.fetchone()[0]
@@ -2980,7 +2980,7 @@ async def on_guild_join(guild):
             )
             embed.add_field(
                 name="🔢 Servidores Ativos",
-                value=f"{total_ativos}/25 servidores usando o Bot Zeus",
+                value=f"{total_ativos}/100 servidores usando o Bot Zeus",
                 inline=False
             )
             embed.set_footer(text="Comece agora com /dono_comando_slash!")
@@ -3030,16 +3030,16 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
             ephemeral=True
         )
     else:
-        # Verificar limite de 25 servidores
+        # Verificar limite de 100 servidores
         cur.execute("SELECT COUNT(*) FROM servidores WHERE ativo = 1")
         total_ativos = cur.fetchone()[0]
 
-        if total_ativos >= 25:
+        if total_ativos >= 100:
             conn.close()
             await interaction.response.send_message(
                 f"⛔ **Limite de Servidores Atingido!**\n\n"
-                f"❌ O Bot Zeus tem suporte máximo para **25 servidores**.\n"
-                f"Servidores ativos: **{total_ativos}/25**\n\n"
+                f"❌ O Bot Zeus tem suporte máximo para **100 servidores**.\n"
+                f"Servidores ativos: **{total_ativos}/100**\n\n"
                 f"📋 **O que fazer:**\n"
                 f"- Remova um servidor inativo para adicionar um novo\n"
                 f"- Contacte o administrador do bot para mais informações",
