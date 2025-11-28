@@ -3006,7 +3006,36 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
 
     print(f"[DONO_COMANDO_SLASH] Servidor {guild_id} definiu cargo de dono: {cargo.name} (ID: {cargo.id}) por {interaction.user.name} (ID: {interaction.user.id})")
 
-
+@tree.command(name="servidores_registrados", description="📋 Mostra todos os servidores que o bot está conectado")
+async def servidores_registrados(interaction: discord.Interaction):
+    """Lista todos os servidores registrados no Bot Zeus"""
+    
+    if not bot.guilds:
+        await interaction.response.send_message(
+            "❌ Bot não está conectado em nenhum servidor!",
+            ephemeral=True
+        )
+        return
+    
+    embed = discord.Embed(
+        title="📋 SERVIDORES REGISTRADOS",
+        description=f"Total de servidores: **{len(bot.guilds)}**",
+        color=0xFF0000
+    )
+    
+    for idx, guild in enumerate(bot.guilds, 1):
+        owner = guild.owner
+        owner_name = owner.name if owner else "Desconhecido"
+        
+        info = f"**ID:** {guild.id}\n**Membros:** {guild.member_count}\n**Owner:** {owner_name}"
+        embed.add_field(
+            name=f"{idx}. {guild.name}",
+            value=info,
+            inline=False
+        )
+    
+    embed.set_footer(text=f"Bot Zeus • {len(bot.guilds)} servidores ativos")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @tree.command(name="tirar_coin", description="💰 Remove coins de um jogador (para ajustes e penalidades)")
 @app_commands.describe(jogador="Jogador", qtd="Quantidade de coins")
