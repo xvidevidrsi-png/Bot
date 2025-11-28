@@ -2439,6 +2439,7 @@ async def criar_filas_3x3_emu(interaction: discord.Interaction):
         conn.close()
 
 @tree.command(name="4x4-emu", description="⚔️ Cria todas as filas de 4v4 Emulador com times")
+@app_commands.default_permissions(administrator=True)
 async def criar_filas_4x4_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2492,6 +2493,7 @@ async def criar_filas_4x4_emu(interaction: discord.Interaction):
         conn.close()
 
 @tree.command(name="2x2-mob", description="⚔️ Cria todas as filas de 2v2 Mobile com duplas")
+@app_commands.default_permissions(administrator=True)
 async def criar_filas_2x2_mob(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
