@@ -6301,53 +6301,29 @@ def start_100bi_ping_server():
         except: pass
 
 def start_ultra_raw_ping():
-    """PING RAW PURO - MÁXIMA VELOCIDADE - EPOLL MULTIPLEXING"""
-    import socket, select, threading
+    """PING RAW PURO - SEM OVERHEAD NENHUM - MÁXIMA VELOCIDADE"""
+    import socket, threading
     
-    def epoll_worker(start_port, num_workers):
-        """Usa epoll para multiplexar múltiplas conexões por thread"""
-        sockets = []
-        for i in range(num_workers):
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 512)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 512)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_BACKLOG, 2048)
-            s.bind(('0.0.0.0', start_port + i))
-            s.listen(2048)
-            s.setblocking(False)
-            sockets.append(s)
+    def raw_worker(port):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1024)
+        s.bind(('0.0.0.0', port))
+        s.listen(1024)
+        resp = b"1"
         
-        try:
-            ep = select.epoll()
-            for s in sockets:
-                ep.register(s, select.EPOLLIN)
-            
-            conns = {}
-            resp = b"1"
-            
-            while 1:
-                events = ep.poll(0)
-                for fd, event in events:
-                    sock = None
-                    for s in sockets:
-                        if s.fileno() == fd:
-                            sock = s
-                            break
-                    
-                    if sock and sock in sockets:
-                        try:
-                            c, _ = sock.accept()
-                            c.send(resp)
-                            c.close()
-                        except: pass
-        except: pass
+        while 1:
+            try:
+                c, _ = s.accept()
+                c.send(resp)
+                c.close()
+            except: pass
     
-    # 4 threads com epoll, 4 portas cada = 16 portas total (7001-7016)
-    for thread_num in range(4):
-        start_port = 7001 + (thread_num * 4)
-        t = threading.Thread(target=epoll_worker, args=(start_port, 4), daemon=True)
+    # 16 threads BRUTAIS em portas diferentes
+    for i, port in enumerate(range(7001, 7017)):
+        t = threading.Thread(target=raw_worker, args=(port,), daemon=True)
         t.start()
 
 async def main():
