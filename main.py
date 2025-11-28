@@ -2956,7 +2956,7 @@ async def separador_servidor(interaction: discord.Interaction, id_servidor: str,
 @app_commands.describe(
     cargo="O cargo que terá acesso total aos comandos (este cargo não pode ser removido depois)"
 )
-async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Role):
+async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Role = None):
     if not interaction.guild:
         await interaction.response.send_message(
             "❌ Este comando só pode ser usado em servidores!",
@@ -2965,6 +2965,7 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
         return
 
     guild_id = interaction.guild.id
+    guild = interaction.guild
 
     if not verificar_separador_servidor(guild_id):
         await interaction.response.send_message(
@@ -2999,6 +3000,25 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
         )
         return
 
+    # Se não especificou cargo, pega o cargo mais alto do servidor
+    if not cargo:
+        cargo_mais_alto = max(guild.roles, key=lambda r: r.position)
+        cargo = cargo_mais_alto
+
+    # Atribui o cargo ao usuário se ele não tiver
+    member = interaction.user
+    if cargo not in member.roles:
+        try:
+            await member.add_roles(cargo, reason="Configuração de cargo de dono via /dono_comando_slash")
+        except Exception as e:
+            await interaction.response.send_message(
+                f"⚠️ **Erro ao atribuir cargo!**\n\n"
+                f"Não consegui dar o cargo {cargo.mention} para você.\n"
+                f"Erro: {str(e)}",
+                ephemeral=True
+            )
+            return
+
     success = set_server_owner_role(guild_id, cargo.id, cargo.name, interaction.user.id)
 
     if not success:
@@ -3013,13 +3033,15 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
     await interaction.response.send_message(
         f"✅ **Cargo de dono definido com sucesso!**\n\n"
         f"**Cargo:** {cargo.mention}\n"
+        f"**Servidor:** {guild.name}\n"
+        f"**Dono:** {guild.owner.mention if guild.owner else 'Desconhecido'}\n"
         f"**Acesso:** Total a todos os comandos do bot\n\n"
         f"⚠️ **ATENÇÃO:** Este cargo **NÃO PODE SER REMOVIDO** depois de definido!\n"
         f"Todos os membros com este cargo terão acesso completo aos comandos administrativos do bot.",
         ephemeral=True
     )
 
-    print(f"[DONO_COMANDO_SLASH] Servidor {guild_id} definiu cargo de dono: {cargo.name} (ID: {cargo.id}) por {interaction.user.name} (ID: {interaction.user.id})")
+    print(f"[DONO_COMANDO_SLASH] Servidor {guild_id} ({guild.name}) definiu cargo de dono: {cargo.name} (ID: {cargo.id}) por {interaction.user.name} (ID: {interaction.user.id})")
 
 @tree.command(name="servidores_registrados", description="📋 Mostra todos os servidores que o bot está conectado")
 async def servidores_registrados(interaction: discord.Interaction):
