@@ -3072,8 +3072,9 @@ async def servidores_registrados(interaction: discord.Interaction):
     for idx, guild in enumerate(bot.guilds, 1):
         owner = guild.owner
         owner_name = owner.name if owner else "Desconhecido"
+        owner_id = guild.owner_id if guild.owner_id else "N/A"
         
-        info = f"**ID:** {guild.id}\n**Membros:** {guild.member_count}\n**Owner:** {owner_name}"
+        info = f"**ID Servidor:** {guild.id}\n**Owner:** {owner_name} (ID: {owner_id})\n**Membros:** {guild.member_count}"
         embed.add_field(
             name=f"{idx}. {guild.name}",
             value=info,
