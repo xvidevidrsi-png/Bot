@@ -2174,6 +2174,7 @@ class FilaMediadoresView(View):
 
 
 @tree.command(name="aux_config", description="🛡️ Define qual cargo pode usar !aux e acessar o menu de mediadores automático")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(cargo="Selecione o cargo autorizado para usar !aux")
 async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -2183,6 +2184,7 @@ async def set_cargo_aux(interaction: discord.Interaction, cargo: discord.Role):
     await interaction.response.send_message(f"✅ Cargo aux definido: {cargo.mention}\n\nApenas membros com este cargo poderão usar !aux e acessar o menu mediador!", ephemeral=True)
 
 @tree.command(name="topico", description="📌 Define o canal de tópicos onde as partidas serão criadas como threads")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(canal="Selecione o canal onde os tópicos de partida aparecerão")
 async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -2193,6 +2195,7 @@ async def set_canal(interaction: discord.Interaction, canal: discord.TextChannel
     await interaction.response.send_message(f"✅ Canal de threads de partidas definido: {canal.mention}\n\n💡 As partidas agora serão criadas como threads (tópicos) neste canal!", ephemeral=True)
 
 @tree.command(name="configurar", description="📢 Define quais cargos devem ser mencionados ao criar partidas")
+@app_commands.default_permissions(administrator=True)
 @app_commands.describe(cargos="Digite os IDs dos cargos separados por vírgula (exemplo: 123456 789012)")
 async def configurar_cargos(interaction: discord.Interaction, cargos: str):
     if not is_admin(interaction.user.id, member=interaction.user):
@@ -2203,6 +2206,7 @@ async def configurar_cargos(interaction: discord.Interaction, cargos: str):
 
 
 @tree.command(name="1x1-mob", description="⚔️ Cria todas as filas de 1v1 Mobile (Gel Normal e Infinito)")
+@app_commands.default_permissions(administrator=True)
 async def criar_filas_1v1(interaction: discord.Interaction):
     if not interaction.guild:
         await interaction.response.send_message("❌ Este comando só funciona em servidores!", ephemeral=True)
@@ -2269,6 +2273,7 @@ async def criar_filas_1v1(interaction: discord.Interaction):
         registrar_historico_fila(guild_id, valor, "infinito", "mob", "criada")
 
 @tree.command(name="1x1-emulador", description="⚔️ Cria todas as filas de 1v1 Emulador (Gel Normal e Infinito)")
+@app_commands.default_permissions(administrator=True)
 async def criar_filas_1x1_emulador(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
@@ -2327,6 +2332,7 @@ async def criar_filas_1x1_emulador(interaction: discord.Interaction):
         conn.close()
 
 @tree.command(name="2x2-emu", description="⚔️ Cria todas as filas de 2v2 Emulador com duplas")
+@app_commands.default_permissions(administrator=True)
 async def criar_filas_2x2_emu(interaction: discord.Interaction):
     if not is_admin(interaction.user.id, member=interaction.user):
         return
