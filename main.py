@@ -3310,6 +3310,13 @@ async def cmd_teste(interaction: discord.Interaction):
         if cmd_msgs_deletadas:
             limpar_cmd_mensagens_deletadas(cmd_msgs_deletadas)
         
+        # DELETAR TODAS AS FILAS E MENSAGENS DO BANCO
+        print(f"🧹 [TESTE] Limpando banco de dados...")
+        cur.execute("DELETE FROM filas")
+        cur.execute("DELETE FROM comando_mensagens")
+        conn.commit()
+        print(f"✅ [TESTE] Banco de dados limpo!")
+        
         # Se não tiver dados para restaurar, apenas reinicia normalmente
         if len(todas_mensagens) == 0 and total_cmd_msgs == 0:
             print(f"✅ [TESTE] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
@@ -3337,6 +3344,31 @@ async def cmd_teste(interaction: discord.Interaction):
         print(f"✅ [TESTE] Total de mensagens SALVAS: {len(todas_mensagens)}")
         print(f"✅ [TESTE] Mensagens de comando deletadas: {total_cmd_msgs}")
         
+        # Enviar aviso de 1 minuto antes nos servidores
+        for guild in bot.guilds:
+            try:
+                canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
+                if canal_id:
+                    canal_id = int(canal_id)
+                    canal = guild.get_channel(canal_id)
+                    if canal:
+                        embed = discord.Embed(
+                            title="⏰ AVISO: Bot Reiniciando em 1 MINUTO",
+                            description="**Tudo voltará ao normal em 1 minuto!**\n\n"
+                                       "✅ Filas serão restauradas\n"
+                                       "✅ Mediadores serão preservados\n"
+                                       "✅ Dados de usuários serão preservados\n\n"
+                                       "Prepare-se! O bot estará de volta em 60 segundos...",
+                            color=0xFF6600
+                        )
+                        embed.set_footer(text="Teste de Restart - Sistemas de backup em operação")
+                        await canal.send(embed=embed)
+            except:
+                pass
+        
+        # Aguardar 60 segundos
+        await asyncio.sleep(60)
+        
         # Enviar aviso nos servidores
         for guild in bot.guilds:
             try:
@@ -3346,11 +3378,11 @@ async def cmd_teste(interaction: discord.Interaction):
                     canal = guild.get_channel(canal_id)
                     if canal:
                         embed = discord.Embed(
-                            title="🧪 Bot em Teste de Restart",
-                            description=f"Bot Zeus está sendo testado.\n✅ Filas foram deletadas e serão restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados",
-                            color=0xFFD700
+                            title="🧪 Bot Reiniciado - Teste de Restart",
+                            description=f"🔄 Atualização concluída!\n\n✅ Filas foram deletadas e restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados\n\n**Próximos passos:**\n1️⃣ Execute `/1x1-mobile` ou o comando de fila desejado\n2️⃣ As filas estarão prontas para uso",
+                            color=0x00FF00
                         )
-                        embed.set_footer(text="Teste de Restart")
+                        embed.set_footer(text="Bot Zeus - Operacional")
                         await canal.send(embed=embed)
             except:
                 pass
