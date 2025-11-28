@@ -153,13 +153,14 @@ async def restart_30_dias_task():
             }
             db_set_config("restart_pending", json.dumps(restart_data))
             
-            print(f"✅ [RESTART] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
+            print(f"✅ [RESTART 30 DIAS] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
             print(f"  ├─ Filas: {total_filas}")
             print(f"  ├─ Mensagens de comando: {total_cmd_msgs}")
             print(f"  ├─ Mediadores: PRESERVADOS")
             print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
-            # Enviar aviso de 1 minuto antes
+            # AVISO DE 1 MINUTO (apenas no restart automático, não no /teste)
+            print(f"⏰ [RESTART 30 DIAS] Enviando aviso de 1 minuto...")
             for guild in bot.guilds:
                 try:
                     canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
@@ -178,11 +179,12 @@ async def restart_30_dias_task():
                             )
                             embed.set_footer(text="Sistemas de backup em operação")
                             await canal.send(embed=embed)
-                            print(f"✅ [RESTART] Aviso de 1 minuto enviado no servidor {guild.name}")
+                            print(f"✅ [RESTART 30 DIAS] Aviso enviado no servidor {guild.name}")
                 except:
                     pass
             
-            # Aguardar 60 segundos
+            # AGUARDAR 60 SEGUNDOS
+            print(f"⏳ [RESTART 30 DIAS] Aguardando 60 segundos...")
             await asyncio.sleep(60)
             
             # Enviar aviso de reinício em todos os servidores
@@ -3358,48 +3360,8 @@ async def cmd_teste(interaction: discord.Interaction):
         print(f"✅ [TESTE] Total de mensagens SALVAS: {len(todas_mensagens)}")
         print(f"✅ [TESTE] Mensagens de comando deletadas: {total_cmd_msgs}")
         
-        # Enviar aviso de 1 minuto antes nos servidores
-        for guild in bot.guilds:
-            try:
-                canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
-                if canal_id:
-                    canal_id = int(canal_id)
-                    canal = guild.get_channel(canal_id)
-                    if canal:
-                        embed = discord.Embed(
-                            title="⏰ AVISO: Bot Reiniciando em 1 MINUTO",
-                            description="**Tudo voltará ao normal em 1 minuto!**\n\n"
-                                       "✅ Filas serão restauradas\n"
-                                       "✅ Mediadores serão preservados\n"
-                                       "✅ Dados de usuários serão preservados\n\n"
-                                       "Prepare-se! O bot estará de volta em 60 segundos...",
-                            color=0xFF6600
-                        )
-                        embed.set_footer(text="Teste de Restart - Sistemas de backup em operação")
-                        await canal.send(embed=embed)
-            except:
-                pass
-        
-        # Aguardar 60 segundos
-        await asyncio.sleep(60)
-        
-        # Enviar aviso nos servidores
-        for guild in bot.guilds:
-            try:
-                canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
-                if canal_id:
-                    canal_id = int(canal_id)
-                    canal = guild.get_channel(canal_id)
-                    if canal:
-                        embed = discord.Embed(
-                            title="🧪 Bot Reiniciado - Teste de Restart",
-                            description=f"🔄 Atualização concluída!\n\n✅ Filas foram deletadas e restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados\n\n**Próximos passos:**\n1️⃣ Execute `/1x1-mobile` ou o comando de fila desejado\n2️⃣ As filas estarão prontas para uso",
-                            color=0x00FF00
-                        )
-                        embed.set_footer(text="Bot Zeus - Operacional")
-                        await canal.send(embed=embed)
-            except:
-                pass
+        # Teste rápido - sem aviso de 1 minuto
+        # Apenas reinicia normalmente
         
         conn.close()
         
