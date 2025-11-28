@@ -2785,6 +2785,7 @@ async def criar_filas_3x3_mob(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "3x3-mob", 'mob', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_3x3_mob")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2839,6 +2840,7 @@ async def criar_filas_4x4_mob(interaction: discord.Interaction):
 
         view = FilaMobView(valor, "4x4-mob", 'mob', guild_id)
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_4x4_mob")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2893,6 +2895,7 @@ async def criar_filas_misto_2x2(interaction: discord.Interaction):
 
         view = FilaMistoView(valor, "2x2-misto")
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_2x2_misto")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -2949,6 +2952,7 @@ async def criar_filas_misto_3x3(interaction: discord.Interaction):
 
         view = FilaMistoView(valor, "3x3-misto")
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_3x3_misto")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -3005,6 +3009,7 @@ async def criar_filas_misto_4x4(interaction: discord.Interaction):
 
         view = FilaMistoView(valor, "4x4-misto")
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_4x4_misto")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
