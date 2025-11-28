@@ -1,10 +1,9 @@
 services:
-  - type: web
+  - type: background_worker
     name: bot-zeus
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
     startCommand: python main.py
-    plan: free
     envVars:
       - key: DISCORD_TOKEN
         scope: all
