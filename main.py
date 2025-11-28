@@ -5204,6 +5204,27 @@ async def on_message(message):
 
     # ROOM_ID: 5-10 dígitos
     if len(content) >= 5 and len(content) <= 10:
+        # 🔥 Verifica se é o mediador ANTES de aceitar room_id
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            
+            if isinstance(message.channel, discord.Thread):
+                cur.execute("SELECT mediador FROM partidas WHERE guild_id = ? AND thread_id = ?", 
+                           (message.guild.id, message.channel.id))
+            else:
+                cur.execute("SELECT mediador FROM partidas WHERE guild_id = ? AND canal_id = ?", 
+                           (message.guild.id, message.channel.id))
+            
+            row = cur.fetchone()
+            conn.close()
+            
+            # Se não for o mediador, sai silenciosamente
+            if not row or not row[0] or row[0] != message.author.id:
+                return
+        except:
+            return
+        
         ADMIN_ROOM_CREATION_STATES[user_key] = {
             'room_id': content,
             'channel_id': message.channel.id,
