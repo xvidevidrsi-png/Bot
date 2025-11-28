@@ -380,6 +380,41 @@ def db_get_config(k):
     conn.close()
     return row[0] if row else None
 
+def salvar_msg_comando(msg_id, guild_id, canal_id, comando_tipo):
+    """Salva mensagem de comando (exceto !p profile)"""
+    if comando_tipo == "profile":  # Não salva mensagens de profile
+        return
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cur = conn.cursor()
+        cur.execute("""INSERT OR IGNORE INTO comando_mensagens (msg_id, guild_id, canal_id, comando_tipo, criado_em)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (msg_id, guild_id, canal_id, comando_tipo, datetime.datetime.utcnow().isoformat()))
+        conn.commit()
+        conn.close()
+    except:
+        pass
+
+def obter_cmd_mensagens_para_restart(guild_id):
+    """Obtém todas as mensagens de comando para restaurar no restart"""
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT msg_id, canal_id, comando_tipo FROM comando_mensagens WHERE guild_id = ?", (guild_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def limpar_cmd_mensagens_deletadas(msg_ids):
+    """Remove mensagens de comando que foram deletadas"""
+    if not msg_ids:
+        return
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    placeholders = ','.join('?' * len(msg_ids))
+    cur.execute(f"DELETE FROM comando_mensagens WHERE msg_id IN ({placeholders})", msg_ids)
+    conn.commit()
+    conn.close()
+
 def registrar_log_partida(partida_id, guild_id, acao, j1_id, j2_id, mediador_id=None, valor=0.0, tipo_fila="1x1-mob", numero_topico=0):
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
