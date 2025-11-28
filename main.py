@@ -3843,6 +3843,7 @@ async def fila_mediadores_slash(interaction: discord.Interaction):
     view = FilaMediadoresView()
     await interaction.response.send_message(embed=embed, view=view)
     msg = await interaction.original_response()
+    salvar_msg_comando(msg.id, guild_id, interaction.channel.id, "fila_mediadores")
 
     db_set_config(f"fila_mediadores_msg_id_{guild_id}", str(msg.id))
     db_set_config(f"fila_mediadores_canal_id_{guild_id}", str(interaction.channel.id))
