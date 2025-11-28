@@ -139,21 +139,8 @@ async def restart_30_dias_task():
             if cmd_msgs_deletadas:
                 limpar_cmd_mensagens_deletadas(cmd_msgs_deletadas)
             
-            # Se não tiver dados para restaurar, apenas reinicia normalmente
-            if len(todas_mensagens) == 0 and total_cmd_msgs == 0:
-                print(f"✅ [RESTART] Nenhuma mensagem para restaurar. Reiniciando normalmente...")
-                conn.close()
-                print(f"🔄 [RESTART 30 DIAS] Reiniciando bot...")
-                await asyncio.sleep(2)
-                os.execv(sys.executable, ['python3'] + sys.argv)
-            
-            # Salvar dados para reenviar após reinício (só se tiver dados)
-            restart_data = {
-                "mensagens": todas_mensagens
-            }
-            db_set_config("restart_pending", json.dumps(restart_data))
-            
-            print(f"✅ [RESTART 30 DIAS] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
+            # NÃO restaura filas e mensagens - apenas deleta e reinicia
+            print(f"✅ [RESTART 30 DIAS] Mensagens DELETADAS (SEM restauração)")
             print(f"  ├─ Filas: {total_filas}")
             print(f"  ├─ Mensagens de comando: {total_cmd_msgs}")
             print(f"  ├─ Mediadores: PRESERVADOS")
@@ -170,8 +157,8 @@ async def restart_30_dias_task():
                         if canal:
                             embed = discord.Embed(
                                 title="⏰ AVISO: Bot Reiniciando em 1 MINUTO",
-                                description="**Tudo voltará ao normal em 1 minuto!**\n\n"
-                                           "✅ Filas serão restauradas\n"
+                                description="**Filas serão deletadas!**\n\n"
+                                           "❌ Filas serão limpas\n"
                                            "✅ Mediadores serão preservados\n"
                                            "✅ Dados de usuários serão preservados\n\n"
                                            "Prepare-se! O bot estará de volta em 60 segundos...",
@@ -197,7 +184,7 @@ async def restart_30_dias_task():
                         if canal:
                             embed = discord.Embed(
                                 title="🔄 Bot Reiniciado",
-                                description=f"Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n✅ Filas foram deletadas e restauradas ({total_filas})\n✅ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados!",
+                                description=f"Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n❌ Filas foram deletadas ({total_filas})\n❌ Mensagens de comandos foram deletadas ({total_cmd_msgs})\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados!",
                                 color=0x2f3136
                             )
                             embed.set_footer(text="Bot Zeus - Operacional")
