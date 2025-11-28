@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from discord.ui import View, Button, Select, Modal, TextInput
-import qrcode
+# import qrcode  # ⚠️ Desabilitado temporariamente para Render
 from io import BytesIO
 from aiohttp import web
 import gc
