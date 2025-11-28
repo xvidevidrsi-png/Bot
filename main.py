@@ -46,26 +46,24 @@ bot = commands.Bot(
 tree = bot.tree
 
 # ⚡ OTIMIZAÇÃO 2: Watchdog de memória (reinicia se necessário)
-def watchdog_memoria():
+@tasks.loop(seconds=30)
+async def watchdog_memoria_task():
     """Monitora memória e reinicia se exceder limite seguro"""
     try:
         import psutil
         processo = psutil.Process(os.getpid())
-        while True:
-            try:
-                uso_mb = processo.memory_info().rss / (1024 * 1024)
-                if uso_mb > 230:  # limite seguro para Replit
-                    print(f"🚨 [WATCHDOG] Memória alta ({uso_mb:.1f}MB)! Reiniciando...")
-                    limpar_memoria()
-                    if uso_mb > 280:  # se persistir
-                        os.execv(sys.executable, ['python3'] + sys.argv)
-                await asyncio.sleep(30)
-            except:
-                await asyncio.sleep(30)
+        uso_mb = processo.memory_info().rss / (1024 * 1024)
+        if uso_mb > 230:  # limite seguro para Replit
+            print(f"🚨 [WATCHDOG] Memória alta ({uso_mb:.1f}MB)! Limpando...")
+            limpar_memoria()
+            if uso_mb > 280:  # se persistir, reinicia
+                print(f"🔄 [WATCHDOG] Memória crítica! Reiniciando bot...")
+                os.execv(sys.executable, ['python3'] + sys.argv)
     except ImportError:
-        print("⚠️ psutil não disponível - watchdog desativado")
+        pass  # psutil não disponível
+    except Exception as e:
+        pass  # Ignora erros do watchdog
 
-# Inicia watchdog em background (após bot ready)
 watchdog_ativo = False
 
 # Error handler global para comandos slash
@@ -5355,10 +5353,12 @@ async def on_ready():
     auto_role_task.start()
     atualizar_fila_mediadores_task.start()
     discord_reconnect_task.start()
+    watchdog_memoria_task.start()  # ⚡ Watchdog de memória
 
     print(f"✅ BOT ZEUS - MODO SEGURO ATIVADO!")
     print(f"  🌟 PING OTIMIZADO: 60 segundos (sem flood)")
     print(f"  📡 5000+ ENDPOINTS DE PING PRONTOS")
+    print(f"  🚨 WATCHDOG DE MEMÓRIA: Ativo (reinicia se >280MB)")
 
     # await enviar_mensagens_iniciais_logs()  # DESATIVADO PARA OTIMIZAR STARTUP
 
