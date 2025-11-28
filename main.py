@@ -348,6 +348,14 @@ def init_db():
         data_definicao TEXT
     )""")
     
+    cur.execute("""CREATE TABLE IF NOT EXISTS comando_mensagens (
+        msg_id INTEGER PRIMARY KEY,
+        guild_id INTEGER,
+        canal_id INTEGER,
+        comando_tipo TEXT,
+        criado_em TEXT
+    )""")
+    
     # Additions for thread handling and topic number
     try:
         cur.execute("""ALTER TABLE partidas ADD COLUMN numero_topico INTEGER DEFAULT 0""")
