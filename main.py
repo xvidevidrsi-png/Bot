@@ -2887,7 +2887,21 @@ async def on_guild_join(guild):
     nome_dono="Nome do dono do servidor"
 )
 async def separador_servidor(interaction: discord.Interaction, id_servidor: str, nome_dono: str):
-    """Registra servidor manualmente - sem restrição de owner"""
+    """Registra servidor manualmente - apenas para owner do servidor"""
+    if not interaction.guild:
+        await interaction.response.send_message(
+            "❌ Este comando só pode ser usado em servidores!",
+            ephemeral=True
+        )
+        return
+    
+    if interaction.guild.owner_id != interaction.user.id:
+        await interaction.response.send_message(
+            "❌ Apenas o **dono do servidor** pode usar este comando!",
+            ephemeral=True
+        )
+        return
+    
     try:
         guild_id_int = int(id_servidor)
     except ValueError:
