@@ -37,6 +37,7 @@ TAXA_POR_JOGADOR = 0.10
 COIN_POR_VITORIA = 1
 BOT_OWNER_USERNAME = "emanoel7269"
 BOT_OWNER_ID = None
+BOT_START_TIME = datetime.datetime.utcnow()
 
 bot = commands.Bot(
     command_prefix=BOT_PREFIX, 
@@ -66,6 +67,20 @@ async def watchdog_memoria_task():
         pass  # Ignora erros do watchdog
 
 watchdog_ativo = False
+
+# ⚡ OTIMIZAÇÃO: Restart automático a cada 30 dias
+@tasks.loop(hours=1)
+async def restart_30_dias_task():
+    """Reinicia o bot automaticamente a cada 30 dias"""
+    try:
+        tempo_decorrido = (datetime.datetime.utcnow() - BOT_START_TIME).total_seconds()
+        dias_decorridos = tempo_decorrido / 86400
+        
+        if dias_decorridos >= 30:
+            print(f"🔄 [RESTART 30 DIAS] Bot rodando há {dias_decorridos:.1f} dias! Reiniciando...")
+            os.execv(sys.executable, ['python3'] + sys.argv)
+    except Exception as e:
+        pass
 
 # Error handler global para comandos slash
 @tree.error
