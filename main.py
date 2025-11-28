@@ -3045,7 +3045,16 @@ async def dono_comando_slash(interaction: discord.Interaction, cargo: discord.Ro
 
 @tree.command(name="servidores_registrados", description="📋 Mostra todos os servidores que o bot está conectado")
 async def servidores_registrados(interaction: discord.Interaction):
-    """Lista todos os servidores registrados no Bot Zeus"""
+    """Lista todos os servidores registrados no Bot Zeus - Apenas para o Owner"""
+    
+    if interaction.user.name != BOT_OWNER_USERNAME and interaction.user.id != BOT_OWNER_ID:
+        await interaction.response.send_message(
+            f"⛔ **ACESSO NEGADO!**\n\n"
+            f"❌ Apenas **{BOT_OWNER_USERNAME}** (Owner do Bot Zeus) pode usar este comando.\n\n"
+            f"Este comando é exclusivo para gerenciamento global do bot.",
+            ephemeral=True
+        )
+        return
     
     if not bot.guilds:
         await interaction.response.send_message(
