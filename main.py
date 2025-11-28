@@ -2418,6 +2418,7 @@ async def criar_filas_1v1(interaction: discord.Interaction):
 
         view = FilaView(valor, guild_id, 'mob')
         msg = await canal.send(embed=embed, view=view)
+        salvar_msg_comando(msg.id, guild_id, canal.id, "fila_1x1_mob")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
