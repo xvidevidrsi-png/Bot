@@ -8,7 +8,6 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from discord.ui import View, Button, Select, Modal, TextInput
-# import qrcode  # ⚠️ Desabilitado temporariamente para Render
 from io import BytesIO
 from aiohttp import web
 import gc
@@ -661,25 +660,6 @@ def gerar_payload_pix_emv(chave_pix, nome_beneficiario, valor=None, cidade="SAO 
 
     return payload
 
-def gerar_qr_code_pix(chave_pix, nome_beneficiario, valor=None, cidade="SAO PAULO", txid=None):
-    pix_payload = gerar_payload_pix_emv(chave_pix, nome_beneficiario, valor, cidade, txid)
-
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(pix_payload)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill_color="black", back_color="white")
-
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-
-    return buffer, pix_payload
 
 def usuario_ensure(guild_id, user_id):
     conn = sqlite3.connect(DB_FILE)
@@ -1598,12 +1578,8 @@ class ConfirmarPartidaView(View):
                             pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
                             pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
 
-                            qr_buffer, codigo_pix = gerar_qr_code_pix(pix_row[1], pix_row[0], valor_com_taxa)
-                            qr_file = discord.File(qr_buffer, filename="qrcode_pix.png")
-                            pix_embed.set_image(url="attachment://qrcode_pix.png")
-
-                            view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
-                            await interaction.channel.send(embed=pix_embed, file=qr_file, view=view_pix)
+                            view_pix = CopiarCodigoPIXView(gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa), pix_row[1])
+                            await interaction.channel.send(embed=pix_embed, view=view_pix)
                             print(f"✅ PIX enviado!")
                     except Exception as e:
                         print(f"❌ Erro ao enviar PIX: {e}")
