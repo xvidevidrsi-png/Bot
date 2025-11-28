@@ -3366,36 +3366,34 @@ async def cmd_teste(interaction: discord.Interaction):
         
         await interaction.followup.send(embed=embed, ephemeral=True)
         
-        # Enviar DM para o dono do bot
+        # Enviar DM para os donos de cada servidor
+        guilds_enviadas = 0
         try:
-            bot_owner = None
-            # Tentar buscar por username
-            for user in bot.users:
-                if user.name == BOT_OWNER_USERNAME:
-                    bot_owner = user
-                    break
-            
-            # Se não encontrou, tentar por ID
-            if not bot_owner and BOT_OWNER_ID:
-                bot_owner = await bot.fetch_user(BOT_OWNER_ID)
-            
-            if bot_owner:
-                dm_embed = discord.Embed(
-                    title="🧪 Teste de Restart Executado",
-                    description=f"O teste de restart foi executado com sucesso!\n\n"
-                                f"**Estatísticas:**\n"
-                                f"• Filas deletadas: {total_filas}\n"
-                                f"• Mensagens de comando deletadas: {total_cmd_msgs}\n"
-                                f"• Mediadores: PRESERVADOS\n"
-                                f"• Dados de usuários: PRESERVADOS\n\n"
-                                f"Bot será reiniciado em 2 segundos...",
-                    color=0x00FF00
-                )
-                dm_embed.set_footer(text="Bot Zeus - Sistema Automático")
-                await bot_owner.send(embed=dm_embed)
-                print(f"✅ [TESTE] DM enviada para {bot_owner.name}")
+            for guild in bot.guilds:
+                try:
+                    if guild.owner:
+                        dm_embed = discord.Embed(
+                            title="🧪 Teste de Restart Executado",
+                            description=f"O teste de restart foi executado com sucesso no seu servidor!\n\n"
+                                        f"**Servidor:** {guild.name}\n"
+                                        f"**Estatísticas:**\n"
+                                        f"• Filas deletadas: {total_filas}\n"
+                                        f"• Mensagens de comando deletadas: {total_cmd_msgs}\n"
+                                        f"• Mediadores: PRESERVADOS\n"
+                                        f"• Dados de usuários: PRESERVADOS\n\n"
+                                        f"Bot será reiniciado em 2 segundos...",
+                            color=0x00FF00
+                        )
+                        dm_embed.set_footer(text="Bot Zeus - Sistema Automático")
+                        await guild.owner.send(embed=dm_embed)
+                        guilds_enviadas += 1
+                        print(f"✅ [TESTE] DM enviada para {guild.owner.name} (Servidor: {guild.name})")
+                except Exception as e:
+                    print(f"⚠️ [TESTE] Não foi possível enviar DM para o dono de {guild.name}: {e}")
         except Exception as e:
-            print(f"⚠️ [TESTE] Não foi possível enviar DM para o dono: {e}")
+            print(f"⚠️ [TESTE] Erro ao enviar DMs: {e}")
+        
+        print(f"✅ [TESTE] {guilds_enviadas} DM(s) enviada(s) para donos de servidores")
         
         print(f"🧪 [TESTE] Reiniciando bot...")
         await asyncio.sleep(2)
