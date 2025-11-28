@@ -1723,7 +1723,8 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
     )
 
     view = ConfirmarPartidaView(partida_id, j1_id, j2_id)
-    await canal_partida.send(mencoes, embed=embed, view=view)
+    msg = await canal_partida.send(mencoes, embed=embed, view=view)
+    salvar_msg_comando(msg.id, guild.id, canal_partida.id, "criar_partida")
 
     registrar_log_partida(partida_id, guild.id, "partida_criada", j1_id, j2_id, mediador_id, valor, f"1x1-{modo}")
     await enviar_log_para_canal(guild, "partida_criada", partida_id, j1_id, j2_id, mediador_id, valor, modo)
@@ -1949,7 +1950,8 @@ class ConfirmarVencedorView(View):
             view=None
         )
 
-        await interaction.channel.send(f"🏆 1 vitória(s) e {COIN_POR_VITORIA} coin(s) adicionados para <@{self.vencedor_id}>!")
+        msg = await interaction.channel.send(f"🏆 1 vitória(s) e {COIN_POR_VITORIA} coin(s) adicionados para <@{self.vencedor_id}>!")
+        salvar_msg_comando(msg.id, guild_id, interaction.channel.id, "confirmar_vitoria")
 
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
@@ -1965,7 +1967,8 @@ class ConfirmarVencedorView(View):
                 color=0x2f3136
             )
             view = MenuMediadorView(partida_id)
-            await interaction.channel.send(embed=embed, view=view)
+            msg = await interaction.channel.send(embed=embed, view=view)
+            salvar_msg_comando(msg.id, guild_id, interaction.channel.id, "menu_mediador")
 
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.danger, emoji="❌")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2144,6 +2147,7 @@ class TrocarValorModal(Modal):
 
             view = CopiarIDView(novo_sala_id)
             msg_enviada = await interaction.channel.send(embed=embed, view=view)
+            salvar_msg_comando(msg_enviada.id, guild_id, interaction.channel.id, "revanche")
             print(f"✅ Embed de revanche enviada! Message ID: {msg_enviada.id}")
             
             if not interaction.response.is_done():
@@ -5288,7 +5292,8 @@ async def enviar_mensagens_iniciais_logs():
                                 color=info["cor"]
                             )
                             embed.set_footer(text="Bot Zeus - Sistema de Logs Automáticos")
-                            await canal.send(embed=embed)
+                            msg = await canal.send(embed=embed)
+                            salvar_msg_comando(msg.id, guild_id, canal.id, "logs_inicial")
                             print(f"📝 Mensagem inicial enviada em {nome_canal} - {guild.name}")
                     except Exception as e:
                         print(f"❌ Erro ao enviar mensagem inicial em {nome_canal} - {guild.name}: {e}")
@@ -5618,7 +5623,8 @@ async def cmd_pixmed(ctx):
     )
 
     view = ConfigurarPIXView()
-    await ctx.send(embed=embed, view=view)
+    msg = await ctx.send(embed=embed, view=view)
+    salvar_msg_comando(msg.id, ctx.guild.id, ctx.channel.id, "pixmed")
 
 @bot.command(name="p")
 async def cmd_perfil(ctx, *, membro: str = None):
