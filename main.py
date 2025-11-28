@@ -11,10 +11,23 @@ from discord.ui import View, Button, Select, Modal, TextInput
 import qrcode
 from io import BytesIO
 from aiohttp import web
+import gc
+import logging
+import threading
+import sys
+
+# ⚡ OTIMIZAÇÃO 1: Desabilitar logs excessivos (reduz CPU/memória)
+logging.getLogger('discord').setLevel(logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
+
+# ⚡ OTIMIZAÇÃO 4: Garbage collection manual
+def limpar_memoria():
+    """Force garbage collection"""
+    gc.collect()
 
 INTENTS = discord.Intents.default()
-INTENTS.members = True
-INTENTS.message_content = True
+INTENTS.members = False  # ⚡ OTIMIZAÇÃO 3: Desabilitar para reduzir cache
+INTENTS.presences = False  # ⚡ OTIMIZAÇÃO 3: Desabilitar para reduzir cache
 INTENTS.message_content = True
 BOT_PREFIX = "!"
 DB_FILE = "bot/bot_zeus.db"
@@ -25,8 +38,35 @@ COIN_POR_VITORIA = 1
 BOT_OWNER_USERNAME = "emanoel7269"
 BOT_OWNER_ID = None
 
-bot = commands.Bot(command_prefix=BOT_PREFIX, intents=INTENTS)
+bot = commands.Bot(
+    command_prefix=BOT_PREFIX, 
+    intents=INTENTS,
+    max_messages=100  # ⚡ OTIMIZAÇÃO 3: Limitar cache (padrão é 1000)
+)
 tree = bot.tree
+
+# ⚡ OTIMIZAÇÃO 2: Watchdog de memória (reinicia se necessário)
+def watchdog_memoria():
+    """Monitora memória e reinicia se exceder limite seguro"""
+    try:
+        import psutil
+        processo = psutil.Process(os.getpid())
+        while True:
+            try:
+                uso_mb = processo.memory_info().rss / (1024 * 1024)
+                if uso_mb > 230:  # limite seguro para Replit
+                    print(f"🚨 [WATCHDOG] Memória alta ({uso_mb:.1f}MB)! Reiniciando...")
+                    limpar_memoria()
+                    if uso_mb > 280:  # se persistir
+                        os.execv(sys.executable, ['python3'] + sys.argv)
+                await asyncio.sleep(30)
+            except:
+                await asyncio.sleep(30)
+    except ImportError:
+        print("⚠️ psutil não disponível - watchdog desativado")
+
+# Inicia watchdog em background (após bot ready)
+watchdog_ativo = False
 
 # Error handler global para comandos slash
 @tree.error
