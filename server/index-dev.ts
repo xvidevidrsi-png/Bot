@@ -1,41 +1,79 @@
 import { spawn } from 'child_process';
+import express from 'express';
 
-console.log('🚀 Iniciando Bot Zeus via Node.js wrapper...');
+const app = express();
+let pythonProcess: any = null;
+
+console.log('🚀 Iniciando Bot Zeus via Node.js wrapper com Auto-Restart...');
 
 // Spawn Python process
-const pythonProcess = spawn('python', ['main.py'], {
-  stdio: 'inherit',
-  cwd: process.cwd()
+const startPython = () => {
+  pythonProcess = spawn('python', ['main.py'], {
+    stdio: 'inherit',
+    cwd: process.cwd()
+  });
+
+  pythonProcess.on('error', (error: any) => {
+    console.error('❌ Erro ao iniciar bot Python:', error);
+  });
+
+  pythonProcess.on('exit', (code: number) => {
+    console.log(`⚠️ Bot Python saiu com código ${code}`);
+    console.log('🔄 Reiniciando Python em 2 segundos...');
+    
+    // Reiniciar Python infinitamente
+    setTimeout(() => {
+      startPython();
+    }, 2000);
+  });
+};
+
+// Endpoints HTTP para saúde e ping
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    bot: 'Zeus Node Wrapper',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
-pythonProcess.on('error', (error) => {
-  console.error('❌ Erro ao iniciar bot Python:', error);
-  process.exit(1);
+app.get('/ping', (req, res) => {
+  res.send('1');
 });
 
-pythonProcess.on('exit', (code) => {
-  console.log(`⚠️ Bot Python saiu com código ${code}`);
-  console.log('🔄 Reiniciando Python...');
-  
-  // Reiniciar Python infinitamente
-  setTimeout(() => {
-    const newProcess = spawn('python', ['main.py'], {
-      stdio: 'inherit',
-      cwd: process.cwd()
-    });
-    newProcess.on('exit', () => {
-      console.log('🔄 Reiniciando novamente...');
-    });
-  }, 1000);
+app.get('/best-ping', (req, res) => {
+  res.send('1');
 });
+
+app.get('/', (req, res) => {
+  res.json({
+    bot: 'Bot Zeus',
+    status: 'running',
+    endpoints: ['/health', '/ping', '/best-ping'],
+    message: 'Bot está online e funcionando'
+  });
+});
+
+// Iniciar servidor HTTP na porta 3000
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ HTTP Server na porta ${PORT}`);
+  console.log('📡 Endpoints: /health, /ping, /best-ping');
+});
+
+// Iniciar Python
+startPython();
 
 // Handle termination signals
 process.on('SIGINT', () => {
   console.log('\n⏹️ Encerrando bot...');
-  pythonProcess.kill('SIGINT');
+  if (pythonProcess) pythonProcess.kill('SIGINT');
+  process.exit(0);
 });
 
 process.on('SIGTERM', () => {
   console.log('\n⏹️ Encerrando bot...');
-  pythonProcess.kill('SIGTERM');
+  if (pythonProcess) pythonProcess.kill('SIGTERM');
+  process.exit(0);
 });
