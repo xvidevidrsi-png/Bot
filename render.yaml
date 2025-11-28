@@ -1,10 +1,10 @@
 services:
-  - type: worker
+  - type: web
     name: bot-zeus
     env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render.txt
     startCommand: python main.py
+    plan: free
     envVars:
-      - key: DISCORD_BOT_TOKEN
+      - key: DISCORD_TOKEN
         scope: all
