@@ -113,30 +113,6 @@ async def restart_30_dias_task():
                 except:
                     pass
             
-            # Buscar mediadores
-            cur.execute("SELECT COUNT(*) FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
-            total_mediadores = cur.fetchone()[0]
-            print(f"📊 [RESTART] Mediadores encontrados: {total_mediadores}")
-            
-            cur.execute("SELECT 'mediador', guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
-            for row in cur.fetchall():
-                tipo, guild_id, canal_id, msg_id = row
-                try:
-                    guild = bot.get_guild(guild_id)
-                    if guild:
-                        canal = guild.get_channel(canal_id)
-                        if canal:
-                            msg = await canal.fetch_message(msg_id)
-                            await msg.delete()
-                            todas_mensagens.append({
-                                "tipo": tipo,
-                                "guild_id": guild_id,
-                                "canal_id": canal_id
-                            })
-                            print(f"🗑️ [RESTART] Deletada mensagem de mediador {msg_id}")
-                except:
-                    pass
-            
             # Salvar TODOS os dados para reenviar após reinício
             restart_data = {
                 "mensagens": todas_mensagens
@@ -145,7 +121,7 @@ async def restart_30_dias_task():
             
             print(f"✅ [RESTART] Total de mensagens SALVAS para restaurar: {len(todas_mensagens)}")
             print(f"  ├─ Filas: {total_filas}")
-            print(f"  ├─ Mediadores: {total_mediadores}")
+            print(f"  ├─ Mediadores: PRESERVADOS")
             print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
             # Enviar aviso de reinício em todos os servidores
@@ -160,7 +136,7 @@ async def restart_30_dias_task():
                         if canal:
                             embed = discord.Embed(
                                 title="🔄 Bot Reiniciado",
-                                description="Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\nAs filas e mediadores estão sendo restaurados automaticamente...\n\n📊 Dados de usuários (vitórias, derrotas, coins) foram preservados!",
+                                description="Bot Zeus foi reiniciado automaticamente após 30 dias de atividade contínua.\n\n✅ Filas foram deletadas e restauradas\n✅ Mediadores foram preservados\n✅ Dados de usuários foram preservados!",
                                 color=0x2f3136
                             )
                             embed.set_footer(text="Bot Zeus - Operacional")
@@ -3210,25 +3186,6 @@ async def cmd_teste(interaction: discord.Interaction):
         total_mediadores = cur.fetchone()[0]
         print(f"📊 [TESTE] Mediadores encontrados: {total_mediadores}")
         
-        cur.execute("SELECT 'mediador', guild_id, canal_id, msg_id FROM fila_mediadores WHERE msg_id IS NOT NULL AND msg_id > 0")
-        for row in cur.fetchall():
-            tipo, guild_id, canal_id, msg_id = row
-            try:
-                guild = bot.get_guild(guild_id)
-                if guild:
-                    canal = guild.get_channel(canal_id)
-                    if canal:
-                        msg = await canal.fetch_message(msg_id)
-                        await msg.delete()
-                        todas_mensagens.append({
-                            "tipo": tipo,
-                            "guild_id": guild_id,
-                            "canal_id": canal_id
-                        })
-                        print(f"🗑️ [TESTE] Deletado mediador {msg_id}")
-            except:
-                pass
-        
         restart_data = {"mensagens": todas_mensagens}
         db_set_config("restart_pending", json.dumps(restart_data))
         
@@ -3246,7 +3203,7 @@ async def cmd_teste(interaction: discord.Interaction):
                     if canal:
                         embed = discord.Embed(
                             title="🧪 Bot em Teste de Restart",
-                            description="Bot Zeus está sendo testado. As filas e mediadores estão sendo restaurados...",
+                            description="Bot Zeus está sendo testado.\n✅ Filas foram deletadas e serão restauradas\n✅ Mediadores foram preservados",
                             color=0xFFD700
                         )
                         embed.set_footer(text="Teste de Restart")
@@ -3261,8 +3218,8 @@ async def cmd_teste(interaction: discord.Interaction):
             title="✅ Teste Completo!",
             description=f"**Mensagens deletadas e salvas para restaurar:**\n"
                         f"• Filas: {total_filas}\n"
-                        f"• Mediadores: {total_mediadores}\n"
-                        f"• Total: {len(todas_mensagens)}",
+                        f"• Mediadores: PRESERVADOS\n"
+                        f"• Total para restaurar: {len(todas_mensagens)}",
             color=0x00FF00
         )
         embed.set_footer(text="Reiniciando em 2 segundos...")
