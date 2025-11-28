@@ -68,17 +68,17 @@ async def watchdog_memoria_task():
 
 watchdog_ativo = False
 
-# ⚡ OTIMIZAÇÃO: Restart automático a cada 30 dias
+# ⚡ OTIMIZAÇÃO: Restart automático a cada 60 dias
 @tasks.loop(hours=1)
-async def restart_30_dias_task():
-    """Reinicia o bot automaticamente a cada 30 dias com limpeza de mensagens"""
+async def restart_60_dias_task():
+    """Reinicia o bot automaticamente a cada 60 dias com limpeza de mensagens"""
     try:
         import json
         tempo_decorrido = (datetime.datetime.utcnow() - BOT_START_TIME).total_seconds()
         dias_decorridos = tempo_decorrido / 86400
         
-        if dias_decorridos >= 30:
-            print(f"🔄 [RESTART 30 DIAS] Bot rodando há {dias_decorridos:.1f} dias! Preparando reinício...")
+        if dias_decorridos >= 60:
+            print(f"🔄 [RESTART 60 DIAS] Bot rodando há {dias_decorridos:.1f} dias! Preparando reinício...")
             
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
@@ -140,14 +140,14 @@ async def restart_30_dias_task():
                 limpar_cmd_mensagens_deletadas(cmd_msgs_deletadas)
             
             # NÃO restaura filas e mensagens - apenas deleta e reinicia
-            print(f"✅ [RESTART 30 DIAS] Mensagens DELETADAS (SEM restauração)")
+            print(f"✅ [RESTART 60 DIAS] Mensagens DELETADAS (SEM restauração)")
             print(f"  ├─ Filas: {total_filas}")
             print(f"  ├─ Mensagens de comando: {total_cmd_msgs}")
             print(f"  ├─ Mediadores: PRESERVADOS")
             print(f"  └─ Dados de usuários: PRESERVADOS (vitórias, derrotas, coins salvos)")
             
             # AVISO DE 1 MINUTO (apenas no restart automático, não no /teste)
-            print(f"⏰ [RESTART 30 DIAS] Enviando aviso de 1 minuto...")
+            print(f"⏰ [RESTART 60 DIAS] Enviando aviso de 1 minuto...")
             for guild in bot.guilds:
                 try:
                     canal_id = db_get_config(f"fila_mediadores_canal_id_{guild.id}")
@@ -166,12 +166,12 @@ async def restart_30_dias_task():
                             )
                             embed.set_footer(text="Sistemas de backup em operação")
                             await canal.send(embed=embed)
-                            print(f"✅ [RESTART 30 DIAS] Aviso enviado no servidor {guild.name}")
+                            print(f"✅ [RESTART 60 DIAS] Aviso enviado no servidor {guild.name}")
                 except:
                     pass
             
             # AGUARDAR 60 SEGUNDOS
-            print(f"⏳ [RESTART 30 DIAS] Aguardando 60 segundos...")
+            print(f"⏳ [RESTART 60 DIAS] Aguardando 60 segundos...")
             await asyncio.sleep(60)
             
             # Enviar aviso de reinício em todos os servidores
@@ -194,11 +194,11 @@ async def restart_30_dias_task():
                     pass
             
             conn.close()
-            print(f"🔄 [RESTART 30 DIAS] Reiniciando bot...")
+            print(f"🔄 [RESTART 60 DIAS] Reiniciando bot...")
             await asyncio.sleep(2)
             os.execv(sys.executable, ['python3'] + sys.argv)
     except Exception as e:
-        print(f"❌ [RESTART 30 DIAS] Erro: {e}")
+        print(f"❌ [RESTART 60 DIAS] Erro: {e}")
 
 # Error handler global para comandos slash
 @tree.error
