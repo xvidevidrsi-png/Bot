@@ -55,11 +55,19 @@ app.get('/', (req, res) => {
   });
 });
 
-// Iniciar servidor HTTP na porta 3000
+// Iniciar servidor HTTP na porta 3000 (Python usa 5000)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ HTTP Server na porta ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ HTTP Server Node.js na porta ${PORT}`);
   console.log('📡 Endpoints: /health, /ping, /best-ping');
+  console.log(`🐍 Python rodará na porta 5000`);
+}).on('error', (err: any) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Porta ${PORT} em uso! Aguardando 3s...`);
+    setTimeout(() => {
+      process.exit(1);
+    }, 3000);
+  }
 });
 
 // Iniciar Python
