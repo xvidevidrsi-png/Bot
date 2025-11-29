@@ -1213,7 +1213,6 @@ class FilaMobView(View):
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
 
         await interaction.response.defer()
-        await asyncio.sleep(3)
 
         if len(jogadores) >= 2:
             await interaction.channel.send(f"⚠️ Match! <@{jogadores[0]}> vs <@{jogadores[1]}>!")
