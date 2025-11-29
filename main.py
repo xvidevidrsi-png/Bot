@@ -1046,11 +1046,13 @@ class FilaView(View):
         await interaction.response.defer()
 
         if len(jogadores) >= 2:
-            print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores[:2]}")
-            fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
-            fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
-            print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
-            await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "normal")
+            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "normal", self.tipo_jogo)
+            if len(jogadores_atualizados) >= 2:
+                print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
+                fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
+                fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
+                print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
+                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "normal")
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def gel_infinito(self, interaction: discord.Interaction):
@@ -1077,11 +1079,13 @@ class FilaView(View):
         await interaction.response.defer()
 
         if len(jogadores) >= 2:
-            print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores[:2]}")
-            fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
-            fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
-            print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
-            await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
+            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "infinito", self.tipo_jogo)
+            if len(jogadores_atualizados) >= 2:
+                print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
+                fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
+                fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
+                print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
+                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "infinito")
             await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
 
     async def sair_fila(self, interaction: discord.Interaction):
@@ -1213,8 +1217,11 @@ class FilaMobView(View):
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
 
         if len(jogadores) >= 2:
-            fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
-            await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
+            # Verifica novamente para evitar race condition
+            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, self.tipo_fila, self.tipo_jogo)
+            if len(jogadores_atualizados) >= 2:
+                fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
+                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, self.tipo_fila)
             await interaction.response.defer()
         else:
             await interaction.response.defer()
@@ -1367,9 +1374,11 @@ class FilaMistoView(View):
         await atualizar_msg_fila_misto(interaction.channel, self.valor, self.tipo_fila)
 
         if len(jogadores) >= 2:
-            fila_remove_primeiros(guild_id, self.valor, modo_fila, 2, 'misto')
-            await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
-            registrar_historico_fila(guild_id, self.valor, modo_fila, "misto", "finalizada")
+            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, modo_fila, 'misto')
+            if len(jogadores_atualizados) >= 2:
+                fila_remove_primeiros(guild_id, self.valor, modo_fila, 2, 'misto')
+                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, self.tipo_fila)
+                registrar_historico_fila(guild_id, self.valor, modo_fila, "misto", "finalizada")
             await atualizar_msg_fila_misto(interaction.channel, self.valor, self.tipo_fila)
 
     async def sair_fila_misto(self, interaction: discord.Interaction):
