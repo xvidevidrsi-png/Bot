@@ -1353,40 +1353,40 @@ class ConfirmarPartidaView(View):
                     import traceback
                     traceback.print_exc()
 
-            # 💰 PIX DESABILITADO POR ENQUANTO
-            # print(f"Verificando PIX... mediador_id={mediador_id}, pix_row={pix_row}")
-            # if mediador_id and pix_row:
-            #     try:
-            #         print(f"Enviando PIX...")
-            #         taxa = get_taxa()
-            #         valor_com_taxa = valor + taxa
-            #         pix_embed = discord.Embed(
-            #             title="💰 Informações de Pagamento",
-            #             description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
-            #             color=0x00ff00
-            #         )
-            #         pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
-            #         pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
-            #         
-            #         _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
-            #         pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
-            #         
-            #         view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
-            #         await interaction.channel.send(embed=pix_embed, view=view_pix)
-            #         print(f"✅ PIX enviado!")
-            #     except Exception as e:
-            #         print(f"❌ Erro ao enviar PIX: {e}")
-            #         import traceback
-            #         traceback.print_exc()
-            # elif mediador_id and not pix_row:
-            #     # Mediador não configurou PIX ainda
-            #     print(f"⚠️ Mediador não configurou PIX: mediador_id={mediador_id}")
-            #     await interaction.channel.send(
-            #         f"⚠️ <@{mediador_id}> - **Você ainda não configurou seu PIX!**\n\n"
-            #         f"Use o comando `/pixmed` para configurar sua chave PIX e habilitar pagamentos automáticos."
-            #     )
-            # else:
-            #     print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
+            # 💰 ENVIA PIX (se mediador tiver dados)
+            print(f"Verificando PIX... mediador_id={mediador_id}, pix_row={pix_row}")
+            if mediador_id and pix_row:
+                try:
+                    print(f"Enviando PIX...")
+                    taxa = get_taxa()
+                    valor_com_taxa = valor + taxa
+                    pix_embed = discord.Embed(
+                        title="💰 Informações de Pagamento",
+                        description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
+                        color=0x00ff00
+                    )
+                    pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
+                    pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
+                    
+                    _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
+                    pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
+                    
+                    view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
+                    await interaction.channel.send(embed=pix_embed, view=view_pix)
+                    print(f"✅ PIX enviado!")
+                except Exception as e:
+                    print(f"❌ Erro ao enviar PIX: {e}")
+                    import traceback
+                    traceback.print_exc()
+            elif mediador_id and not pix_row:
+                # Mediador não configurou PIX ainda
+                print(f"⚠️ Mediador não configurou PIX: mediador_id={mediador_id}")
+                await interaction.channel.send(
+                    f"⚠️ <@{mediador_id}> - **Você ainda não configurou seu PIX!**\n\n"
+                    f"Use o comando `/pixmed` para configurar sua chave PIX e habilitar pagamentos automáticos."
+                )
+            else:
+                print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
 
             # 📋 MENU DO MEDIADOR - SEMPRE ENVIADO
             print(f"Enviando Menu Mediador... mediador_id={mediador_id}")
