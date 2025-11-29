@@ -1263,14 +1263,6 @@ class ConfirmarPartidaView(View):
 
     @discord.ui.button(label="Confirmar", style=discord.ButtonStyle.success, emoji="✅")
     async def confirmar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not verificar_separador_servidor(interaction.guild.id):
-            await interaction.response.send_message(
-                "⛔ **Servidor não registrado!**\n\n"
-                "Este servidor precisa estar registrado para usar o Bot Zeus.",
-                ephemeral=True
-            )
-            return
-
         user_id = interaction.user.id
 
         if user_id not in [self.jogador1_id, self.jogador2_id]:
