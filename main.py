@@ -2070,20 +2070,8 @@ class ConfigurarPIXView(View):
 
     @discord.ui.button(label="Configurar PIX", style=discord.ButtonStyle.primary, emoji="💰")
     async def configurar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # ✅ Verificar se é mediador na fila
-        guild_id = interaction.guild.id
-        mediadores = mediador_get_all(guild_id)
-        
-        if interaction.user.id not in mediadores:
-            await interaction.response.send_message(
-                "❌ **Você não é um mediador autorizado!**\n\n"
-                "Apenas mediadores na fila podem configurar PIX.\n"
-                "Entre na fila de mediadores primeiro usando o botão 'Entrar em serviço'.",
-                ephemeral=True
-            )
-            return
-        
-        print(f"✅ {interaction.user.display_name} é mediador, permitindo configuração de PIX")
+        # Disponível para TODOS os mediadores
+        print(f"✅ {interaction.user.display_name} está configurando PIX")
         modal = ConfigurarPIXModal()
         await interaction.response.send_modal(modal)
 
