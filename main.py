@@ -1284,7 +1284,7 @@ class ConfirmarPartidaView(View):
 
         conn.commit()
 
-        cur.execute("SELECT confirmacao_j1, confirmacao_j2, mediador, valor FROM partidas WHERE id = ?", (self.partida_id,))
+        cur.execute("SELECT confirmacao_j1, confirmacao_j2, mediador, valor, guild_id FROM partidas WHERE id = ?", (self.partida_id,))
         row = cur.fetchone()
         conn.close()
 
@@ -1292,7 +1292,7 @@ class ConfirmarPartidaView(View):
             await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
             return
 
-        conf_j1, conf_j2, mediador_id, valor = row
+        conf_j1, conf_j2, mediador_id, valor, guild_id_partida = row
 
         await interaction.response.send_message("✅ Confirmação registrada!", ephemeral=True)
 
@@ -1324,14 +1324,13 @@ class ConfirmarPartidaView(View):
             
             # Buscar PIX do mediador
             if mediador_id and mediador_id > 0:
-                guild_id = interaction.guild.id
-                print(f"4️⃣ Buscando PIX: guild_id={guild_id}, user_id={mediador_id}")
+                print(f"4️⃣ Buscando PIX: guild_id={guild_id_partida}, user_id={mediador_id}")
                 
                 cur.execute("""
                     SELECT nome_completo, chave_pix 
                     FROM mediador_pix 
                     WHERE guild_id = ? AND user_id = ?
-                """, (guild_id, mediador_id))
+                """, (guild_id_partida, mediador_id))
                 pix_row = cur.fetchone()
                 print(f"5️⃣ PIX result: {pix_row}")
                 if pix_row:
