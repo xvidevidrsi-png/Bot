@@ -1341,24 +1341,6 @@ class ConfirmarPartidaView(View):
                 except Exception as e:
                     print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-            # ✅ Busca e mostra ID e Senha da Sala
-            conn = sqlite3.connect(DB_FILE)
-            cur = conn.cursor()
-            cur.execute("SELECT sala_id, sala_senha FROM partidas WHERE id = ?", (self.partida_id,))
-            sala_row = cur.fetchone()
-            conn.close()
-
-            if sala_row:
-                sala_id, sala_senha = sala_row
-                embed_sala = discord.Embed(
-                    title="🎮 Informações da Sala",
-                    description="Dados para entrar na sala de Free Fire",
-                    color=0x00ff00
-                )
-                embed_sala.add_field(name="🆔 ID da Sala", value=f"```\n{sala_id}\n```", inline=False)
-                embed_sala.add_field(name="🔐 Senha da Sala", value=f"```\n{sala_senha}\n```", inline=False)
-                view_sala = CopiarIDView(sala_id)
-                await interaction.channel.send(embed=embed_sala, view=view_sala)
 
             if mediador_id:
                 guild_id = interaction.guild.id
@@ -1431,12 +1413,6 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
         return
 
     partida_id = str(random.randint(100000, 9999999))
-    
-    # Gera ID e Senha da Sala automaticamente
-    # ID: entre 5 e 11 dígitos
-    tamanho_id = random.randint(5, 11)
-    sala_id = str(random.randint(10**4, 10**(tamanho_id) - 1))
-    sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
 
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -1453,9 +1429,9 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
 
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    cur.execute("""INSERT INTO partidas (id, guild_id, topico_id, thread_id, valor, jogador1, jogador2, status, sala_id, sala_senha, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?, ?)""",
-                (partida_id, guild.id, canal_partida.id, 0, valor, j1_id, j2_id, sala_id, sala_senha, datetime.datetime.utcnow().isoformat()))
+    cur.execute("""INSERT INTO partidas (id, guild_id, topico_id, thread_id, valor, jogador1, jogador2, status, criado_em)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?)""",
+                (partida_id, guild.id, canal_partida.id, 0, valor, j1_id, j2_id, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
@@ -1511,12 +1487,6 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
     partida_id = str(random.randint(100000, 9999999))
     usar_threads = db_get_config("usar_threads")
 
-    # Gera ID e Senha da Sala automaticamente
-    # ID: entre 5 e 11 dígitos
-    tamanho_id = random.randint(5, 11)
-    sala_id = str(random.randint(10**4, 10**(tamanho_id) - 1))
-    sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
-
     # Contador de tópicos criados
     contador_topicos = db_get_config("contador_topicos")
     if not contador_topicos:
@@ -1567,9 +1537,9 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
     except sqlite3.OperationalError:
         pass
 
-    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, sala_id, sala_senha, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?, ?, ?)""",
-                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, numero_topico, sala_id, sala_senha, datetime.datetime.utcnow().isoformat()))
+    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, criado_em)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?)""",
+                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, numero_topico, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
@@ -1791,6 +1761,15 @@ class MenuMediadorView(View):
         view = EscolherVencedorView(self.partida_id, j1_id, j2_id)
         await interaction.response.send_message("⚠️ W.O. - Escolha o vencedor:", view=view, ephemeral=True)
 
+    @discord.ui.button(label="🎮 Definir Sala", style=discord.ButtonStyle.secondary, emoji="⚙️")
+    async def definir_sala(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not is_aux_permitido(interaction.user):
+            await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
+            return
+
+        modal = DefinirSalaModal(self.partida_id, interaction.channel, interaction.guild)
+        await interaction.response.send_modal(modal)
+
     @discord.ui.button(label="Revanche", style=discord.ButtonStyle.secondary, emoji="🔄")
     async def revanche(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not is_aux_permitido(interaction.user):
@@ -1799,6 +1778,83 @@ class MenuMediadorView(View):
 
         modal = TrocarValorModal(self.partida_id, interaction.channel)
         await interaction.response.send_modal(modal)
+
+class DefinirSalaModal(Modal):
+    def __init__(self, partida_id, canal, guild):
+        super().__init__(title="Definir ID e Senha da Sala")
+        self.partida_id = partida_id
+        self.canal = canal
+        self.guild = guild
+
+        self.sala_id = TextInput(
+            label="ID da Sala",
+            placeholder="Digite o ID da sala (5-11 dígitos)",
+            required=True,
+            max_length=11
+        )
+
+        self.sala_senha = TextInput(
+            label="Senha da Sala",
+            placeholder="Digite a senha da sala",
+            required=True,
+            max_length=50
+        )
+
+        self.add_item(self.sala_id)
+        self.add_item(self.sala_senha)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            sala_id_input = self.sala_id.value.strip()
+            sala_senha_input = self.sala_senha.value.strip()
+
+            if not sala_id_input or not sala_senha_input:
+                await interaction.response.send_message("❌ ID e senha são obrigatórios!", ephemeral=True)
+                return
+
+            # Validar se ID tem entre 5 e 11 dígitos
+            if not sala_id_input.isdigit() or len(sala_id_input) < 5 or len(sala_id_input) > 11:
+                await interaction.response.send_message("❌ ID deve ter entre 5 e 11 dígitos!", ephemeral=True)
+                return
+
+            guild_id = interaction.guild.id
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+
+            # Buscar dados da partida
+            cur.execute("SELECT jogador1, jogador2, mediador FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, guild_id))
+            partida_row = cur.fetchone()
+
+            if not partida_row:
+                conn.close()
+                await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
+                return
+
+            j1_id, j2_id, mediador_id = partida_row
+
+            # Atualizar sala_id e sala_senha
+            cur.execute("UPDATE partidas SET sala_id = ?, sala_senha = ? WHERE id = ? AND guild_id = ?", 
+                       (sala_id_input, sala_senha_input, self.partida_id, guild_id))
+            conn.commit()
+            conn.close()
+
+            # Criar mensagem de confirmação
+            embed = discord.Embed(
+                title="✅ ID E SENHA CRIADOS",
+                color=0x00ff00
+            )
+            embed.add_field(name="👨‍⚖️ MEDIADOR", value=f"<@{mediador_id}>", inline=False)
+            embed.add_field(name="⚔️ PLAYERS", value=f"<@{j1_id}> VS <@{j2_id}>", inline=False)
+            embed.add_field(name="🆔 ID DA SALA", value=f"```\n{sala_id_input}\n```", inline=False)
+            embed.add_field(name="🔐 SENHA DA SALA", value=f"```\n{sala_senha_input}\n```", inline=False)
+
+            view = CopiarIDView(sala_id_input)
+            await self.canal.send(embed=embed, view=view)
+            await interaction.response.send_message("✅ Sala criada com sucesso!", ephemeral=True)
+
+        except Exception as e:
+            print(f"❌ Erro ao definir sala: {e}")
+            await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
 
 class TrocarValorModal(Modal):
     def __init__(self, partida_id, canal):
