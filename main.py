@@ -1528,6 +1528,60 @@ class ConfirmarPartidaView(View):
             except Exception as e:
                 print(f"❌ Erro ao renomear: {e}")
 
+            # Busca dados para menu e PIX
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT mediador, valor, tipo_fila FROM partidas WHERE id = ?", (self.partida_id,))
+            partida_dados = cur.fetchone()
+            conn.close()
+
+            if partida_dados:
+                mediador_id, valor_partida, tipo_fila = partida_dados
+
+                # Envia Menu do Mediador
+                try:
+                    embed_menu = discord.Embed(
+                        title="📊 Menu do Mediador",
+                        description=f"**Partida:** `{self.partida_id}`\n**Valor:** R$ {fmt_valor(valor_partida)}\n**Tipo:** {tipo_fila.upper()}",
+                        color=0x2f3136
+                    )
+                    embed_menu.add_field(name="🎮 Jogadores", value=f"<@{self.jogador1_id}> vs <@{self.jogador2_id}>", inline=False)
+                    embed_menu.add_field(name="⚙️ Opções", value="Clique em um botão abaixo para gerenciar a partida", inline=False)
+                    embed_menu.set_footer(text="⏱️ Menu ativo até o final da partida")
+                    
+                    view_menu = MenuMediadorView(self.partida_id, self.jogador1_id, self.jogador2_id, valor_partida, tipo_fila)
+                    await interaction.channel.send(embed=embed_menu, view=view_menu)
+                    print(f"✅ Menu do mediador enviado!")
+                except Exception as e:
+                    print(f"❌ Erro ao enviar menu: {e}")
+
+                # Envia PIX do Mediador
+                if mediador_id:
+                    try:
+                        guild_id = interaction.guild.id
+                        conn = sqlite3.connect(DB_FILE)
+                        cur = conn.cursor()
+                        cur.execute("SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?", (guild_id, mediador_id))
+                        pix_row = cur.fetchone()
+                        conn.close()
+
+                        if pix_row:
+                            taxa = get_taxa()
+                            valor_com_taxa = valor_partida + taxa
+                            pix_embed = discord.Embed(
+                                title="💰 Informações de Pagamento",
+                                description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
+                                color=0x00ff00
+                            )
+                            pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
+                            pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
+
+                            view_pix = CopiarCodigoPIXView(gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa), pix_row[1])
+                            await interaction.channel.send(embed=pix_embed, view=view_pix)
+                            print(f"✅ PIX enviado!")
+                    except Exception as e:
+                        print(f"❌ Erro ao enviar PIX: {e}")
+
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.danger, emoji="❌")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
         user_id = interaction.user.id
