@@ -1431,6 +1431,10 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
         return
 
     partida_id = str(random.randint(100000, 9999999))
+    
+    # Gera ID e Senha da Sala automaticamente
+    sala_id = str(random.randint(100000, 999999))
+    sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
 
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -1447,9 +1451,9 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
 
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    cur.execute("""INSERT INTO partidas (id, guild_id, topico_id, thread_id, valor, jogador1, jogador2, status, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?)""",
-                (partida_id, guild.id, canal_partida.id, 0, valor, j1_id, j2_id, datetime.datetime.utcnow().isoformat()))
+    cur.execute("""INSERT INTO partidas (id, guild_id, topico_id, thread_id, valor, jogador1, jogador2, status, sala_id, sala_senha, criado_em)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?, ?)""",
+                (partida_id, guild.id, canal_partida.id, 0, valor, j1_id, j2_id, sala_id, sala_senha, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
