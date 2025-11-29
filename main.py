@@ -1362,12 +1362,25 @@ class ConfirmarPartidaView(View):
                     traceback.print_exc()
 
             # 💰 ENVIA PIX (se mediador tiver dados)
-            print(f"Verificando PIX... mediador_id={mediador_id}, pix_row={pix_row}")
-            if mediador_id and pix_row:
+            print(f"\n========== DEBUG PIX COMPLETO ==========")
+            print(f"1️⃣ mediador_id={mediador_id}, tipo={type(mediador_id)}")
+            print(f"2️⃣ pix_row={pix_row}, tipo={type(pix_row)}")
+            print(f"3️⃣ bool(mediador_id)={bool(mediador_id)}")
+            print(f"4️⃣ mediador_id > 0 = {mediador_id > 0 if mediador_id else 'N/A'}")
+            print(f"========================================\n")
+            
+            if mediador_id and mediador_id > 0 and pix_row:
                 try:
-                    print(f"Enviando PIX...")
+                    print(f"✅ Condição atendida: enviando PIX...")
+                    print(f"  - Nome: {pix_row[0]}")
+                    print(f"  - Chave PIX: {pix_row[1]}")
+                    print(f"  - Valor original: {valor}")
+                    
                     taxa = get_taxa()
+                    print(f"  - Taxa: {taxa}")
                     valor_com_taxa = valor + taxa
+                    print(f"  - Valor com taxa: {valor_com_taxa}")
+                    
                     pix_embed = discord.Embed(
                         title="💰 Informações de Pagamento",
                         description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
@@ -1376,25 +1389,31 @@ class ConfirmarPartidaView(View):
                     pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
                     pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
                     
+                    print(f"  - Gerando QR code PIX...")
                     _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
+                    print(f"  - QR code gerado: {codigo_pix[:50]}...")
                     pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
                     
                     view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
+                    print(f"  - Enviando embed para canal...")
                     await interaction.channel.send(embed=pix_embed, view=view_pix)
-                    print(f"✅ PIX enviado!")
+                    print(f"✅ PIX ENVIADO COM SUCESSO!")
                 except Exception as e:
-                    print(f"❌ Erro ao enviar PIX: {e}")
+                    print(f"❌ ERRO AO ENVIAR PIX: {e}")
                     import traceback
                     traceback.print_exc()
-            elif mediador_id and not pix_row:
+            elif mediador_id and mediador_id > 0 and not pix_row:
                 # Mediador não configurou PIX ainda
-                print(f"⚠️ Mediador não configurou PIX: mediador_id={mediador_id}")
+                print(f"⚠️ Mediador encontrado mas SEM PIX configurado: mediador_id={mediador_id}")
                 await interaction.channel.send(
                     f"⚠️ <@{mediador_id}> - **Você ainda não configurou seu PIX!**\n\n"
                     f"Use o comando `/pixmed` para configurar sua chave PIX e habilitar pagamentos automáticos."
                 )
             else:
-                print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
+                print(f"⚠️ PIX NÃO ENVIADO:")
+                print(f"   mediador_id={mediador_id}")
+                print(f"   mediador_id > 0 = {mediador_id > 0 if mediador_id else 'FALSE'}")
+                print(f"   pix_row={pix_row}")
 
             # 📋 MENU DO MEDIADOR - SEMPRE ENVIADO
             print(f"Enviando Menu Mediador... mediador_id={mediador_id}")
