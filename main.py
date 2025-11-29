@@ -1299,18 +1299,9 @@ class ConfirmarPartidaView(View):
                 await interaction.channel.send(f"✅ <@{self.jogador2_id}> confirmou a partida! Aguardando <@{self.jogador1_id}> confirmar...")
 
         if conf_j1 == 1 and conf_j2 == 1:
-            # Desativa botões
-            for item in self.children:
-                item.disabled = True
+            print(f"🎮 AMBOS CONFIRMARAM - Partida {self.partida_id}")
             
-            # Edita a mensagem original (não ephemeral) para desativar botões
-            try:
-                original_message = await interaction.channel.fetch_message(interaction.message.id)
-                await original_message.edit(view=self)
-            except:
-                pass  # Se não conseguir editar, continua mesmo assim
-
-            # 📦 Busca TUDO do banco em UMA conexão
+            # 📦 Busca dados da partida
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("""
@@ -1319,7 +1310,6 @@ class ConfirmarPartidaView(View):
             """, (self.partida_id,))
             partida_row = cur.fetchone()
             
-            # Se tem mediador, busca PIX também
             pix_row = None
             if mediador_id and partida_row:
                 guild_id = interaction.guild.id
@@ -1332,9 +1322,12 @@ class ConfirmarPartidaView(View):
             
             conn.close()
 
-            # 🔄 Renomeia canal/thread para mobile-X
+            # 🔄 RENOMEIA CANAL PARA mobile-X
+            print(f"Renomeando canal...")
             if partida_row:
                 numero_topico, canal_id, thread_id = partida_row
+                print(f"  numero_topico={numero_topico}, canal_id={canal_id}, thread_id={thread_id}")
+                
                 thread_id = int(thread_id) if thread_id else 0
                 canal_id = int(canal_id) if canal_id else 0
 
@@ -1342,18 +1335,24 @@ class ConfirmarPartidaView(View):
                     channel = None
                     if thread_id > 0:
                         channel = await interaction.guild.fetch_channel(thread_id)
+                        print(f"  Fetched thread: {channel}")
                     elif canal_id > 0:
                         channel = await interaction.guild.fetch_channel(canal_id)
+                        print(f"  Fetched canal: {channel}")
                     
                     if channel:
                         await channel.edit(name=f"mobile-{numero_topico}")
-                        print(f"✅ Canal/Thread renomeado: mobile-{numero_topico}")
+                        print(f"✅ Renomeado para: mobile-{numero_topico}")
                 except Exception as e:
-                    print(f"⚠️ Erro ao renomear: {e}")
+                    print(f"❌ Erro ao renomear: {e}")
+                    import traceback
+                    traceback.print_exc()
 
-            # 💰 Envia PIX (se tem dados)
-            try:
-                if mediador_id and pix_row:
+            # 💰 ENVIA PIX (se mediador tiver dados)
+            print(f"Verificando PIX... mediador_id={mediador_id}, pix_row={pix_row}")
+            if mediador_id and pix_row:
+                try:
+                    print(f"Enviando PIX...")
                     taxa = get_taxa()
                     valor_com_taxa = valor + taxa
                     pix_embed = discord.Embed(
@@ -1369,10 +1368,16 @@ class ConfirmarPartidaView(View):
                     
                     view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
                     await interaction.channel.send(embed=pix_embed, view=view_pix)
-            except Exception as e:
-                print(f"⚠️ Erro ao enviar PIX: {e}")
+                    print(f"✅ PIX enviado!")
+                except Exception as e:
+                    print(f"❌ Erro ao enviar PIX: {e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
 
-            # 📋 Menu do mediador - SEMPRE ENVIADO
+            # 📋 MENU DO MEDIADOR - SEMPRE ENVIADO
+            print(f"Enviando Menu Mediador...")
             try:
                 embed_menu = discord.Embed(
                     title="Menu Mediador",
@@ -1381,8 +1386,11 @@ class ConfirmarPartidaView(View):
                 )
                 view_menu = MenuMediadorView(self.partida_id)
                 await interaction.channel.send(embed=embed_menu, view=view_menu)
+                print(f"✅ Menu Mediador enviado!")
             except Exception as e:
-                print(f"⚠️ Erro ao enviar Menu: {e}")
+                print(f"❌ Erro ao enviar Menu: {e}")
+                import traceback
+                traceback.print_exc()
 
     @discord.ui.button(label="Recusar", style=discord.ButtonStyle.danger, emoji="❌")
     async def recusar(self, interaction: discord.Interaction, button: discord.ui.Button):
