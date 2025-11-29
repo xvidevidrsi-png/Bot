@@ -2034,6 +2034,16 @@ class ConfigurarPIXModal(Modal):
         self.add_item(self.chave_pix)
 
     async def on_submit(self, interaction: discord.Interaction):
+        print(f"\n{'='*60}")
+        print(f"📝 MEDIADOR CONFIGURANDO PIX")
+        print(f"{'='*60}")
+        print(f"Guild ID: {interaction.guild.id}")
+        print(f"Mediador: <@{interaction.user.id}> ({interaction.user.display_name})")
+        print(f"Nome Completo: {self.nome_completo.value}")
+        print(f"CPF: {self.cpf.value or 'Não informado'}")
+        print(f"Número: {self.numero.value or 'Não informado'}")
+        print(f"Chave PIX: {self.chave_pix.value[:15]}..." if len(self.chave_pix.value) > 15 else f"Chave PIX: {self.chave_pix.value}")
+        
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
         cur.execute("""INSERT OR REPLACE INTO mediador_pix (guild_id, user_id, nome_completo, cpf, numero, chave_pix)
@@ -2042,8 +2052,17 @@ class ConfigurarPIXModal(Modal):
                      self.numero.value or None, self.chave_pix.value))
         conn.commit()
         conn.close()
+        
+        print(f"✅ PIX ARMAZENADO NO BANCO COM SUCESSO!")
+        print(f"{'='*60}\n")
 
-        await interaction.response.send_message("✅ PIX configurado com sucesso!", ephemeral=True)
+        await interaction.response.send_message(
+            f"✅ **PIX Configurado com Sucesso!**\n\n"
+            f"📋 **Nome:** {self.nome_completo.value}\n"
+            f"🔑 **Chave:** {self.chave_pix.value}\n\n"
+            f"💡 **Agora você pode entrar na fila de mediadores!**",
+            ephemeral=True
+        )
 
 class ConfigurarPIXView(View):
     def __init__(self):
