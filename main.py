@@ -1043,7 +1043,7 @@ class FilaView(View):
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, "normal", user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
+        await interaction.response.send_message(f"✅ Entrou na fila! ({len(jogadores)}/2)", ephemeral=True)
 
         if len(jogadores) >= 2:
             print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores[:2]}")
@@ -1051,7 +1051,9 @@ class FilaView(View):
             fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
             print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "normal")
-            await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+            await atualizar_msg_fila_rapida(interaction.channel, self.valor, self.tipo_jogo, jogadores[:2])
+        else:
+            asyncio.create_task(atualizar_fila_background(interaction.channel, self.valor, self.tipo_jogo))
 
     async def gel_infinito(self, interaction: discord.Interaction):
         if not verificar_separador_servidor(interaction.guild.id):
@@ -1074,7 +1076,7 @@ class FilaView(View):
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, "infinito", user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
+        await interaction.response.send_message(f"✅ Entrou na fila! ({len(jogadores)}/2)", ephemeral=True)
 
         if len(jogadores) >= 2:
             print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores[:2]}")
@@ -1082,8 +1084,9 @@ class FilaView(View):
             fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
             print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, "infinito")
-        
-        await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+            await atualizar_msg_fila_rapida(interaction.channel, self.valor, self.tipo_jogo, jogadores[:2])
+        else:
+            asyncio.create_task(atualizar_fila_background(interaction.channel, self.valor, self.tipo_jogo))
 
     async def sair_fila(self, interaction: discord.Interaction):
         if not verificar_separador_servidor(interaction.guild.id):
@@ -1112,9 +1115,8 @@ class FilaView(View):
             )
             return
 
-        await interaction.response.defer()
-
-        await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+        await interaction.response.send_message("✅ Saiu da fila!", ephemeral=True)
+        asyncio.create_task(atualizar_fila_background(interaction.channel, self.valor, self.tipo_jogo))
 
 async def atualizar_msg_fila(canal, valor, tipo_jogo='mob'):
     guild_id = canal.guild.id
@@ -1213,9 +1215,7 @@ class FilaMobView(View):
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
-
-        await atualizar_msg_fila_mob(interaction.channel, self.valor, self.tipo_fila, self.tipo_jogo)
+        await interaction.response.send_message(f"✅ Entrou na fila! ({len(jogadores)}/2)", ephemeral=True)
 
         if len(jogadores) >= 2:
             fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
