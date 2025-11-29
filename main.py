@@ -615,6 +615,25 @@ def get_taxa():
 def fmt_valor(v):
     return f"R$ {v:.2f}".replace(".", ",")
 
+def verificar_configuracoes_fila(guild_id):
+    """Verifica se as 3 configurações obrigatórias foram feitas"""
+    # 1. /topico - canal_partidas_id
+    canal_id = db_get_config("canal_partidas_id")
+    if not canal_id:
+        return False, "❌ Tópico não configurado! Use `/topico`"
+    
+    # 2. /aux_config - mediadores
+    mediadores = mediador_get_all(guild_id)
+    if not mediadores:
+        return False, "❌ Nenhum mediador configurado! Use `/aux_config`"
+    
+    # 3. /configurar - auto_role
+    auto_role = get_auto_role(guild_id)
+    if not auto_role:
+        return False, "❌ Auto role não configurado! Use `/configurar`"
+    
+    return True, None
+
 def gerar_payload_pix_emv(chave_pix, nome_beneficiario, valor=None, cidade="SAO PAULO", txid=None):
     def emv_format(id_tag, value):
         return f"{id_tag:02d}{len(str(value)):02d}{value}"
@@ -1033,12 +1052,9 @@ class FilaView(View):
             return
 
         guild_id = interaction.guild.id
-        mediadores = mediador_get_all(guild_id)
-        if not mediadores:
-            await interaction.response.send_message(
-                "❌ Não há mediadores disponíveis no momento! @player",
-                ephemeral=True
-            )
+        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+        if not config_ok:
+            await interaction.response.send_message(config_erro, ephemeral=True)
             return
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, "normal", user_id, self.tipo_jogo)
@@ -1066,12 +1082,9 @@ class FilaView(View):
             return
 
         guild_id = interaction.guild.id
-        mediadores = mediador_get_all(guild_id)
-        if not mediadores:
-            await interaction.response.send_message(
-                "❌ Não há mediadores disponíveis no momento! Aguarde até que um mediador entre em serviço.",
-                ephemeral=True
-            )
+        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+        if not config_ok:
+            await interaction.response.send_message(config_erro, ephemeral=True)
             return
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, "infinito", user_id, self.tipo_jogo)
@@ -1206,12 +1219,9 @@ class FilaMobView(View):
             return
 
         guild_id = interaction.guild.id
-        mediadores = mediador_get_all(guild_id)
-        if not mediadores:
-            await interaction.response.send_message(
-                "❌ Não há mediadores disponíveis no momento! Aguarde até que um mediador entre em serviço.",
-                ephemeral=True
-            )
+        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+        if not config_ok:
+            await interaction.response.send_message(config_erro, ephemeral=True)
             return
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
@@ -1343,12 +1353,9 @@ class FilaMistoView(View):
             return
 
         guild_id = interaction.guild.id
-        mediadores = mediador_get_all(guild_id)
-        if not mediadores:
-            await interaction.response.send_message(
-                "❌ Não há mediadores disponíveis no momento! Aguarde até que um mediador entre em serviço.",
-                ephemeral=True
-            )
+        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+        if not config_ok:
+            await interaction.response.send_message(config_erro, ephemeral=True)
             return
         user_id = interaction.user.id
 
