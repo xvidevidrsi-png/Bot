@@ -1524,7 +1524,6 @@ class ConfirmarPartidaView(View):
             try:
                 novo_nome = interaction.channel.name.replace("aguardando-", "MOBILE-")
                 await interaction.channel.edit(name=novo_nome)
-                await interaction.channel.send("🎮 **PARTIDA CONFIRMADA! Aguardando mediador enviar ID e Senha...**")
                 print(f"✅ Canal renomeado para: {novo_nome}")
             except Exception as e:
                 print(f"❌ Erro ao renomear: {e}")
