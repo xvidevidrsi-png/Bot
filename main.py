@@ -1317,14 +1317,26 @@ class ConfirmarPartidaView(View):
             
             pix_row = None
             
+            # ✅ CORREÇÕES CRÍTICAS:
+            # 1. Extrair guild_id correto da partida
+            topico_guild_id = None
+            if partida_row:
+                numero_topico, canal_id, thread_id, topico_guild_id = partida_row
+            
+            # 2. Converter mediador_id para INT (estava como STRING)
+            try:
+                mediador_id = int(mediador_id) if mediador_id else 0
+            except (ValueError, TypeError):
+                mediador_id = 0
+            
             print(f"\n========== DEBUG PIX COMPLETO ==========")
-            print(f"1️⃣ mediador_id (da query anterior)={mediador_id}, tipo={type(mediador_id)}")
+            print(f"1️⃣ mediador_id={mediador_id}, tipo={type(mediador_id)}")
             print(f"2️⃣ valor={valor}")
-            print(f"3️⃣ partida_row={partida_row}")
+            print(f"3️⃣ topico_guild_id={topico_guild_id}")
             
             # Buscar PIX do mediador (otimizado)
-            if mediador_id and mediador_id > 0:
-                print(f"4️⃣ Buscando PIX: guild_id={guild_id_partida}, user_id={mediador_id}")
+            if mediador_id > 0 and topico_guild_id:
+                print(f"4️⃣ Buscando PIX: guild_id={topico_guild_id}, user_id={mediador_id}")
                 
                 # Query otimizada - traz apenas o necessário
                 cur.execute("""
@@ -1332,16 +1344,16 @@ class ConfirmarPartidaView(View):
                     FROM mediador_pix 
                     WHERE guild_id = ? AND user_id = ?
                     LIMIT 1
-                """, (guild_id_partida, mediador_id))
+                """, (topico_guild_id, mediador_id))
                 pix_row = cur.fetchone()
                 
                 if pix_row:
                     print(f"5️⃣ PIX ENCONTRADO! Nome: {pix_row[0]}, Chave: {pix_row[1][:10]}...")
                 else:
-                    print(f"5️⃣ PIX NÃO ENCONTRADO")
+                    print(f"5️⃣ PIX NÃO ENCONTRADO para guild={topico_guild_id}, user={mediador_id}")
                     pix_row = None
             else:
-                print(f"⚠️ Mediador inválido: mediador_id={mediador_id}")
+                print(f"⚠️ Mediador inválido ou guild_id ausente: mediador_id={mediador_id}, topico_guild_id={topico_guild_id}")
                 pix_row = None
             
             print(f"========================================\n")
