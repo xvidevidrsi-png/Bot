@@ -1581,7 +1581,7 @@ class ConfirmarPartidaView(View):
 
                         print(f"DEBUG: PIX row: {pix_row}")
 
-                        if pix_row:
+                        if pix_row and pix_row[1]:  # Verifica se tem chave PIX
                             taxa = get_taxa()
                             valor_com_taxa = valor_partida + taxa
                             pix_embed = discord.Embed(
@@ -1589,18 +1589,25 @@ class ConfirmarPartidaView(View):
                                 description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
                                 color=0x00ff00
                             )
-                            pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
+                            pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0] or "Não configurado", inline=False)
                             pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
 
-                            view_pix = CopiarCodigoPIXView(gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa), pix_row[1])
-                            await interaction.channel.send(embed=pix_embed, view=view_pix)
-                            print(f"✅ PIX enviado!")
+                            try:
+                                payload = gerar_payload_pix_emv(pix_row[1], pix_row[0] or "Mediador", valor_com_taxa)
+                                view_pix = CopiarCodigoPIXView(payload, pix_row[1])
+                                await interaction.channel.send(embed=pix_embed, view=view_pix)
+                                print(f"✅ PIX enviado!")
+                            except Exception as payload_error:
+                                print(f"❌ Erro ao gerar payload PIX: {payload_error}")
+                                await interaction.channel.send(embed=pix_embed)
                         else:
-                            print(f"DEBUG: PIX não encontrado para mediador {mediador_id}")
+                            print(f"DEBUG: PIX não encontrado para mediador {mediador_id}. Row: {pix_row}")
                     except Exception as e:
                         print(f"❌ Erro ao enviar PIX: {e}")
                         import traceback
                         traceback.print_exc()
+                else:
+                    print(f"DEBUG: Sem mediador_id! Partida ID: {self.partida_id}, mediador_id: {mediador_id}")
             else:
                 print(f"❌ Partida {self.partida_id} não encontrada!")
 
