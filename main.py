@@ -1535,8 +1535,11 @@ class ConfirmarPartidaView(View):
             partida_dados = cur.fetchone()
             conn.close()
 
+            print(f"DEBUG: Partida dados: {partida_dados}")
+
             if partida_dados:
                 mediador_id, valor_partida, tipo_fila = partida_dados
+                print(f"DEBUG: Mediador={mediador_id}, Valor={valor_partida}, Tipo={tipo_fila}")
 
                 # Envia Menu do Mediador
                 try:
@@ -1554,6 +1557,8 @@ class ConfirmarPartidaView(View):
                     print(f"✅ Menu do mediador enviado!")
                 except Exception as e:
                     print(f"❌ Erro ao enviar menu: {e}")
+                    import traceback
+                    traceback.print_exc()
 
                 # Envia PIX do Mediador
                 if mediador_id:
@@ -1564,6 +1569,8 @@ class ConfirmarPartidaView(View):
                         cur.execute("SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?", (guild_id, mediador_id))
                         pix_row = cur.fetchone()
                         conn.close()
+
+                        print(f"DEBUG: PIX row: {pix_row}")
 
                         if pix_row:
                             taxa = get_taxa()
@@ -1579,8 +1586,14 @@ class ConfirmarPartidaView(View):
                             view_pix = CopiarCodigoPIXView(gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa), pix_row[1])
                             await interaction.channel.send(embed=pix_embed, view=view_pix)
                             print(f"✅ PIX enviado!")
+                        else:
+                            print(f"DEBUG: PIX não encontrado para mediador {mediador_id}")
                     except Exception as e:
                         print(f"❌ Erro ao enviar PIX: {e}")
+                        import traceback
+                        traceback.print_exc()
+            else:
+                print(f"❌ Partida {self.partida_id} não encontrada!")
 
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.danger, emoji="❌")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
