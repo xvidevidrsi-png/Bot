@@ -1322,21 +1322,27 @@ class ConfirmarPartidaView(View):
             print(f"2️⃣ valor={valor}")
             print(f"3️⃣ partida_row={partida_row}")
             
-            # Buscar PIX do mediador
+            # Buscar PIX do mediador (otimizado)
             if mediador_id and mediador_id > 0:
                 print(f"4️⃣ Buscando PIX: guild_id={guild_id_partida}, user_id={mediador_id}")
                 
+                # Query otimizada - traz apenas o necessário
                 cur.execute("""
                     SELECT nome_completo, chave_pix 
                     FROM mediador_pix 
                     WHERE guild_id = ? AND user_id = ?
+                    LIMIT 1
                 """, (guild_id_partida, mediador_id))
                 pix_row = cur.fetchone()
-                print(f"5️⃣ PIX result: {pix_row}")
+                
                 if pix_row:
-                    print(f"   Nome: {pix_row[0]}, Chave: {pix_row[1][:10]}...")
+                    print(f"5️⃣ PIX ENCONTRADO! Nome: {pix_row[0]}, Chave: {pix_row[1][:10]}...")
+                else:
+                    print(f"5️⃣ PIX NÃO ENCONTRADO")
+                    pix_row = None
             else:
                 print(f"⚠️ Mediador inválido: mediador_id={mediador_id}")
+                pix_row = None
             
             print(f"========================================\n")
             conn.close()
