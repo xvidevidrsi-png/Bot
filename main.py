@@ -1299,9 +1299,16 @@ class ConfirmarPartidaView(View):
                 await interaction.channel.send(f"✅ <@{self.jogador2_id}> confirmou a partida! Aguardando <@{self.jogador1_id}> confirmar...")
 
         if conf_j1 == 1 and conf_j2 == 1:
+            # Desativa botões
             for item in self.children:
                 item.disabled = True
-            await interaction.message.edit(view=self)
+            
+            # Edita a mensagem original (não ephemeral) para desativar botões
+            try:
+                original_message = await interaction.channel.fetch_message(interaction.message.id)
+                await original_message.edit(view=self)
+            except:
+                pass  # Se não conseguir editar, continua mesmo assim
 
             # 📦 Busca TUDO do banco em UMA conexão
             conn = sqlite3.connect(DB_FILE)
