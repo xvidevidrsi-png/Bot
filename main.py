@@ -1301,16 +1301,22 @@ class ConfirmarPartidaView(View):
         if conf_j1 == 1 and conf_j2 == 1:
             print(f"🎮 AMBOS CONFIRMARAM - Partida {self.partida_id}")
             
-            # 📦 Busca dados da partida
+            # 📦 Busca dados da partida (INCLUINDO MEDIADOR ATUALIZADO)
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("""
-                SELECT numero_topico, canal_id, thread_id, guild_id
+                SELECT numero_topico, canal_id, thread_id, guild_id, mediador
                 FROM partidas WHERE id = ?
             """, (self.partida_id,))
             partida_row = cur.fetchone()
             
             pix_row = None
+            
+            # Extrair mediador_id da query (agora com valor atualizado do banco)
+            if partida_row:
+                numero_topico, canal_id, thread_id, topico_guild_id, mediador_id_banco = partida_row
+                mediador_id = mediador_id_banco
+            
             print(f"DEBUG PIX: mediador_id={mediador_id}, tipo={type(mediador_id)}, bool={bool(mediador_id)}")
             
             if mediador_id and mediador_id > 0:
@@ -1324,6 +1330,8 @@ class ConfirmarPartidaView(View):
                 """, (guild_id, mediador_id))
                 pix_row = cur.fetchone()
                 print(f"  PIX result: {pix_row}")
+            else:
+                print(f"⚠️ Mediador não encontrado ou inválido: mediador_id={mediador_id}")
             
             conn.close()
 
