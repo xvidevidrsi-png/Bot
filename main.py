@@ -1305,7 +1305,7 @@ class ConfirmarPartidaView(View):
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("""
-                SELECT numero_topico, canal_id, thread_id 
+                SELECT numero_topico, canal_id, thread_id, guild_id
                 FROM partidas WHERE id = ?
             """, (self.partida_id,))
             partida_row = cur.fetchone()
@@ -1325,8 +1325,8 @@ class ConfirmarPartidaView(View):
             # 🔄 RENOMEIA CANAL PARA mobile-X
             print(f"Renomeando canal...")
             if partida_row:
-                numero_topico, canal_id, thread_id = partida_row
-                print(f"  numero_topico={numero_topico}, canal_id={canal_id}, thread_id={thread_id}")
+                numero_topico, canal_id, thread_id, topico_guild_id = partida_row
+                print(f"  numero_topico={numero_topico}, canal_id={canal_id}, thread_id={thread_id}, topico_guild_id={topico_guild_id}")
                 
                 thread_id = int(thread_id) if thread_id else 0
                 canal_id = int(canal_id) if canal_id else 0
