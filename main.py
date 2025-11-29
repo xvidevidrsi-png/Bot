@@ -5606,6 +5606,37 @@ async def cmd_pixmed(ctx):
     msg = await ctx.send(embed=embed, view=view)
     salvar_msg_comando(msg.id, ctx.guild.id, ctx.channel.id, "pixmed")
 
+@tree.command(name="pixmed", description="Configurar PIX do mediador")
+async def slash_pixmed(interaction: discord.Interaction):
+    """Slash command equivalente a !pixmed"""
+    if not is_admin(interaction.user.id, interaction.guild, interaction.user):
+        await interaction.response.send_message("❌ Apenas o **dono do servidor** ou quem tem o **cargo configurado** pode usar este comando!", ephemeral=True)
+        return
+    
+    if not verificar_separador_servidor(interaction.guild.id):
+        await interaction.response.send_message("⛔ **Servidor não registrado!**", ephemeral=True)
+        return
+
+    from datetime import timezone, timedelta
+    brasilia_tz = timezone(timedelta(hours=-3))
+    data_brasilia = datetime.datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
+
+    embed = discord.Embed(
+        title="💰 Envie sua chave Pix",
+        description=(
+            "• **Sistema de automatização de pagamentos!**\n\n"
+            "• **Como funciona?**\n\n"
+            "O sistema de automatização de pagamentos é essencial para que todos os mediadores "
+            "garantam a agilidade nas partidas abertas. Após configurar, nunca mais precisará enviar "
+            "novamente sua chave PIX nas salas criadas. Eu farei todo o trabalho!\n\n"
+            f"[ZEROTAXA] SALAO,00 | Automatização de Pagamentos | {data_brasilia}"
+        ),
+        color=0x2f3136
+    )
+
+    view = ConfigurarPIXView()
+    await interaction.response.send_message(embed=embed, view=view)
+
 @bot.command(name="p")
 async def cmd_perfil(ctx, *, membro: str = None):
     """Ver perfil e estatísticas de um jogador"""
