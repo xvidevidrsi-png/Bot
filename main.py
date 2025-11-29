@@ -1433,7 +1433,9 @@ async def criar_partida(guild, j1_id, j2_id, valor, modo):
     partida_id = str(random.randint(100000, 9999999))
     
     # Gera ID e Senha da Sala automaticamente
-    sala_id = str(random.randint(100000, 999999))
+    # ID: entre 5 e 11 dígitos
+    tamanho_id = random.randint(5, 11)
+    sala_id = str(random.randint(10**4, 10**(tamanho_id) - 1))
     sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
 
     overwrites = {
@@ -1510,7 +1512,9 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
     usar_threads = db_get_config("usar_threads")
 
     # Gera ID e Senha da Sala automaticamente
-    sala_id = str(random.randint(100000, 999999))
+    # ID: entre 5 e 11 dígitos
+    tamanho_id = random.randint(5, 11)
+    sala_id = str(random.randint(10**4, 10**(tamanho_id) - 1))
     sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
 
     # Contador de tópicos criados
