@@ -1213,9 +1213,9 @@ class FilaMobView(View):
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
 
         if len(jogadores) >= 2:
-            await interaction.response.send_message(f"⚠️ Match! <@{jogadores[0]}> vs <@{jogadores[1]}>!", ephemeral=False)
             fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
+            await interaction.response.defer()
         else:
             await interaction.response.defer()
 
