@@ -1378,6 +1378,13 @@ class ConfirmarPartidaView(View):
                     print(f"❌ Erro ao enviar PIX: {e}")
                     import traceback
                     traceback.print_exc()
+            elif mediador_id and not pix_row:
+                # Mediador não configurou PIX ainda
+                print(f"⚠️ Mediador não configurou PIX: mediador_id={mediador_id}")
+                await interaction.channel.send(
+                    f"⚠️ <@{mediador_id}> - **Você ainda não configurou seu PIX!**\n\n"
+                    f"Use o comando `/pixmed` para configurar sua chave PIX e habilitar pagamentos automáticos."
+                )
             else:
                 print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
 
