@@ -1301,27 +1301,26 @@ class ConfirmarPartidaView(View):
         if conf_j1 == 1 and conf_j2 == 1:
             print(f"🎮 AMBOS CONFIRMARAM - Partida {self.partida_id}")
             
-            # 📦 Busca dados da partida (INCLUINDO MEDIADOR ATUALIZADO)
+            # 📦 Busca dados da partida
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("""
-                SELECT numero_topico, canal_id, thread_id, guild_id, mediador
+                SELECT numero_topico, canal_id, thread_id, guild_id
                 FROM partidas WHERE id = ?
             """, (self.partida_id,))
             partida_row = cur.fetchone()
             
             pix_row = None
             
-            # Extrair mediador_id da query (agora com valor atualizado do banco)
-            if partida_row:
-                numero_topico, canal_id, thread_id, topico_guild_id, mediador_id_banco = partida_row
-                mediador_id = mediador_id_banco
+            print(f"\n========== DEBUG PIX COMPLETO ==========")
+            print(f"1️⃣ mediador_id (da query anterior)={mediador_id}, tipo={type(mediador_id)}")
+            print(f"2️⃣ valor={valor}")
+            print(f"3️⃣ partida_row={partida_row}")
             
-            print(f"DEBUG PIX: mediador_id={mediador_id}, tipo={type(mediador_id)}, bool={bool(mediador_id)}")
-            
+            # Buscar PIX do mediador
             if mediador_id and mediador_id > 0:
                 guild_id = interaction.guild.id
-                print(f"  Buscando PIX para guild_id={guild_id}, user_id={mediador_id}")
+                print(f"4️⃣ Buscando PIX: guild_id={guild_id}, user_id={mediador_id}")
                 
                 cur.execute("""
                     SELECT nome_completo, chave_pix 
@@ -1329,10 +1328,13 @@ class ConfirmarPartidaView(View):
                     WHERE guild_id = ? AND user_id = ?
                 """, (guild_id, mediador_id))
                 pix_row = cur.fetchone()
-                print(f"  PIX result: {pix_row}")
+                print(f"5️⃣ PIX result: {pix_row}")
+                if pix_row:
+                    print(f"   Nome: {pix_row[0]}, Chave: {pix_row[1][:10]}...")
             else:
-                print(f"⚠️ Mediador não encontrado ou inválido: mediador_id={mediador_id}")
+                print(f"⚠️ Mediador inválido: mediador_id={mediador_id}")
             
+            print(f"========================================\n")
             conn.close()
 
             # 🔄 RENOMEIA CANAL PARA mobile-X
