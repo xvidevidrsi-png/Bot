@@ -1042,64 +1042,74 @@ class FilaView(View):
         self.add_item(self.btn_sair)
 
     async def gel_normal(self, interaction: discord.Interaction):
-        if not verificar_separador_servidor(interaction.guild.id):
-            await interaction.response.send_message(
-                "⛔ **Servidor não registrado!**\n\n"
-                "Este servidor precisa estar registrado para usar o Bot Zeus.\n"
-                "Entre em contato com o owner do bot (emanoel7269) para registrar seu servidor.",
-                ephemeral=True
-            )
-            return
+        try:
+            if not verificar_separador_servidor(interaction.guild.id):
+                await interaction.response.send_message(
+                    "⛔ **Servidor não registrado!**\n\n"
+                    "Este servidor precisa estar registrado para usar o Bot Zeus.\n"
+                    "Entre em contato com o owner do bot (emanoel7269) para registrar seu servidor.",
+                    ephemeral=True
+                )
+                return
 
-        guild_id = interaction.guild.id
-        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
-        if not config_ok:
-            await interaction.response.send_message(config_erro, ephemeral=True)
-            return
-        user_id = interaction.user.id
-        jogadores = fila_add_jogador(guild_id, self.valor, "normal", user_id, self.tipo_jogo)
+            guild_id = interaction.guild.id
+            config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+            if not config_ok:
+                await interaction.response.send_message(config_erro, ephemeral=True)
+                return
+            user_id = interaction.user.id
+            jogadores = fila_add_jogador(guild_id, self.valor, "normal", user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
+            await interaction.response.defer()
 
-        if len(jogadores) >= 2:
-            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "normal", self.tipo_jogo)
-            if len(jogadores_atualizados) >= 2:
-                print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
-                fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
-                fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
-                print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
-                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "normal")
-            await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+            if len(jogadores) >= 2:
+                jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "normal", self.tipo_jogo)
+                if len(jogadores_atualizados) >= 2:
+                    print(f"[GEL NORMAL] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
+                    fila_remove_primeiros(guild_id, self.valor, "normal", 2, self.tipo_jogo)
+                    fila_clear(guild_id, self.valor, "infinito", self.tipo_jogo)
+                    print(f"[GEL NORMAL] Jogadores removidos, criando partida...")
+                    await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "normal")
+                await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+        except Exception as e:
+            print(f"❌ ERRO em gel_normal: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def gel_infinito(self, interaction: discord.Interaction):
-        if not verificar_separador_servidor(interaction.guild.id):
-            await interaction.response.send_message(
-                "⛔ **Servidor não registrado!**\n\n"
-                "Este servidor precisa estar registrado para usar o Bot Zeus.\n"
-                "Entre em contato com o owner do bot (emanoel7269) para registrar seu servidor.",
-                ephemeral=True
-            )
-            return
+        try:
+            if not verificar_separador_servidor(interaction.guild.id):
+                await interaction.response.send_message(
+                    "⛔ **Servidor não registrado!**\n\n"
+                    "Este servidor precisa estar registrado para usar o Bot Zeus.\n"
+                    "Entre em contato com o owner do bot (emanoel7269) para registrar seu servidor.",
+                    ephemeral=True
+                )
+                return
 
-        guild_id = interaction.guild.id
-        config_ok, config_erro = verificar_configuracoes_fila(guild_id)
-        if not config_ok:
-            await interaction.response.send_message(config_erro, ephemeral=True)
-            return
-        user_id = interaction.user.id
-        jogadores = fila_add_jogador(guild_id, self.valor, "infinito", user_id, self.tipo_jogo)
+            guild_id = interaction.guild.id
+            config_ok, config_erro = verificar_configuracoes_fila(guild_id)
+            if not config_ok:
+                await interaction.response.send_message(config_erro, ephemeral=True)
+                return
+            user_id = interaction.user.id
+            jogadores = fila_add_jogador(guild_id, self.valor, "infinito", user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
+            await interaction.response.defer()
 
-        if len(jogadores) >= 2:
-            jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "infinito", self.tipo_jogo)
-            if len(jogadores_atualizados) >= 2:
-                print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
-                fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
-                fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
-                print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
-                await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "infinito")
-            await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+            if len(jogadores) >= 2:
+                jogadores_atualizados = fila_get_jogadores(guild_id, self.valor, "infinito", self.tipo_jogo)
+                if len(jogadores_atualizados) >= 2:
+                    print(f"[GEL INFINITO] Removendo 2 jogadores: {jogadores_atualizados[:2]}")
+                    fila_remove_primeiros(guild_id, self.valor, "infinito", 2, self.tipo_jogo)
+                    fila_clear(guild_id, self.valor, "normal", self.tipo_jogo)
+                    print(f"[GEL INFINITO] Jogadores removidos, criando partida...")
+                    await criar_partida_mob(interaction.guild, jogadores_atualizados[0], jogadores_atualizados[1], self.valor, "infinito")
+                await atualizar_msg_fila(interaction.channel, self.valor, self.tipo_jogo)
+        except Exception as e:
+            print(f"❌ ERRO em gel_infinito: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def sair_fila(self, interaction: discord.Interaction):
         if not verificar_separador_servidor(interaction.guild.id):
@@ -1483,48 +1493,57 @@ class ConfirmarPartidaView(View):
 
     @discord.ui.button(label="Confirmação", style=discord.ButtonStyle.success, emoji="✅")
     async def confirmar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        user_id = interaction.user.id
+        try:
+            user_id = interaction.user.id
 
-        if user_id not in [self.jogador1_id, self.jogador2_id]:
-            await interaction.response.send_message("❌ Você não faz parte desta partida!", ephemeral=True)
-            return
+            if user_id not in [self.jogador1_id, self.jogador2_id]:
+                await interaction.response.send_message("❌ Você não faz parte desta partida!", ephemeral=True)
+                return
 
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
 
-        # Verifica se já confirmou
-        cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
-        conf = cur.fetchone()
-        
-        if not conf:
-            await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
+            # Verifica se já confirmou
+            cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
+            conf = cur.fetchone()
+            
+            if not conf:
+                await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
+                conn.close()
+                return
+
+            conf_j1_antes, conf_j2_antes = conf
+
+            # Marca confirmação do jogador
+            if user_id == self.jogador1_id:
+                if conf_j1_antes == 1:
+                    await interaction.response.send_message("❌ Você já confirmou!", ephemeral=True)
+                    conn.close()
+                    return
+                cur.execute("UPDATE partidas SET confirmacao_j1 = 1 WHERE id = ?", (self.partida_id,))
+            else:
+                if conf_j2_antes == 1:
+                    await interaction.response.send_message("❌ Você já confirmou!", ephemeral=True)
+                    conn.close()
+                    return
+                cur.execute("UPDATE partidas SET confirmacao_j2 = 1 WHERE id = ?", (self.partida_id,))
+
+            conn.commit()
+
+            # Busca confirmações atualizadas
+            cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
+            conf_atualizada = cur.fetchone()
             conn.close()
-            return
 
-        conf_j1_antes, conf_j2_antes = conf
-
-        # Marca confirmação do jogador
-        if user_id == self.jogador1_id:
-            if conf_j1_antes == 1:
-                await interaction.response.send_message("❌ Você já confirmou!", ephemeral=True)
-                conn.close()
-                return
-            cur.execute("UPDATE partidas SET confirmacao_j1 = 1 WHERE id = ?", (self.partida_id,))
-        else:
-            if conf_j2_antes == 1:
-                await interaction.response.send_message("❌ Você já confirmou!", ephemeral=True)
-                conn.close()
-                return
-            cur.execute("UPDATE partidas SET confirmacao_j2 = 1 WHERE id = ?", (self.partida_id,))
-
-        conn.commit()
-
-        # Busca confirmações atualizadas
-        cur.execute("SELECT confirmacao_j1, confirmacao_j2 FROM partidas WHERE id = ?", (self.partida_id,))
-        conf_atualizada = cur.fetchone()
-        conn.close()
-
-        await interaction.response.send_message("✅ Confirmado!", ephemeral=True)
+            await interaction.response.send_message("✅ Confirmado!", ephemeral=True)
+        except Exception as e:
+            print(f"❌ ERRO em confirmar: {e}")
+            import traceback
+            traceback.print_exc()
+            try:
+                await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
+            except:
+                pass
 
         if conf_atualizada and conf_atualizada[0] == 1 and conf_atualizada[1] == 1:
             # Ambos confirmaram - Renomeia para MOBILE
