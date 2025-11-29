@@ -11,12 +11,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from discord.ui import View, Button, Select, Modal, TextInput
-import qrcode
-from io import BytesIO
 from aiohttp import web
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from collections import defaultdict
 
 INTENTS = discord.Intents.default()
