@@ -1312,7 +1312,7 @@ class ConfirmarPartidaView(View):
 
             await interaction.message.edit(view=self)
 
-            # Renomeia o canal/thread para mobile-X
+            # 🔄 Renomeia o canal/thread para mobile-X (COM CORREÇÃO DE FETCH)
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
             cur.execute("SELECT numero_topico, canal_id, thread_id FROM partidas WHERE id = ?", (self.partida_id,))
@@ -1321,29 +1321,34 @@ class ConfirmarPartidaView(View):
 
             if partida_row:
                 numero_topico, canal_id, thread_id = partida_row
+                
+                # Cast para int para evitar erros
+                thread_id = int(thread_id) if thread_id else 0
+                canal_id = int(canal_id) if canal_id else 0
 
                 try:
+                    # Prioriza thread se existir, caso contrário usa canal
                     if thread_id and thread_id > 0:
-                        # É um thread
-                        thread = interaction.guild.get_thread(thread_id)
-                        if thread:
-                            await thread.edit(name=f"mobile-{numero_topico}")
+                        channel = await interaction.guild.fetch_channel(thread_id)
+                    elif canal_id and canal_id > 0:
+                        channel = await interaction.guild.fetch_channel(canal_id)
                     else:
-                        # É um canal
-                        canal = interaction.guild.get_channel(canal_id)
-                        if canal:
-                            await canal.edit(name=f"mobile-{numero_topico}")
+                        channel = None
+                    
+                    if channel:
+                        await channel.edit(name=f"mobile-{numero_topico}")
+                        print(f"✅ Canal/Thread renomeado para: mobile-{numero_topico}")
                 except Exception as e:
                     print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
-
+            # 💰 Envia informações de pagamento (PIX)
             if mediador_id:
                 guild_id = interaction.guild.id
                 conn = sqlite3.connect(DB_FILE)
                 cur = conn.cursor()
                 cur.execute(
-    "SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?",
-    (guild_id, mediador_id)
+                    "SELECT nome_completo, chave_pix FROM mediador_pix WHERE guild_id = ? AND user_id = ?",
+                    (guild_id, mediador_id)
                 )
                 pix_row = cur.fetchone()
                 conn.close()
@@ -1359,14 +1364,14 @@ class ConfirmarPartidaView(View):
                     pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
                     pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
 
-                    # ✅ Gera código PIX (copia-cola) sem tentar renderizar QR code (Render não suporta)
+                    # ✅ Gera código PIX (copia-cola) sem QR code
                     _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
                     pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
 
                     view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
                     await interaction.channel.send(embed=pix_embed, view=view_pix)
 
-            # Envia menu do mediador automaticamente
+            # 📋 Envia menu do mediador
             embed_menu = discord.Embed(
                 title="Menu Mediador",
                 description=f"<@{self.jogador1_id}>\n<@{self.jogador2_id}>",
