@@ -4797,6 +4797,10 @@ async def start_web_server():
     
     # Salvar porta usada no banco para o keep-alive
     db_set_config("http_server_port", str(port))
+    
+    # ✅ CRÍTICO: Manter o servidor rodando ETERNAMENTE
+    # Sem isso, a função termina e a porta é fechada!
+    await asyncio.sleep(float('inf'))
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
