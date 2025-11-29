@@ -1761,8 +1761,8 @@ class MenuMediadorView(View):
         view = EscolherVencedorView(self.partida_id, j1_id, j2_id)
         await interaction.response.send_message("⚠️ W.O. - Escolha o vencedor:", view=view, ephemeral=True)
 
-    @discord.ui.button(label="🎮 Definir Sala", style=discord.ButtonStyle.secondary, emoji="⚙️")
-    async def definir_sala(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="🎮 CRIAR SALA", style=discord.ButtonStyle.success, emoji="🎮")
+    async def criar_sala(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not is_aux_permitido(interaction.user):
             await interaction.response.send_message("❌ Apenas mediadores podem usar este botão!", ephemeral=True)
             return
@@ -1821,8 +1821,8 @@ class DefinirSalaModal(Modal):
             conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
 
-            # Buscar dados da partida
-            cur.execute("SELECT jogador1, jogador2, mediador FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, guild_id))
+            # Buscar dados da partida (jogadores, mediador e valor)
+            cur.execute("SELECT jogador1, jogador2, mediador, valor FROM partidas WHERE id = ? AND guild_id = ?", (self.partida_id, guild_id))
             partida_row = cur.fetchone()
 
             if not partida_row:
@@ -1830,7 +1830,7 @@ class DefinirSalaModal(Modal):
                 await interaction.response.send_message("❌ Partida não encontrada!", ephemeral=True)
                 return
 
-            j1_id, j2_id, mediador_id = partida_row
+            j1_id, j2_id, mediador_id, valor = partida_row
 
             # Atualizar sala_id e sala_senha
             cur.execute("UPDATE partidas SET sala_id = ?, sala_senha = ? WHERE id = ? AND guild_id = ?", 
@@ -1838,11 +1838,19 @@ class DefinirSalaModal(Modal):
             conn.commit()
             conn.close()
 
+            # Renomear canal para "paga-VALOR"
+            try:
+                novo_nome = f"paga-{fmt_valor(valor)}"
+                await self.canal.edit(name=novo_nome)
+            except Exception as e:
+                print(f"⚠️ Erro ao renomear canal: {e}")
+
             # Criar mensagem de confirmação
             embed = discord.Embed(
-                title="✅ ID E SENHA CRIADOS",
+                title="✅ ID E SENHA E PAGAR",
                 color=0x00ff00
             )
+            embed.add_field(name="💰 VALOR", value=f"{fmt_valor(valor)}", inline=False)
             embed.add_field(name="👨‍⚖️ MEDIADOR", value=f"<@{mediador_id}>", inline=False)
             embed.add_field(name="⚔️ PLAYERS", value=f"<@{j1_id}> VS <@{j2_id}>", inline=False)
             embed.add_field(name="🆔 ID DA SALA", value=f"```\n{sala_id_input}\n```", inline=False)
