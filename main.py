@@ -1493,6 +1493,8 @@ class ConfirmarPartidaView(View):
 
     @discord.ui.button(label="Confirmação", style=discord.ButtonStyle.success, emoji="✅")
     async def confirmar(self, interaction: discord.Interaction, button: discord.ui.Button):
+        conf_atualizada = None
+        
         try:
             user_id = interaction.user.id
 
