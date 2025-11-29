@@ -1311,14 +1311,19 @@ class ConfirmarPartidaView(View):
             partida_row = cur.fetchone()
             
             pix_row = None
-            if mediador_id and partida_row:
+            print(f"DEBUG PIX: mediador_id={mediador_id}, tipo={type(mediador_id)}, bool={bool(mediador_id)}")
+            
+            if mediador_id and mediador_id > 0:
                 guild_id = interaction.guild.id
+                print(f"  Buscando PIX para guild_id={guild_id}, user_id={mediador_id}")
+                
                 cur.execute("""
                     SELECT nome_completo, chave_pix 
                     FROM mediador_pix 
                     WHERE guild_id = ? AND user_id = ?
                 """, (guild_id, mediador_id))
                 pix_row = cur.fetchone()
+                print(f"  PIX result: {pix_row}")
             
             conn.close()
 
