@@ -150,6 +150,11 @@ def init_db():
         cur.execute("""ALTER TABLE partidas ADD COLUMN sala_update_count INTEGER DEFAULT 0""")
     except sqlite3.OperationalError:
         pass
+    
+    try:
+        cur.execute("""ALTER TABLE partidas ADD COLUMN sala_paga TEXT DEFAULT NULL""")
+    except sqlite3.OperationalError:
+        pass
 
     try:
         cur.execute("""ALTER TABLE logs_partidas ADD COLUMN tipo_fila TEXT DEFAULT '1x1-mob'""")
