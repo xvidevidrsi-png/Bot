@@ -1397,7 +1397,7 @@ class ConfirmarPartidaView(View):
                     pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
                     
                     print(f"  - Gerando QR code PIX...")
-                    _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
+                    qr_buffer, codigo_pix = gerar_qr_code_pix(pix_row[1], pix_row[0], valor_com_taxa)
                     print(f"  - QR code gerado: {codigo_pix[:50]}...")
                     pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
                     
