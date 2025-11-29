@@ -6611,44 +6611,25 @@ async def start_web_server():
     runner = web.AppRunner(app)
     await runner.setup()
 
-    # Tentar porta 5000 primeiro (Replit requirement), depois outras portas
-    ports = [5000, 3000, 8080, 8000]
-    site = None
+    # RENDER FIX: Usar variável PORT do Render (importante!)
+    port = int(os.environ.get("PORT", 5000))
+    
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    print(f'✅ HTTP na porta {port}')
+    print(f'  🎯 5000+ ENDPOINTS DE PING:')
+    print(f'    ├─ ✅ /best-ping ⭐ RECOMENDADO!')
+    print(f'    ├─ /health (para UptimeRobot)')
+    print(f'    └─ 5000+ endpoints de ping disponíveis')
+    print(f'')
+    print(f'📋 CONFIGURAÇÃO UPTIME:')
+    print(f'  ├─ 🎯 URL: https://seu-bot.onrender.com/best-ping')
+    print(f'  ├─ ⏰ Intervalo: 5 minutos')
+    print(f'  └─ 🚀 Bot vai rodar 24/7!')
 
-    for port in ports:
-        try:
-            site = web.TCPSite(runner, '0.0.0.0', port)
-            await site.start()
-            print(f'✅ HTTP na porta {port}')
-            print(f'  🎯 5000+ ENDPOINTS DE PING - MELHOR PING DO MUNDO:')
-            print(f'    ├─ ✅ /best-ping ⭐ RECOMENDADO!')
-            print(f'    ├─ /a1-a1000, /b1-b1000, /c1-c1000, /d1-d1000, /e1-e1000')
-            print(f'    ├─ /ultra1-ultra50 (50 endpoints redundantes)')
-            print(f'    └─ TODOS RESPONDEM EM 1 BYTE - SEM OVERHEAD')
-            print(f'  8 MEGA PINGS QUÂNTICOS RODANDO 24/7:')
-            print(f'    ├─ 🌟 ETERNAL: 0.5ms | ⚡ PARALLEL: 0.1ms | 🔷 NANOSECOND: 0.01ms')
-            print(f'    ├─ 💠 QUANTUM: 0.001ms | ✨ TRANSCENDENCE: 0.0001ms')
-            print(f'    ├─ 🔴 MEGA: 1 bilião/s | ⭐ ULTRA: 10 bilhões/s | 💫 SUPREME: 100 bilhões/s')
-            print(f'  └─ 5000+ ENDPOINTS | 8 MEGA TASKS | 100% UPTIME INFINITO ✅!!!')
-            print(f'')
-            print(f'📋 CONFIGURAÇÃO PARA MELHOR PING (Cron-Job.org):')
-            print(f'  ├─ 🎯 URL: https://seu-repl.replit.dev/best-ping')
-            print(f'  ├─ ⏰ Intervalo: 1 segundo')
-            print(f'  ├─ Timeout: 5 segundos')
-            print(f'  └─ 🚀 5000+ endpoints redundantes prontos!')
-
-            # Salvar porta usada no banco para o keep-alive
-            db_set_config("http_server_port", str(port))
-            break
-        except OSError as e:
-            if "address already in use" in str(e).lower():
-                print(f'⚠️ Porta {port} já em uso, tentando próxima...')
-                continue
-            else:
-                raise
-
-    if site is None:
-        raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
+    # Salvar porta usada no banco para o keep-alive
+    db_set_config("http_server_port", str(port))
 
 async def start_tcp_ping_server():
     """Servidor TCP RAW ultra-rápido na porta 5001 - ZERO overhead HTTP"""
