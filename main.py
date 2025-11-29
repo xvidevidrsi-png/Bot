@@ -1345,31 +1345,37 @@ class ConfirmarPartidaView(View):
                     print(f"⚠️ Erro ao renomear: {e}")
 
             # 💰 Envia PIX (se tem dados)
-            if mediador_id and pix_row:
-                taxa = get_taxa()
-                valor_com_taxa = valor + taxa
-                pix_embed = discord.Embed(
-                    title="💰 Informações de Pagamento",
-                    description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
-                    color=0x00ff00
-                )
-                pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
-                pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
-                
-                _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
-                pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
-                
-                view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
-                await interaction.channel.send(embed=pix_embed, view=view_pix)
+            try:
+                if mediador_id and pix_row:
+                    taxa = get_taxa()
+                    valor_com_taxa = valor + taxa
+                    pix_embed = discord.Embed(
+                        title="💰 Informações de Pagamento",
+                        description=f"**Valor a pagar:** {fmt_valor(valor_com_taxa)}\n(Taxa de {fmt_valor(taxa)} incluída)",
+                        color=0x00ff00
+                    )
+                    pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
+                    pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
+                    
+                    _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
+                    pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
+                    
+                    view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
+                    await interaction.channel.send(embed=pix_embed, view=view_pix)
+            except Exception as e:
+                print(f"⚠️ Erro ao enviar PIX: {e}")
 
-            # 📋 Menu do mediador
-            embed_menu = discord.Embed(
-                title="Menu Mediador",
-                description=f"<@{self.jogador1_id}>\n<@{self.jogador2_id}>",
-                color=0x2f3136
-            )
-            view_menu = MenuMediadorView(self.partida_id)
-            await interaction.channel.send(embed=embed_menu, view=view_menu)
+            # 📋 Menu do mediador - SEMPRE ENVIADO
+            try:
+                embed_menu = discord.Embed(
+                    title="Menu Mediador",
+                    description=f"<@{self.jogador1_id}>\n<@{self.jogador2_id}>",
+                    color=0x2f3136
+                )
+                view_menu = MenuMediadorView(self.partida_id)
+                await interaction.channel.send(embed=embed_menu, view=view_menu)
+            except Exception as e:
+                print(f"⚠️ Erro ao enviar Menu: {e}")
 
     @discord.ui.button(label="Recusar", style=discord.ButtonStyle.danger, emoji="❌")
     async def recusar(self, interaction: discord.Interaction, button: discord.ui.Button):
