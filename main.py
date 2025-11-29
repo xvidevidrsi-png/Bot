@@ -5,6 +5,7 @@ import uuid
 import random
 import datetime
 import re
+import gc
 from typing import List, Dict, Optional
 import discord
 from discord.ext import commands, tasks
