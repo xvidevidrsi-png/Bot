@@ -1212,12 +1212,12 @@ class FilaMobView(View):
         user_id = interaction.user.id
         jogadores = fila_add_jogador(guild_id, self.valor, self.tipo_fila, user_id, self.tipo_jogo)
 
-        await interaction.response.defer()
-
         if len(jogadores) >= 2:
-            await interaction.channel.send(f"⚠️ Match! <@{jogadores[0]}> vs <@{jogadores[1]}>!")
+            await interaction.response.send_message(f"⚠️ Match! <@{jogadores[0]}> vs <@{jogadores[1]}>!", ephemeral=False)
             fila_remove_primeiros(guild_id, self.valor, self.tipo_fila, 2, self.tipo_jogo)
             await criar_partida_mob(interaction.guild, jogadores[0], jogadores[1], self.valor, self.tipo_fila)
+        else:
+            await interaction.response.defer()
 
         await atualizar_msg_fila_mob(interaction.channel, self.valor, self.tipo_fila, self.tipo_jogo)
 
