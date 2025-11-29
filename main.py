@@ -795,7 +795,7 @@ class ConfirmarEntradaView(View):
 
 class FilaView(View):
     def __init__(self, valor: float, guild_id: int = None, tipo_jogo: str = 'mob'):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.valor = valor
         self.guild_id = guild_id
         self.tipo_jogo = tipo_jogo
@@ -976,7 +976,7 @@ async def atualizar_msg_fila(canal, valor, tipo_jogo='mob'):
 
 class FilaMobView(View):
     def __init__(self, valor: float, tipo_fila: str, tipo_jogo: str = 'mob', guild_id: int = None):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.valor = valor
         self.tipo_fila = tipo_fila
         self.tipo_jogo = tipo_jogo
@@ -1096,7 +1096,7 @@ async def atualizar_msg_fila_mob(canal, valor, tipo_fila, tipo_jogo='mob'):
 
 class FilaMistoView(View):
     def __init__(self, valor: float, tipo_fila: str):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.valor = valor
         self.tipo_fila = tipo_fila
 
@@ -1261,7 +1261,7 @@ async def atualizar_msg_fila_misto(canal, valor, tipo_fila):
 
 class ConfirmarPartidaView(View):
     def __init__(self, partida_id: str, jogador1_id: int, jogador2_id: int):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.partida_id = partida_id
         self.jogador1_id = jogador1_id
         self.jogador2_id = jogador2_id
@@ -1587,7 +1587,7 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
 
 class CopiarChavePIXView(View):
     def __init__(self, chave_pix):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.chave_pix = chave_pix
 
     @discord.ui.button(label="Copiar PIX", style=discord.ButtonStyle.primary, emoji="💰")
@@ -1596,7 +1596,7 @@ class CopiarChavePIXView(View):
 
 class CopiarCodigoPIXView(View):
     def __init__(self, codigo_pix, chave_pix):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.codigo_pix = codigo_pix
         self.chave_pix = chave_pix
 
@@ -1614,7 +1614,7 @@ class CopiarCodigoPIXView(View):
 
 class CopiarIDView(View):
     def __init__(self, sala_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.sala_id = sala_id
 
     @discord.ui.button(label="Copiar ID", style=discord.ButtonStyle.primary, emoji="📋")
@@ -1623,7 +1623,7 @@ class CopiarIDView(View):
 
 class EscolherVencedorView(View):
     def __init__(self, partida_id, j1_id, j2_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.partida_id = partida_id
         self.j1_id = j1_id
         self.j2_id = j2_id
@@ -1648,7 +1648,7 @@ class EscolherVencedorView(View):
 
 class ConfirmarVencedorView(View):
     def __init__(self, partida_id, vencedor_id, perdedor_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.partida_id = partida_id
         self.vencedor_id = vencedor_id
         self.perdedor_id = perdedor_id
@@ -1704,7 +1704,7 @@ class ConfirmarVencedorView(View):
 
 class MenuMediadorView(View):
     def __init__(self, partida_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
         self.partida_id = partida_id
 
     @discord.ui.button(label="Vitória", style=discord.ButtonStyle.success, emoji="🏆")
@@ -1876,7 +1876,7 @@ class ConfigurarPIXModal(Modal):
 
 class ConfigurarPIXView(View):
     def __init__(self):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
 
     @discord.ui.button(label="Configurar PIX", style=discord.ButtonStyle.primary, emoji="💰")
     async def configurar(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -1965,7 +1965,7 @@ class RemoverMediadorView(View):
 
 class FilaMediadoresView(View):
     def __init__(self):
-        super().__init__(timeout=60)
+        super().__init__(timeout=120)
 
     @discord.ui.button(label="Entrar em serviço", style=discord.ButtonStyle.success, emoji="✅")
     async def entrar(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -3974,6 +3974,15 @@ async def atualizar_fila_mediadores_task():
     except Exception as e:
         print(f"[FILA MEDIADORES] ❌ Erro geral no task: {e}")
 
+@tasks.loop(seconds=300)
+async def garbage_collector_task():
+    """Limpeza de memória a cada 5 minutos - Remove objects obsoletos"""
+    try:
+        collected = gc.collect()
+        print(f"🧹 [GC] Limpeza: {collected} objetos removidos")
+    except Exception as e:
+        print(f"🧹 [GC] ❌ Erro: {e}")
+
 async def enviar_mensagens_iniciais_logs():
     """Envia mensagens iniciais explicativas em todos os canais de log"""
     try:
@@ -4500,6 +4509,7 @@ async def on_ready():
     # keep_alive_task.start()  # ❌ REMOVIDO - Desnecessário no Render, gera overhead
     rotacao_mediadores_task.start()
     auto_role_task.start()
+    garbage_collector_task.start()
     atualizar_fila_mediadores_task.start()
 
     print(f"🔄 Tasks iniciados:")
