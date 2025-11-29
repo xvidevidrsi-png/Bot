@@ -1363,12 +1363,12 @@ class ConfirmarPartidaView(View):
                     pix_embed.add_field(name="📋 Nome Completo", value=pix_row[0], inline=False)
                     pix_embed.add_field(name="🔑 Chave PIX", value=pix_row[1], inline=False)
 
-                    qr_buffer, codigo_pix = gerar_qr_code_pix(pix_row[1], pix_row[0], valor_com_taxa)
-                    qr_file = discord.File(qr_buffer, filename="qrcode_pix.png")
-                    pix_embed.set_image(url="attachment://qrcode_pix.png")
+                    # ✅ Gera código PIX (copia-cola) sem tentar renderizar QR code (Render não suporta)
+                    _, codigo_pix = gerar_payload_pix_emv(pix_row[1], pix_row[0], valor_com_taxa)
+                    pix_embed.add_field(name="📲 PIX Copia e Cola", value=f"```\n{codigo_pix}\n```", inline=False)
 
                     view_pix = CopiarCodigoPIXView(codigo_pix, pix_row[1])
-                    await interaction.channel.send(embed=pix_embed, file=qr_file, view=view_pix)
+                    await interaction.channel.send(embed=pix_embed, view=view_pix)
 
             # Envia menu do mediador automaticamente
             embed_menu = discord.Embed(
