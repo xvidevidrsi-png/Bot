@@ -4119,9 +4119,9 @@ async def auto_role_task():
     except Exception as e:
         print(f"[AUTO ROLE] ❌ Erro no task: {e}")
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=1)
 async def atualizar_fila_mediadores_task():
-    """Atualiza a mensagem da fila de mediadores a cada 10 segundos"""
+    """Atualiza a mensagem da fila de mediadores a cada 1 segundo"""
     try:
         for guild in bot.guilds:
             guild_id = guild.id
