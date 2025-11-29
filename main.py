@@ -1389,16 +1389,19 @@ class ConfirmarPartidaView(View):
                 print(f"⚠️ PIX não enviado: mediador_id={mediador_id}, pix_row={pix_row}")
 
             # 📋 MENU DO MEDIADOR - SEMPRE ENVIADO
-            print(f"Enviando Menu Mediador...")
+            print(f"Enviando Menu Mediador... mediador_id={mediador_id}")
             try:
+                print(f"  1. Criando embed...")
                 embed_menu = discord.Embed(
                     title="Menu Mediador",
                     description=f"<@{self.jogador1_id}>\n<@{self.jogador2_id}>",
                     color=0x2f3136
                 )
+                print(f"  2. Criando view...")
                 view_menu = MenuMediadorView(self.partida_id)
-                await interaction.channel.send(embed=embed_menu, view=view_menu)
-                print(f"✅ Menu Mediador enviado!")
+                print(f"  3. Enviando mensagem...")
+                msg = await interaction.channel.send(embed=embed_menu, view=view_menu)
+                print(f"✅ Menu Mediador enviado! msg_id={msg.id}")
             except Exception as e:
                 print(f"❌ Erro ao enviar Menu: {e}")
                 import traceback
