@@ -1808,7 +1808,7 @@ class MenuMediadorView(View):
 
 class DefinirSalaModal(Modal):
     def __init__(self, partida_id, canal, guild):
-        super().__init__(title="Definir ID e Senha da Sala")
+        super().__init__(title="Definir ID, Senha e Pagamento da Sala")
         self.partida_id = partida_id
         self.canal = canal
         self.guild = guild
@@ -1827,16 +1827,25 @@ class DefinirSalaModal(Modal):
             max_length=50
         )
 
+        self.sala_paga = TextInput(
+            label="Paga",
+            placeholder="Digite informação de pagamento",
+            required=True,
+            max_length=100
+        )
+
         self.add_item(self.sala_id)
         self.add_item(self.sala_senha)
+        self.add_item(self.sala_paga)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
             sala_id_input = self.sala_id.value.strip()
             sala_senha_input = self.sala_senha.value.strip()
+            sala_paga_input = self.sala_paga.value.strip()
 
-            if not sala_id_input or not sala_senha_input:
-                await interaction.response.send_message("❌ ID e senha são obrigatórios!", ephemeral=True)
+            if not sala_id_input or not sala_senha_input or not sala_paga_input:
+                await interaction.response.send_message("❌ ID, senha e pagamento são obrigatórios!", ephemeral=True)
                 return
 
             # Validar se ID tem entre 5 e 11 dígitos
@@ -1859,9 +1868,9 @@ class DefinirSalaModal(Modal):
 
             j1_id, j2_id, mediador_id, valor = partida_row
 
-            # Atualizar sala_id e sala_senha
-            cur.execute("UPDATE partidas SET sala_id = ?, sala_senha = ? WHERE id = ? AND guild_id = ?", 
-                       (sala_id_input, sala_senha_input, self.partida_id, guild_id))
+            # Atualizar sala_id, sala_senha e sala_paga
+            cur.execute("UPDATE partidas SET sala_id = ?, sala_senha = ?, sala_paga = ? WHERE id = ? AND guild_id = ?", 
+                       (sala_id_input, sala_senha_input, sala_paga_input, self.partida_id, guild_id))
             conn.commit()
             conn.close()
 
@@ -1874,7 +1883,7 @@ class DefinirSalaModal(Modal):
 
             # Criar mensagem de confirmação
             embed = discord.Embed(
-                title="✅ ID E SENHA E PAGAR",
+                title="✅ ID, SENHA E PAGAMENTO",
                 color=0x00ff00
             )
             embed.add_field(name="💰 VALOR", value=f"{fmt_valor(valor)}", inline=False)
@@ -1882,6 +1891,7 @@ class DefinirSalaModal(Modal):
             embed.add_field(name="⚔️ PLAYERS", value=f"<@{j1_id}> VS <@{j2_id}>", inline=False)
             embed.add_field(name="🆔 ID DA SALA", value=f"```\n{sala_id_input}\n```", inline=False)
             embed.add_field(name="🔐 SENHA DA SALA", value=f"```\n{sala_senha_input}\n```", inline=False)
+            embed.add_field(name="💳 PAGAMENTO", value=f"```\n{sala_paga_input}\n```", inline=False)
 
             view = CopiarIDView(sala_id_input)
             await self.canal.send(embed=embed, view=view)
