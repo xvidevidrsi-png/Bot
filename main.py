@@ -4733,7 +4733,14 @@ async def main():
         print("Configure o secret DISCORD_TOKEN")
         exit(1)
 
-    await start_web_server()
+    # ✅ Inicia servidor web em BACKGROUND (não bloqueia o bot)
+    try:
+        bot.loop.create_task(start_web_server())
+        print("🌐 Servidor web iniciado em background")
+    except Exception as e:
+        print(f"⚠️ Aviso: Não foi possível iniciar servidor web: {e}")
+    
+    # ✅ Bot roda em FOREGROUND (bloqueante, conecta ao Discord)
     await bot.start(token)
 
 if __name__ == "__main__":
