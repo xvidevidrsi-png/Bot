@@ -4783,38 +4783,24 @@ async def start_web_server():
     runner = web.AppRunner(app)
     await runner.setup()
     
-    # Tentar porta 5000 primeiro (recomendada pelo Replit), depois 8080
-    ports = [5000, 8080, 3000, 8000]
-    site = None
+    # Porta fixa: 5000
+    port = 5000
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f'✅ Servidor HTTP rodando na porta {port}')
+    print(f'  ├─ GET /ping - Ping otimizado (Cron-Job.org compatible)')
+    print(f'  ├─ GET /status - Status rápido em texto')
+    print(f'  ├─ GET /health - Health check JSON detalhado')
+    print(f'  └─ GET /stats - Estatísticas do banco de dados')
+    print(f'')
+    print(f'📋 Configuração recomendada para Cron-Job.org:')
+    print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
+    print(f'  ├─ Intervalo: 5 minutos')
+    print(f'  ├─ Timeout: 30 segundos')
+    print(f'  └─ Palavra-chave esperada: "pong"')
     
-    for port in ports:
-        try:
-            site = web.TCPSite(runner, '0.0.0.0', port)
-            await site.start()
-            print(f'✅ Servidor HTTP rodando na porta {port}')
-            print(f'  ├─ GET /ping - Ping otimizado (Cron-Job.org compatible)')
-            print(f'  ├─ GET /status - Status rápido em texto')
-            print(f'  ├─ GET /health - Health check JSON detalhado')
-            print(f'  └─ GET /stats - Estatísticas do banco de dados')
-            print(f'')
-            print(f'📋 Configuração recomendada para Cron-Job.org:')
-            print(f'  ├─ URL: https://seu-repl.replit.dev/ping')
-            print(f'  ├─ Intervalo: 5 minutos')
-            print(f'  ├─ Timeout: 30 segundos')
-            print(f'  └─ Palavra-chave esperada: "pong"')
-            
-            # Salvar porta usada no banco para o keep-alive
-            db_set_config("http_server_port", str(port))
-            break
-        except OSError as e:
-            if "address already in use" in str(e).lower():
-                print(f'⚠️ Porta {port} já em uso, tentando próxima...')
-                continue
-            else:
-                raise
-    
-    if site is None:
-        raise Exception("❌ Nenhuma porta disponível para o servidor HTTP!")
+    # Salvar porta usada no banco para o keep-alive
+    db_set_config("http_server_port", str(port))
 
 async def main():
     token = os.getenv("DISCORD_TOKEN")
