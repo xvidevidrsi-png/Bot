@@ -1341,6 +1341,25 @@ class ConfirmarPartidaView(View):
                 except Exception as e:
                     print(f"⚠️ Erro ao renomear canal/thread: {e}")
 
+            # ✅ Busca e mostra ID e Senha da Sala
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute("SELECT sala_id, sala_senha FROM partidas WHERE id = ?", (self.partida_id,))
+            sala_row = cur.fetchone()
+            conn.close()
+
+            if sala_row:
+                sala_id, sala_senha = sala_row
+                embed_sala = discord.Embed(
+                    title="🎮 Informações da Sala",
+                    description="Dados para entrar na sala de Free Fire",
+                    color=0x00ff00
+                )
+                embed_sala.add_field(name="🆔 ID da Sala", value=f"```\n{sala_id}\n```", inline=False)
+                embed_sala.add_field(name="🔐 Senha da Sala", value=f"```\n{sala_senha}\n```", inline=False)
+                view_sala = CopiarIDView(sala_id)
+                await interaction.channel.send(embed=embed_sala, view=view_sala)
+
             if mediador_id:
                 guild_id = interaction.guild.id
                 conn = sqlite3.connect(DB_FILE)
@@ -1486,6 +1505,10 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
     partida_id = str(random.randint(100000, 9999999))
     usar_threads = db_get_config("usar_threads")
 
+    # Gera ID e Senha da Sala automaticamente
+    sala_id = str(random.randint(100000, 999999))
+    sala_senha = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
+
     # Contador de tópicos criados
     contador_topicos = db_get_config("contador_topicos")
     if not contador_topicos:
@@ -1536,9 +1559,9 @@ async def criar_partida_mob(guild, j1_id, j2_id, valor, tipo_fila):
     except sqlite3.OperationalError:
         pass
 
-    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?)""",
-                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, numero_topico, datetime.datetime.utcnow().isoformat()))
+    cur.execute("""INSERT INTO partidas (id, guild_id, canal_id, thread_id, valor, jogador1, jogador2, status, numero_topico, sala_id, sala_senha, criado_em)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmacao', ?, ?, ?, ?)""",
+                (partida_id, guild.id, canal_ou_thread_id, thread_id, valor, j1_id, j2_id, numero_topico, sala_id, sala_senha, datetime.datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
